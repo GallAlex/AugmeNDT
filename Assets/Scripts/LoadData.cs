@@ -68,7 +68,9 @@ public class LoadData : MonoBehaviour
 
         //this.minSize = new Vector2(300.0f, 200.0f);
 
-        FileLoader fileLoader = new RawFileLoader(fileToImport, dimX, dimY, dimZ, dataFormat, endianness, bytesToSkip);
+        //FileLoader fileLoader = new RawFileLoader(fileToImport, dimX, dimY, dimZ, dataFormat, endianness, bytesToSkip);
+        fileToImport = EditorUtility.OpenFilePanel("Select a dataset to load", "DataFiles", "");
+        FileLoader fileLoader = new MhdFileLoader(fileToImport);
         fileLoader.loadData(fileToImport);
         dataset = fileLoader.voxelDataset;
 

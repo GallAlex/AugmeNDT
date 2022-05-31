@@ -20,8 +20,17 @@ public class MhdFileLoader : RawFileLoader
 
     public override void loadData(string filePath)
     {
-        //USE RAW FILE Path here
-        base.loadData(filePath);
+        readMetaInfo(filePath);
+        
+        //Check if compressed Format
+        if(mhdFile.CompressedData == true) 
+        {
+            Debug.LogError("The compressed formats are currently not supported");
+            return;
+
+        }
+
+        base.loadData(rawFile.FilePath);
     }
 
     public void readMetaInfo(string filePath)
@@ -57,8 +66,10 @@ public class MhdFileLoader : RawFileLoader
             {
                 bool temp = false;
                 Boolean.TryParse(value, out temp);
-                mhdFile.ByteOrderMSB = temp;
-                Debug.Log("BinaryDataByteOrderMSB: " + mhdFile.ByteOrderMSB);
+                if(temp) mhdFile.Endianness = Endianness.BigEndian;
+                else mhdFile.Endianness = Endianness.LittleEndian;
+
+                Debug.Log("BinaryDataByteOrderMSB: " + mhdFile.Endianness);
             }
             else if (name == "CompressedData")
             {
@@ -111,8 +122,8 @@ public class MhdFileLoader : RawFileLoader
             }
             else if (name == "ElementType")
             {
-                mhdFile.Format = MhdFileType.GetFormatByName(value);
-                Debug.Log("ElementType: " + mhdFile.Format);
+                mhdFile.ContentFormat = MhdFileType.GetFormatByName(value);
+                Debug.Log("ElementType: " + mhdFile.ContentFormat);
             }
             else if (name == "ElementDataFile")
             {
