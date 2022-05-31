@@ -35,15 +35,28 @@ public class RawFileLoader : FileLoader
         }
 
         //if (GetDatasetType(filePath) != DatasetType.Raw) return;
+        Debug.Log("Loading File path:" + filePath);
+        
 
         FileStream fs = new FileStream(filePath, FileMode.Open);
         BinaryReader reader = new BinaryReader(fs);
 
         // Check that the dimension does not exceed the file size
         long expectedFileSize = (long)(rawFile.DimX * rawFile.DimY * rawFile.DimZ) * GetSampleFormatSize(rawFile.ContentFormat) + rawFile.SkipBytes;
+        Debug.Log("File has SampleFormat:" + rawFile.ContentFormat + " with file size" + expectedFileSize);
         if (fs.Length < expectedFileSize)
         {
             Debug.LogError($"The dimension({rawFile.DimX}, {rawFile.DimY}, {rawFile.DimZ}) exceeds the file size. Expected file size is {expectedFileSize} bytes, while the actual file size is {fs.Length} bytes");
+            reader.Close();
+            fs.Close();
+            return;
+        }
+
+        // In versions of .NET prior to 4.5, the maximum object size is 2GB
+        // https://stackoverflow.com/questions/2415434/the-limitation-on-the-size-of-net-array
+        if (expectedFileSize > System.Int32.MaxValue)
+        {
+            Debug.LogError("File size (" + expectedFileSize + ") is greater then the maximum possible array size (" + System.Int32.MaxValue + ")");
             reader.Close();
             fs.Close();
             return;
@@ -56,7 +69,7 @@ public class RawFileLoader : FileLoader
             reader.ReadBytes(rawFile.SkipBytes);
 
         int uDimension = rawFile.DimX * rawFile.DimY * rawFile.DimZ;
-        voxelDataset.data = new int[uDimension];
+        voxelDataset.data = new int[uDimension];   
 
         // Read the data/sample values
         for (int i = 0; i < uDimension; i++)
@@ -74,7 +87,8 @@ public class RawFileLoader : FileLoader
 
     public override void createDataset()
     {
-        voxelDataset = new VoxelDataset();
+        //voxelDataset = new VoxelDataset();
+        voxelDataset = ScriptableObject.CreateInstance<VoxelDataset>();
         voxelDataset.datasetName = Path.GetFileName(rawFile.FilePath);
         voxelDataset.filePath = rawFile.FilePath;
         voxelDataset.dimX = rawFile.DimX;
@@ -113,6 +127,39 @@ public class RawFileLoader : FileLoader
                     }
                     return (int)dataval;
                 }
+            case DataContentFormat.Int64: //Todo Check!!
+                {
+                    long dataval = reader.ReadInt64();
+                    if (rawFile.Endianness == Endianness.BigEndian)
+                    {
+                        byte[] bytes = BitConverter.GetBytes(dataval);
+                        Array.Reverse(bytes, 0, bytes.Length);
+                        dataval = BitConverter.ToInt64(bytes, 0);
+                    }
+                    return (int)dataval;
+                }
+            case DataContentFormat.Float32: //Todo Check!!
+                {
+                    float dataval = reader.ReadSingle();
+                    if (rawFile.Endianness == Endianness.BigEndian)
+                    {
+                        byte[] bytes = BitConverter.GetBytes(dataval);
+                        Array.Reverse(bytes, 0, bytes.Length);
+                        dataval = BitConverter.ToSingle(bytes, 0);
+                    }
+                    return (int)dataval;
+                }
+            case DataContentFormat.Float64: //Todo Check!!
+                {
+                    double dataval = reader.ReadDouble();
+                    if (rawFile.Endianness == Endianness.BigEndian)
+                    {
+                        byte[] bytes = BitConverter.GetBytes(dataval);
+                        Array.Reverse(bytes, 0, bytes.Length);
+                        dataval = BitConverter.ToDouble(bytes, 0);
+                    }
+                    return (int)dataval;
+                }
             case DataContentFormat.Uint8:
                 {
                     return (int)reader.ReadByte();
@@ -139,6 +186,17 @@ public class RawFileLoader : FileLoader
                     }
                     return (int)dataval;
                 }
+            case DataContentFormat.Uint64: //Todo Check!!
+                {
+                    ulong dataval = reader.ReadUInt64();
+                    if (rawFile.Endianness == Endianness.BigEndian)
+                    {
+                        byte[] bytes = BitConverter.GetBytes(dataval);
+                        Array.Reverse(bytes, 0, bytes.Length);
+                        dataval = BitConverter.ToUInt64(bytes, 0);
+                    }
+                    return (int)dataval;
+                }
             default:
                 throw new NotImplementedException("Unimplemented data content format");
         }
@@ -161,6 +219,14 @@ public class RawFileLoader : FileLoader
                 return 4;
             case DataContentFormat.Uint32:
                 return 4;
+            case DataContentFormat.Int64:
+                return 8;
+            case DataContentFormat.Uint64:
+                return 8;
+            case DataContentFormat.Float32:
+                return 4;
+            case DataContentFormat.Float64:
+                return 8;
         }
         throw new NotImplementedException();
     }

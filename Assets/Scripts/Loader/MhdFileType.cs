@@ -7,7 +7,7 @@ public class MhdFileType : RawFileType
 {
     private int nDims = 0;
     private bool binaryData = true;
-    private bool byteOrderMSB = false;
+    //private bool byteOrderMSB = false;
     private bool compressedData = false;
     private int compressedDataSize = 0;
     private int[] transformMatrix;
@@ -16,12 +16,12 @@ public class MhdFileType : RawFileType
     private int[] elementSpacing;
     private int[] dimSize;
     private string elementDataFile = "";
-    private DataContentFormat format;
+    private string elementType;
 
     #region Getter/Setter
     public int NDims { get => nDims; set => nDims = value; }
     public bool BinaryData { get => binaryData; set => binaryData = value; }
-    public bool ByteOrderMSB { get => byteOrderMSB; set => byteOrderMSB = value; }
+    //public bool ByteOrderMSB { get => byteOrderMSB; set => byteOrderMSB = value; }
     public bool CompressedData { get => compressedData; set => compressedData = value; }
     public int CompressedDataSize { get => compressedDataSize; set => compressedDataSize = value; }
     public int[] TransformMatrix { get => transformMatrix; set => transformMatrix = value; }
@@ -30,7 +30,7 @@ public class MhdFileType : RawFileType
     public int[] ElementSpacing { get => elementSpacing; set => elementSpacing = value; }
     public int[] DimSize { get => dimSize; set => dimSize = value; }
     public string ElementDataFile { get => elementDataFile; set => elementDataFile = value; }
-    public DataContentFormat Format { get => format; set => format = value; }
+    public string ElementType { get => elementType; set => elementType = value; }
     #endregion
 
     public static DataContentFormat GetFormatByName(string format)
@@ -49,8 +49,12 @@ public class MhdFileType : RawFileType
                 return DataContentFormat.Int32;
             case "MET_UINT":
                 return DataContentFormat.Uint32;
+            case "MET_LONG":
+                return DataContentFormat.Int32;
             case "MET_LONG_LONG":
                 return DataContentFormat.Int64;
+            case "MET_ULONG":
+                return DataContentFormat.Uint32;
             case "MET_ULONG_LONG":
                 return DataContentFormat.Uint64;
             case "MET_FLOAT":
