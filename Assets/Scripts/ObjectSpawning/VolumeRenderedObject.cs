@@ -21,7 +21,6 @@ public class VolumeRenderedObject : MonoBehaviour
 
         meshRenderer.sharedMaterial.SetTexture("_MainTex", dataset.GetDataTexture());
 
-
         if (dataset.scaleX != 0.0f && dataset.scaleY != 0.0f && dataset.scaleZ != 0.0f)
         {
             float maxScale = Mathf.Max(dataset.scaleX, dataset.scaleY, dataset.scaleZ);

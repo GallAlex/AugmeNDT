@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEditor;
+//using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -69,7 +69,7 @@ public class LoadData : MonoBehaviour
         //this.minSize = new Vector2(300.0f, 200.0f);
 
         //FileLoader fileLoader = new RawFileLoader(fileToImport, dimX, dimY, dimZ, dataFormat, endianness, bytesToSkip);
-        fileToImport = EditorUtility.OpenFilePanel("Select a dataset to load", "DataFiles", "");
+        //fileToImport = EditorUtility.OpenFilePanel("Select a dataset to load", "DataFiles", "");
         FileLoader fileLoader = new MhdFileLoader(fileToImport);
         fileLoader.loadData(fileToImport);
         dataset = fileLoader.voxelDataset;
@@ -83,7 +83,7 @@ public class LoadData : MonoBehaviour
 
             // Save the texture to your Unity Project
             //AssetDatabase.CreateAsset(dataset.GetDataTexture(), "Assets/Textures/Example3DTexture.asset");
-            
+
         }
         else
         {

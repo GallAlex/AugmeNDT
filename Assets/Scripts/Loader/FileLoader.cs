@@ -16,4 +16,9 @@ public abstract class FileLoader
     public abstract void loadData(string filePath);
 
     public abstract void createDataset();
+
+    public override string ToString()
+    {
+        return base.ToString() + ": \n";
+    }
 }

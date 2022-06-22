@@ -34,16 +34,13 @@ public class RawFileLoader : FileLoader
             return;
         }
 
-        //if (GetDatasetType(filePath) != DatasetType.Raw) return;
-        Debug.Log("Loading File path:" + filePath);
-        
+        //if (GetDatasetType(filePath) != DatasetType.Raw) return;        
 
         FileStream fs = new FileStream(filePath, FileMode.Open);
         BinaryReader reader = new BinaryReader(fs);
 
         // Check that the dimension does not exceed the file size
         long expectedFileSize = (long)(rawFile.DimX * rawFile.DimY * rawFile.DimZ) * GetSampleFormatSize(rawFile.ContentFormat) + rawFile.SkipBytes;
-        Debug.Log("File has SampleFormat:" + rawFile.ContentFormat + " with file size" + expectedFileSize);
         if (fs.Length < expectedFileSize)
         {
             Debug.LogError($"The dimension({rawFile.DimX}, {rawFile.DimY}, {rawFile.DimZ}) exceeds the file size. Expected file size is {expectedFileSize} bytes, while the actual file size is {fs.Length} bytes");

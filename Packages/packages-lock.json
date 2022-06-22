@@ -1,11 +1,5 @@
 {
   "dependencies": {
-    "com.microsoft.azure.object-anchors.runtime": {
-      "version": "file:MixedReality/com.microsoft.azure.object-anchors.runtime-0.20.0.tgz",
-      "depth": 0,
-      "source": "local-tarball",
-      "dependencies": {}
-    },
     "com.microsoft.azure.spatial-anchors-sdk.core": {
       "version": "file:MixedReality/com.microsoft.azure.spatial-anchors-sdk.core-2.12.0.tgz",
       "depth": 0,
@@ -37,13 +31,13 @@
       "dependencies": {}
     },
     "com.microsoft.mixedreality.openxr": {
-      "version": "file:MixedReality/com.microsoft.mixedreality.openxr-1.4.0.tgz",
+      "version": "file:MixedReality/com.microsoft.mixedreality.openxr-1.4.1.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {
         "com.unity.xr.arfoundation": "4.1.7",
         "com.unity.xr.management": "4.2.0",
-        "com.unity.xr.openxr": "1.3.1"
+        "com.unity.xr.openxr": "1.4.2"
       }
     },
     "com.microsoft.mixedreality.sceneunderstanding": {
@@ -53,20 +47,20 @@
       "dependencies": {}
     },
     "com.microsoft.mixedreality.toolkit.examples": {
-      "version": "file:MixedReality/com.microsoft.mixedreality.toolkit.examples-2.7.3.tgz",
+      "version": "file:MixedReality/com.microsoft.mixedreality.toolkit.examples-2.8.0.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {
-        "com.microsoft.mixedreality.toolkit.foundation": "2.7.3",
-        "com.microsoft.mixedreality.toolkit.extensions": "2.7.3"
+        "com.microsoft.mixedreality.toolkit.foundation": "2.8.0",
+        "com.microsoft.mixedreality.toolkit.extensions": "2.8.0"
       }
     },
     "com.microsoft.mixedreality.toolkit.extensions": {
-      "version": "file:MixedReality/com.microsoft.mixedreality.toolkit.extensions-2.7.3.tgz",
+      "version": "file:MixedReality/com.microsoft.mixedreality.toolkit.extensions-2.8.0.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {
-        "com.microsoft.mixedreality.toolkit.foundation": "2.7.3"
+        "com.microsoft.mixedreality.toolkit.foundation": "2.8.0"
       }
     },
     "com.microsoft.mixedreality.toolkit.figmabridge": {
@@ -80,11 +74,11 @@
       }
     },
     "com.microsoft.mixedreality.toolkit.foundation": {
-      "version": "file:MixedReality/com.microsoft.mixedreality.toolkit.foundation-2.7.3.tgz",
+      "version": "file:MixedReality/com.microsoft.mixedreality.toolkit.foundation-2.8.0.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {
-        "com.microsoft.mixedreality.toolkit.standardassets": "2.7.3"
+        "com.microsoft.mixedreality.toolkit.standardassets": "2.8.0"
       }
     },
     "com.microsoft.mixedreality.toolkit.gpustats": {
@@ -106,7 +100,7 @@
       "dependencies": {}
     },
     "com.microsoft.mixedreality.toolkit.standardassets": {
-      "version": "file:MixedReality/com.microsoft.mixedreality.toolkit.standardassets-2.7.3.tgz",
+      "version": "file:MixedReality/com.microsoft.mixedreality.toolkit.standardassets-2.8.0.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {
@@ -114,53 +108,59 @@
       }
     },
     "com.microsoft.mixedreality.toolkit.testutilities": {
-      "version": "file:MixedReality/com.microsoft.mixedreality.toolkit.testutilities-2.7.3.tgz",
+      "version": "file:MixedReality/com.microsoft.mixedreality.toolkit.testutilities-2.8.0.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {
-        "com.microsoft.mixedreality.toolkit.foundation": "2.7.3"
+        "com.microsoft.mixedreality.toolkit.foundation": "2.8.0"
       }
     },
     "com.microsoft.mixedreality.toolkit.tools": {
-      "version": "file:MixedReality/com.microsoft.mixedreality.toolkit.tools-2.7.3.tgz",
+      "version": "file:MixedReality/com.microsoft.mixedreality.toolkit.tools-2.8.0.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {
-        "com.microsoft.mixedreality.toolkit.foundation": "2.7.3"
+        "com.microsoft.mixedreality.toolkit.foundation": "2.8.0"
       }
     },
     "com.microsoft.mixedreality.wlt.asa": {
-      "version": "file:MixedReality/com.microsoft.mixedreality.wlt.asa-1.5.8.tgz",
+      "version": "file:MixedReality/com.microsoft.mixedreality.wlt.asa-1.5.9.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {
         "com.microsoft.azure.spatial-anchors-sdk.core": "2.11.0",
-        "com.microsoft.mixedreality.worldlockingtools": "1.5.8"
+        "com.microsoft.mixedreality.worldlockingtools": "1.5.9"
       }
     },
     "com.microsoft.mixedreality.wlt.asa.samples": {
-      "version": "file:MixedReality/com.microsoft.mixedreality.wlt.asa.samples-1.5.8.tgz",
+      "version": "file:MixedReality/com.microsoft.mixedreality.wlt.asa.samples-1.5.9.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {
         "com.microsoft.azure.spatial-anchors-sdk.core": "2.11.0",
         "com.microsoft.mixedreality.toolkit.foundation": "2.7.0",
-        "com.microsoft.mixedreality.wlt.asa": "1.5.8",
-        "com.microsoft.mixedreality.worldlockingtools": "1.5.8",
-        "com.microsoft.mixedreality.worldlockingsamples": "1.5.8"
+        "com.microsoft.mixedreality.wlt.asa": "1.5.9",
+        "com.microsoft.mixedreality.worldlockingtools": "1.5.9",
+        "com.microsoft.mixedreality.worldlockingsamples": "1.5.9"
       }
     },
     "com.microsoft.mixedreality.worldlockingsamples": {
-      "version": "file:MixedReality/com.microsoft.mixedreality.worldlockingsamples-1.5.8.tgz",
+      "version": "file:MixedReality/com.microsoft.mixedreality.worldlockingsamples-1.5.9.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {
         "com.microsoft.mixedreality.toolkit.foundation": "2.7.0",
-        "com.microsoft.mixedreality.worldlockingtools": "1.5.8"
+        "com.microsoft.mixedreality.worldlockingtools": "1.5.9"
       }
     },
     "com.microsoft.mixedreality.worldlockingtools": {
-      "version": "file:MixedReality/com.microsoft.mixedreality.worldlockingtools-1.5.8.tgz",
+      "version": "file:MixedReality/com.microsoft.mixedreality.worldlockingtools-1.5.9.tgz",
+      "depth": 0,
+      "source": "local-tarball",
+      "dependencies": {}
+    },
+    "com.microsoft.mrtk.graphicstools.unity": {
+      "version": "file:MixedReality/com.microsoft.mrtk.graphicstools.unity-0.4.0.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {}
@@ -172,7 +172,7 @@
       "dependencies": {}
     },
     "com.unity.collab-proxy": {
-      "version": "1.15.15",
+      "version": "1.15.17",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -199,8 +199,8 @@
       "depth": 0,
       "source": "builtin",
       "dependencies": {
-        "com.unity.ide.visualstudio": "2.0.14",
-        "com.unity.ide.rider": "3.0.13",
+        "com.unity.ide.visualstudio": "2.0.15",
+        "com.unity.ide.rider": "3.0.14",
         "com.unity.ide.vscode": "1.2.5",
         "com.unity.editorcoroutines": "1.0.0",
         "com.unity.performance.profile-analyzer": "1.1.1",
@@ -209,7 +209,7 @@
       }
     },
     "com.unity.ide.rider": {
-      "version": "3.0.13",
+      "version": "3.0.14",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -243,7 +243,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.nuget.newtonsoft-json": {
-      "version": "2.0.0",
+      "version": "3.0.2",
       "depth": 1,
       "source": "registry",
       "dependencies": {},
@@ -257,7 +257,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.render-pipelines.core": {
-      "version": "12.1.6",
+      "version": "12.1.7",
       "depth": 1,
       "source": "builtin",
       "dependencies": {
@@ -274,11 +274,13 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.services.core": {
-      "version": "1.0.1",
+      "version": "1.4.0",
       "depth": 1,
       "source": "registry",
       "dependencies": {
-        "com.unity.modules.unitywebrequest": "1.0.0"
+        "com.unity.modules.unitywebrequest": "1.0.0",
+        "com.unity.nuget.newtonsoft-json": "3.0.2",
+        "com.unity.modules.androidjni": "1.0.0"
       },
       "url": "https://packages.unity.com"
     },
@@ -290,11 +292,11 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.shadergraph": {
-      "version": "12.1.6",
+      "version": "12.1.7",
       "depth": 0,
       "source": "builtin",
       "dependencies": {
-        "com.unity.render-pipelines.core": "12.1.6",
+        "com.unity.render-pipelines.core": "12.1.7",
         "com.unity.searcher": "4.9.1"
       }
     },
@@ -359,7 +361,7 @@
       }
     },
     "com.unity.visualscripting": {
-      "version": "1.7.6",
+      "version": "1.7.8",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -369,18 +371,18 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.arfoundation": {
-      "version": "4.2.2",
+      "version": "4.2.3",
       "depth": 1,
       "source": "registry",
       "dependencies": {
-        "com.unity.xr.arsubsystems": "4.2.2",
+        "com.unity.xr.arsubsystems": "4.2.3",
         "com.unity.xr.management": "4.0.1",
         "com.unity.modules.particlesystem": "1.0.0"
       },
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.arsubsystems": {
-      "version": "4.2.2",
+      "version": "4.2.3",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -413,13 +415,13 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.openxr": {
-      "version": "1.3.1",
+      "version": "1.4.2",
       "depth": 0,
       "source": "registry",
       "dependencies": {
         "com.unity.xr.management": "4.0.1",
         "com.unity.xr.legacyinputhelpers": "2.1.2",
-        "com.unity.inputsystem": "1.0.2"
+        "com.unity.inputsystem": "1.3.0"
       },
       "url": "https://packages.unity.com"
     },

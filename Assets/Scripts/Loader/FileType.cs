@@ -8,15 +8,16 @@ using UnityEngine;
 public abstract class FileType
 {
 
-    private string filePath;
+    private string filePath = "";
 
     #region Getter/Setter
     public string FilePath { get => filePath; set => filePath = value; }
     #endregion
 
-    //public string fileName;
-    //public string fileExtension;
+    public override string ToString()
+    {
+        string values = "filePath = " + FilePath.ToString() + "\n";
 
-
-
+        return base.ToString() + ": \n" + values;
+    }
 }

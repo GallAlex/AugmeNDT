@@ -31,6 +31,7 @@ public class MhdFileLoader : RawFileLoader
         }
 
         base.loadData(rawFile.FilePath);
+        Debug.Log(this.ToString());
     }
 
     public void readMetaInfo(string filePath)
@@ -38,6 +39,7 @@ public class MhdFileLoader : RawFileLoader
         if (!File.Exists(filePath)) return;
 
         string[] lines = File.ReadAllLines(filePath);
+        string rawFilePath = "";
 
         foreach (string line in lines)
         {
@@ -53,45 +55,36 @@ public class MhdFileLoader : RawFileLoader
                 int temp = 0;
                 Int32.TryParse(value, out temp);
                 mhdFile.NDims = temp;
-                Debug.Log("Ndims: " + mhdFile.NDims);
             }
             else if (name == "BinaryData")
             {
                 bool temp = true;
                 Boolean.TryParse(value, out temp);
                 mhdFile.BinaryData = temp;
-                Debug.Log("BinaryData: " + mhdFile.BinaryData);
             }
             else if (name == "BinaryDataByteOrderMSB")
             {
                 bool temp = false;
                 Boolean.TryParse(value, out temp);
-                if(temp) mhdFile.Endianness = Endianness.BigEndian;
-                else mhdFile.Endianness = Endianness.LittleEndian;
-
-                Debug.Log("BinaryDataByteOrderMSB: " + mhdFile.Endianness);
+                mhdFile.ByteOrderMSB = temp;
             }
             else if (name == "CompressedData")
             {
                 bool temp = false;
                 Boolean.TryParse(value, out temp);
                 mhdFile.CompressedData = temp;
-                Debug.Log("CompressedData: " + mhdFile.CompressedData);
             }
             else if (name == "CompressedDataSize")
             {
                 int temp = 0;
                 Int32.TryParse(value, out temp);
                 mhdFile.CompressedDataSize = temp;
-                Debug.Log("CompressedDataSize: " + mhdFile.CompressedDataSize);
             }
             else if (name == "TransformMatrix")
             {
                 Char[] charNumbers = value.Where(Char.IsDigit).ToArray();
                 int[] numbers = charNumbers.Select(x => Convert.ToInt32(x.ToString())).ToArray();
                 mhdFile.TransformMatrix = numbers;
-
-                Debug.Log("TransformMatrix: " + mhdFile.TransformMatrix.ToString());
             }
             else if (name == "Offset")
             {
@@ -122,25 +115,35 @@ public class MhdFileLoader : RawFileLoader
             }
             else if (name == "ElementType")
             {
-                mhdFile.ContentFormat = MhdFileType.GetFormatByName(value);
-                Debug.Log("ElementType: " + mhdFile.ContentFormat);
+                mhdFile.ElementType = value;
             }
             else if (name == "ElementDataFile")
             {
                 mhdFile.ElementDataFile = value;
-                Debug.Log("ElementDataFile: " + mhdFile.ElementDataFile);
+                rawFilePath = Path.GetDirectoryName(filePath) + "/" + value; //Same Path with raw file name 
             }
             
         }
 
-        // if path from mhd is missing or wrong
-        if (!File.Exists(mhdFile.ElementDataFile))
+        // if raw name from mhd is missing or wrong
+        if (!File.Exists(rawFilePath))
         {
-            mhdFile.ElementDataFile = replaceTargetPath(filePath);
+            rawFilePath = replaceTargetPath(filePath); //get whole Path
+            mhdFile.ElementDataFile = Path.GetFileName(rawFilePath); // Store raw file name
         }
 
+        createRawFileType(rawFilePath);
+}
+
+    private void createRawFileType(string rawFilePath)
+    {
+        Endianness endianness;
+        if (mhdFile.ByteOrderMSB) endianness = Endianness.BigEndian;
+        else endianness = Endianness.LittleEndian;
+
         //Read Info and store in Raw File with path to raw file
-        rawFile = new RawFileType(mhdFile.ElementDataFile, mhdFile.DimSize[0], mhdFile.DimSize[1], mhdFile.DimSize[2], mhdFile.ContentFormat, mhdFile.Endianness, mhdFile.SkipBytes);
+        rawFile = new RawFileType(rawFilePath, mhdFile.DimSize[0], mhdFile.DimSize[1], mhdFile.DimSize[2], MhdFileType.GetFormatByName(mhdFile.ElementType), endianness, mhdFile.HeaderSize);
+
     }
 
     /// <summary>
@@ -161,4 +164,13 @@ public class MhdFileLoader : RawFileLoader
 
         return targetPath;
     }
+
+    public override string ToString()
+    {
+        string values = mhdFile.ToString() + "\n";
+        values += rawFile.ToString() + "\n";
+        
+        return base.ToString() + values;
+    }
+
 }

@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public class MhdFileType : RawFileType
+public class MhdFileType : FileType
 {
+    private int headerSize = 0;
     private int nDims = 0;
     private bool binaryData = true;
-    //private bool byteOrderMSB = false;
+    private bool byteOrderMSB = false;
     private bool compressedData = false;
     private int compressedDataSize = 0;
     private int[] transformMatrix;
@@ -15,13 +16,12 @@ public class MhdFileType : RawFileType
     private int[] centerOfRotation;
     private int[] elementSpacing;
     private int[] dimSize;
-    private string elementDataFile = "";
-    private string elementType;
+    private string elementDataFile = ""; // raw file name
+    private string elementType = ""; // Format name
 
     #region Getter/Setter
     public int NDims { get => nDims; set => nDims = value; }
     public bool BinaryData { get => binaryData; set => binaryData = value; }
-    //public bool ByteOrderMSB { get => byteOrderMSB; set => byteOrderMSB = value; }
     public bool CompressedData { get => compressedData; set => compressedData = value; }
     public int CompressedDataSize { get => compressedDataSize; set => compressedDataSize = value; }
     public int[] TransformMatrix { get => transformMatrix; set => transformMatrix = value; }
@@ -30,7 +30,9 @@ public class MhdFileType : RawFileType
     public int[] ElementSpacing { get => elementSpacing; set => elementSpacing = value; }
     public int[] DimSize { get => dimSize; set => dimSize = value; }
     public string ElementDataFile { get => elementDataFile; set => elementDataFile = value; }
+    public bool ByteOrderMSB { get => byteOrderMSB; set => byteOrderMSB = value; }
     public string ElementType { get => elementType; set => elementType = value; }
+    public int HeaderSize { get => headerSize; set => headerSize = value; }
     #endregion
 
     public static DataContentFormat GetFormatByName(string format)
@@ -66,7 +68,27 @@ public class MhdFileType : RawFileType
         }
     }
 
-    public MhdFileType(string filePath) : base(filePath)
+    public MhdFileType(string filePath, int headerSize = 0)
     {
+        FilePath = filePath;
+        this.headerSize = headerSize;
+    }
+
+    public override string ToString()
+    {
+        string values = "headerSize = " + HeaderSize.ToString() + "\n";
+        values += "nDims = " + NDims.ToString() + "\n";
+        values += "binaryData = " + BinaryData.ToString() + "\n";
+        values += "compressedData = " + CompressedData.ToString() + "\n";
+        values += "compressedDataSize = " + CompressedDataSize.ToString() + "\n";
+        values += "transformMatrix = " + TransformMatrix.ToString() + "\n";
+        values += "offset = " + Offset.ToString() + "\n";
+        values += "centerOfRotation = " + CenterOfRotation.ToString() + "\n";
+        values += "elementSpacing = " + ElementSpacing.ToString() + "\n";
+        values += "dimSize = " + DimSize.ToString() + "\n";
+        values += "elementDataFile = " + ElementDataFile.ToString() + "\n";
+        values += "elementType = " + ElementType.ToString() + "\n";
+
+        return base.ToString() + values;
     }
 }
