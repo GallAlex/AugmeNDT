@@ -3,8 +3,9 @@ Shader "Volume/RaymarchingShader"
     Properties
     {
         _MainTex("Texture", 3D) = "white" {}
-        _Alpha("Alpha", float) = 0.02
         _StepSize("Step Size", float) = 0.01
+        _MinVal("Min val", Range(0.0, 1.0)) = 0.0
+        _MaxVal("Max val", Range(0.0, 1.0)) = 1.0
     }
         SubShader
         {
@@ -40,22 +41,23 @@ Shader "Volume/RaymarchingShader"
 
                 sampler3D _MainTex;
                 float4 _MainTex_ST;
-                float _Alpha;
                 float _StepSize;
+                float _MinVal;
+                float _MaxVal;
 
                 v2f vert(appdata v)
                 {
-                    v2f o;
+                    v2f output;
 
                     // Vertex in object space this will be the starting point of raymarching
-                    o.objectVertex = v.vertex;
+                    output.objectVertex = v.vertex;
 
                     // Calculate vector from camera to vertex in world space
                     float3 worldVertex = mul(unity_ObjectToWorld, v.vertex).xyz;
-                    o.vectorToSurface = worldVertex - _WorldSpaceCameraPos;
+                    output.vectorToSurface = worldVertex - _WorldSpaceCameraPos;
 
-                    o.vertex = UnityObjectToClipPos(v.vertex);
-                    return o;
+                    output.vertex = UnityObjectToClipPos(v.vertex);
+                    return output;
                 }
 
                 float4 BlendUnder(float4 color, float4 newColor)
@@ -65,30 +67,47 @@ Shader "Volume/RaymarchingShader"
                     return color;
                 }
 
-                fixed4 frag(v2f i) : SV_Target
+                // Returns the density at the specified position
+                float getDensity(float3 pos)
+                {
+                    return tex3Dlod(_MainTex, float4(pos.x, pos.y, pos.z, 0.0f));
+                }
+
+                fixed4 frag(v2f input) : SV_Target
                 {
                     // Start raymarching at the front surface of the object
-                    float3 rayOrigin = i.objectVertex;
+                    float3 rayOrigin = input.objectVertex;
 
                     // Use vector from camera to object surface to get ray direction
-                    float3 rayDirection = mul(unity_WorldToObject, float4(normalize(i.vectorToSurface), 1));
+                    float3 rayDirection = mul(unity_WorldToObject, float4(normalize(input.vectorToSurface), 1));
 
                     float4 color = float4(0, 0, 0, 0);
                     float3 samplePosition = rayOrigin;
+                    float maxDensity = 0.0f;
 
                     // Raymarch through object space
-                    for (int i = 0; i < MAX_STEP_COUNT; i++)
+                    for (int input = 0; input < MAX_STEP_COUNT; input++)
                     {
                         // Accumulate color only within unit cube bounds
                         if (max(abs(samplePosition.x), max(abs(samplePosition.y), abs(samplePosition.z))) < 0.5f + EPSILON)
                         {
-                            float4 sampledColor = tex3D(_MainTex, samplePosition + float3(0.5f, 0.5f, 0.5f));
-                            sampledColor.a *= _Alpha;
-                            color = BlendUnder(color, sampledColor);
+                            const float density = tex3D(_MainTex, samplePosition + float3(0.5f, 0.5f, 0.5f)); //Density
+                            //float4 sampledColor = float4(density, density, density, 0.02);
+                            //float4 sampledColor = float4(1.0f, 1.0f, 1.0f, 1-density);
+
+                            //sampledColor.a *= _Alpha;
+                            if (density > _MinVal && density < _MaxVal) {
+                                maxDensity = max(density, maxDensity);
+                            }
+
+                            //color = BlendUnder(color, sampledColor);
+
                             samplePosition += rayDirection * _StepSize;
                         }
                     }
 
+                    float4 sampledColor = float4(1.0f, 1.0f, 1.0f, maxDensity);
+                    color = BlendUnder(color, sampledColor);
                     return color;
                 }
                 ENDCG

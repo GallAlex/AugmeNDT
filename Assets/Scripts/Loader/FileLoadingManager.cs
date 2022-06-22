@@ -1,14 +1,15 @@
+//using UnityEditor;
 using System.IO;
 using System;
 using UnityEngine;
 
 public enum DatasetType
 {
-    Unknown,
     Raw,
     Mhd,
     Csv,
-    DICOM
+    DICOM,
+    Unknown
 }
 
 /// <summary>
@@ -16,13 +17,41 @@ public enum DatasetType
 /// </summary>
 public class FileLoadingManager
 {
+    private string filePath;
+    private FileLoader loaderFactory;
 
-
-    public void loadData(string filePath)
+    public void loadData()
     {
+        //this.filePath = EditorUtility.OpenFilePanel("Select a dataset to load", "DataFiles", "raw, zraw, mhd, dicom, dcm");
+        DatasetType fileTyp = GetDatasetType(filePath);
+
         //Choose Loader here
+        switch (fileTyp)
+        {
+            case DatasetType.Raw:
+                //open RawFileLoaderWindow
+                //loaderFactory = new RawFileLoader(filePath, dimX, dimY, dimZ, contentFormat, endianness, skipBytes);
+                break;
+            case DatasetType.Mhd:
+                loaderFactory = new MhdFileLoader(filePath);
+                break;
+            case DatasetType.Csv:
+                throw new NotImplementedException(fileTyp.ToString() + " extension is currently not supported");
+            case DatasetType.DICOM:
+                throw new NotImplementedException(fileTyp.ToString() + " extension is currently not supported");
+            case DatasetType.Unknown:
+            default:
+                return;
+        }
+
     }
 
+
+    /// <summary>
+    /// Returns the detected extension type of the file
+    /// </summary>
+    /// <param name="filePath"></param>
+    /// <returns></returns>
     public static DatasetType GetDatasetType(string filePath)
     {
         DatasetType datasetType;
@@ -48,7 +77,7 @@ public class FileLoadingManager
                 break;
             default:
                 datasetType = DatasetType.Unknown;
-                break;
+                throw new NotImplementedException("Data extension format [" + extension  + "] not supported");
         }
 
         return datasetType;

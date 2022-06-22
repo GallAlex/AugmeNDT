@@ -58,7 +58,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Alpha: 0.006
+    - _Alpha: 0.002
     - _BlendOp: 0
     - _BumpScale: 1
     - _ColorWriteMask: 15
@@ -78,7 +78,7 @@ Material:
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
-    - _StepSize: 0.0000007
+    - _StepSize: 0.000001
     - _UVSec: 0
     - _WireThickness: 100
     - _ZOffsetFactor: 0

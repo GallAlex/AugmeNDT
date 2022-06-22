@@ -62,4 +62,17 @@ public class RawFileType : FileType
         SkipBytes = skipBytes;
     }
 
+    public override string ToString()
+    {
+
+        string values = "DimX = " + DimX.ToString() + "\n";
+        values += "DimY = " + DimY.ToString() + "\n";
+        values += "DimZ = " + DimZ.ToString() + "\n";
+        values += "ContentFormat = " + contentFormat.ToString() + "\n";
+        values += "Endianness = " + Endianness.ToString() + "\n";
+        values += "skipBytes = " + SkipBytes.ToString() + "\n";
+
+        return base.ToString() + values;
+
+    }
 }
