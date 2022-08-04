@@ -1,6 +1,7 @@
 using System.IO;
 using System;
 using UnityEngine;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Abstract class for loader of various files
@@ -13,7 +14,7 @@ public abstract class FileLoader
     /*3D model data*/
     //public PolygonalDataset polygonalDataset;
 
-    public abstract void loadData(string filePath);
+    public abstract Task loadData(string filePath);
 
     public abstract void createDataset();
 

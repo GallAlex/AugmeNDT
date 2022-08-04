@@ -1,8 +1,11 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using UnityEngine;
 
-
+#if !UNITY_EDITOR && UNITY_WSA_10_0
+using Windows.Storage;
+#endif
 
 public class RawFileLoader : FileLoader
 {
@@ -25,27 +28,62 @@ public class RawFileLoader : FileLoader
     }
 
 
-    public override void loadData(string filePath)
+    public override async Task loadData(string filePath)
     {
-        // Check that the file exists
-        if (!File.Exists(filePath))
-        {
-            Debug.LogError("The file does not exist: " + filePath);
-            return;
-        }
+        // Check that the file exists (does not work on MHL2)
+        //if (!File.Exists(filePath))
+        //{
+        //    Debug.LogError("The raw file does not exist: " + filePath);
+        //    return;
+        //}
 
-        //if (GetDatasetType(filePath) != DatasetType.Raw) return;        
+        Debug.Log("RawFileLoader started for file: " + filePath);
 
+        //if (GetDatasetType(filePath) != DatasetType.Raw) return;
+
+        await readBinaryInfo(filePath);
+
+
+        Debug.Log("Raw FileStream and BinaryReader closed");
+
+        // Check 3D texture max size
+        voxelDataset.FixDimensions();
+
+    }
+
+    private async Task readBinaryInfo(string filePath)
+    {
+        long fileLength;
+        BinaryReader reader;
+
+#if UNITY_EDITOR
         FileStream fs = new FileStream(filePath, FileMode.Open);
-        BinaryReader reader = new BinaryReader(fs);
+        fileLength = fs.Length;
+        reader = new BinaryReader(fs);
+#endif
+
+#if !UNITY_EDITOR && UNITY_WSA_10_0
+        Task<BinaryReader> binaryReaderTask = getBinaryReader(filePath);
+        reader = await binaryReaderTask;//.ConfigureAwait(false);
+        Debug.Log("After await binaryReaderTask");
+
+        //reader = await getBinaryReader(filePath);
+        //reader = await Task.Run(() => getBinaryReader(filePath));
+        //Task<BinaryReader> binaryReaderTask = Task.Run(() => getBinaryReader(filePath));
+        //var results = await Task.WhenAll(binaryReaderTask);
+        //reader = results[0];
+        fileLength = (long)reader.BaseStream.Length;
+#endif
+
+        Debug.Log("Raw Reader generated");
 
         // Check that the dimension does not exceed the file size
         long expectedFileSize = (long)(rawFile.DimX * rawFile.DimY * rawFile.DimZ) * GetSampleFormatSize(rawFile.ContentFormat) + rawFile.SkipBytes;
-        if (fs.Length < expectedFileSize)
+        if (fileLength < expectedFileSize)
         {
-            Debug.LogError($"The dimension({rawFile.DimX}, {rawFile.DimY}, {rawFile.DimZ}) exceeds the file size. Expected file size is {expectedFileSize} bytes, while the actual file size is {fs.Length} bytes");
+            Debug.LogError($"The dimension({rawFile.DimX}, {rawFile.DimY}, {rawFile.DimZ}) exceeds the file size. Expected file size is {expectedFileSize} bytes, while the actual file size is {fileLength} bytes");
             reader.Close();
-            fs.Close();
+            //fs.Close();
             return;
         }
 
@@ -55,18 +93,22 @@ public class RawFileLoader : FileLoader
         {
             Debug.LogError("File size (" + expectedFileSize + ") is greater then the maximum possible array size (" + System.Int32.MaxValue + ")");
             reader.Close();
-            fs.Close();
+            //fs.Close();
             return;
         }
 
-        createDataset();
+        //createDataset();
+        fillVoxelDataset();
 
         // Skip header (if any)
         if (rawFile.SkipBytes > 0)
+        {
             reader.ReadBytes(rawFile.SkipBytes);
+        }
+            
 
         int uDimension = rawFile.DimX * rawFile.DimY * rawFile.DimZ;
-        voxelDataset.data = new int[uDimension];   
+        voxelDataset.data = new int[uDimension];
 
         // Read the data/sample values
         for (int i = 0; i < uDimension; i++)
@@ -75,17 +117,24 @@ public class RawFileLoader : FileLoader
         }
 
         reader.Close();
-        fs.Close();
-
-        // Check 3D texture max size
-        voxelDataset.FixDimensions();
-
+        //fs.Close();
     }
 
     public override void createDataset()
     {
+        Debug.Log("Create Voxel Dataset");
         //voxelDataset = new VoxelDataset();
         voxelDataset = ScriptableObject.CreateInstance<VoxelDataset>();
+        //voxelDataset.datasetName = Path.GetFileName(rawFile.FilePath);
+        //voxelDataset.filePath = rawFile.FilePath;
+        //voxelDataset.dimX = rawFile.DimX;
+        //voxelDataset.dimY = rawFile.DimY;
+        //voxelDataset.dimZ = rawFile.DimZ;
+    }
+
+    public void fillVoxelDataset()
+    {
+        Debug.Log("Fill Voxel Dataset");
         voxelDataset.datasetName = Path.GetFileName(rawFile.FilePath);
         voxelDataset.filePath = rawFile.FilePath;
         voxelDataset.dimX = rawFile.DimX;
@@ -227,4 +276,37 @@ public class RawFileLoader : FileLoader
         }
         throw new NotImplementedException();
     }
+
+#if !UNITY_EDITOR && UNITY_WSA_10_0
+    protected async Task<StreamReader> getStreamReader(string path)
+    {
+        Debug.Log("Create StreamReader\n");
+        StorageFile file = await StorageFile.GetFileFromPathAsync(path);
+        if (file == null) Debug.LogError("StorageFile is null");
+
+        var randomAccessStream = await file.OpenReadAsync();
+        Stream stream = randomAccessStream.AsStreamForRead();
+        if (stream == null) Debug.LogError("stream is null");
+        StreamReader str = new StreamReader(stream);
+        Debug.Log("Finished creation of StreamReader\n");
+
+        return str;
+    }
+
+    protected async Task<BinaryReader> getBinaryReader(string path)
+    {
+        Debug.Log("Create BinaryReader\n");
+        StorageFile file = await StorageFile.GetFileFromPathAsync(path);
+        if(file == null) Debug.LogError("StorageFile is null");
+
+        var randomAccessStream = await file.OpenReadAsync();
+        Stream stream = randomAccessStream.AsStreamForRead();
+        if (stream == null) Debug.LogError("stream is null");
+        Debug.Log("BinaryReader binr gets now created");
+        BinaryReader binr = new BinaryReader(stream);
+        Debug.Log("Finished creation of BinaryReader\n");
+
+        return binr;
+    }
+#endif
 }

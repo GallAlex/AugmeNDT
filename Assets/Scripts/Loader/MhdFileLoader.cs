@@ -1,9 +1,13 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
+using System.Collections.Generic;
 
-
+#if !UNITY_EDITOR && UNITY_WSA_10_0
+using Windows.Storage;
+#endif
 
 public class MhdFileLoader : RawFileLoader
 {
@@ -18,30 +22,71 @@ public class MhdFileLoader : RawFileLoader
         mhdFile = new MhdFileType(filePath);
     }
 
-    public override void loadData(string filePath)
+    public override async Task loadData(string filePath)
     {
-        readMetaInfo(filePath);
-        
+        Debug.Log("MhdFileLoader started");
+
+        await ReadMetaInfo(filePath);
+
+        Debug.Log("Mhd MetaInfo reading finished");
+
         //Check if compressed Format
-        if(mhdFile.CompressedData == true) 
+        if (mhdFile.CompressedData == true) 
         {
             Debug.LogError("The compressed formats are currently not supported");
             return;
 
         }
 
-        base.loadData(rawFile.FilePath);
+        Debug.Log("await base.loadData");
+
+        await base.loadData(rawFile.FilePath);
         Debug.Log(this.ToString());
     }
 
-    public void readMetaInfo(string filePath)
+    public async Task ReadMetaInfo(string filePath)
     {
-        if (!File.Exists(filePath)) return;
-
-        string[] lines = File.ReadAllLines(filePath);
+        List<string> stringList = new List<string>();
+        //string[] lines = File.ReadAllLines(filePath);
         string rawFilePath = "";
 
+        // Check that the file exists (does not work on MHL2)
+        //if (!File.Exists(filePath))
+        //{
+        //    Debug.LogError("The mhd file does not exist: " + filePath);
+        //    return;
+        //}
+
+        Debug.Log("ReadMetaInfo started for file: " + filePath);
+#if UNITY_EDITOR
+    string[] lines = File.ReadAllLines(filePath);
+#endif
+
+#if !UNITY_EDITOR && UNITY_WSA_10_0
+        //StreamReader sr = await getStreamReader(filePath);
+
+        Task<StreamReader> streamReaderTask = getStreamReader(filePath);
+        StreamReader sr = await streamReaderTask;//.ConfigureAwait(false);
+
+        //Task<StreamReader> streamReaderTask = Task.Run(() => getStreamReader(filePath));
+        //var results = await Task.WhenAll(streamReaderTask);
+        //StreamReader sr = results[0];
+        //StreamReader sr = streamReaderTask.GetAwaiter().GetResult();
+        //streamReaderTask.Dispose();
+
+        string tempLine;
+        // Read and display lines from the file until the end of
+        // the file is reached.
+        while ((tempLine = sr.ReadLine()) != null)
+        {
+            stringList.Add(tempLine);
+        }
+        string[] lines = stringList.ToArray();
+        //sr.Close();
+#endif
+        Debug.Log("StreamReader valid and start mhd file read ");
         foreach (string line in lines)
+
         {
             string[] parts = line.Split('=');
             if (parts.Length != 2) continue;
@@ -120,22 +165,25 @@ public class MhdFileLoader : RawFileLoader
             else if (name == "ElementDataFile")
             {
                 mhdFile.ElementDataFile = value;
-                rawFilePath = Path.GetDirectoryName(filePath) + "/" + value; //Same Path with raw file name 
+                //rawFilePath = Path.GetDirectoryName(filePath) + "/" + value; //Same Path with raw file name (Error wit / instead of \)
+                rawFilePath = Path.Join(Path.GetDirectoryName(filePath), value);
             }
-            
+            Debug.Log("Read Line: " + line);
         }
 
+        //TODO: (File.Exists does not work on MHL2)
         // if raw name from mhd is missing or wrong
-        if (!File.Exists(rawFilePath))
-        {
-            rawFilePath = replaceTargetPath(filePath); //get whole Path
-            mhdFile.ElementDataFile = Path.GetFileName(rawFilePath); // Store raw file name
-        }
+        //if (!File.Exists(rawFilePath))
+        //{
+        //    rawFilePath = ReplaceTargetPath(filePath); //get whole Path
+        //    mhdFile.ElementDataFile = Path.GetFileName(rawFilePath); // Store raw file name
+        //}
 
-        createRawFileType(rawFilePath);
+        Debug.Log("mhd file read!");
+        CreateRawFileType(rawFilePath);
 }
 
-    private void createRawFileType(string rawFilePath)
+    private void CreateRawFileType(string rawFilePath)
     {
         Endianness endianness;
         if (mhdFile.ByteOrderMSB) endianness = Endianness.BigEndian;
@@ -151,12 +199,13 @@ public class MhdFileLoader : RawFileLoader
     /// </summary>
     /// <param name="mhdFilePath"></param>
     /// <returns>String with path of .zraw or .raw</returns>
-    private string replaceTargetPath(string mhdFilePath)
+    private string ReplaceTargetPath(string mhdFilePath)
     {
         string targetPath;
         //Get path to raw data
         targetPath = mhdFilePath.Replace(".mhd", ".raw");
-        
+
+        //TODO: (File.Exists does not work on MHL2)
         if (!File.Exists(targetPath))
         {
             targetPath = mhdFilePath.Replace(".mhd", ".zraw");
