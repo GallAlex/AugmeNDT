@@ -21,11 +21,16 @@ public class VolumeRenderedObject : MonoBehaviour
 
         meshRenderer.sharedMaterial.SetTexture("_MainTex", dataset.GetDataTexture());
 
-        if (dataset.scaleX != 0.0f && dataset.scaleY != 0.0f && dataset.scaleZ != 0.0f)
-        {
-            float maxScale = Mathf.Max(dataset.scaleX, dataset.scaleY, dataset.scaleZ);
-            volume.transform.localScale = new Vector3(dataset.scaleX / maxScale, dataset.scaleY / maxScale, dataset.scaleZ / maxScale);
-        }
+        MeshFilter viewedModelFilter = (MeshFilter)volume.GetComponent("MeshFilter");
+        Debug.Log("VertexCount for Volume: " + viewedModelFilter.mesh.vertexCount);
+
+        float maxScale = Mathf.Max(dataset.dimX, dataset.dimY, dataset.dimZ);
+        maxScale = 0.1f / maxScale;
+        dataset.scaleX = maxScale;
+        dataset.scaleY = maxScale;
+        dataset.scaleZ = maxScale;
+
+        volume.transform.localScale = new Vector3(dataset.dimX * maxScale, dataset.dimY * maxScale, dataset.dimZ * maxScale);
 
         return volume;
     }

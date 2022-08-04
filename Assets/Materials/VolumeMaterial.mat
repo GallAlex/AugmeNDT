@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: VolumeMaterial
-  m_Shader: {fileID: 4800000, guid: af65f7b5babb9184f85d269282c9e282, type: 3}
+  m_Shader: {fileID: 4800000, guid: 3f4d45cca03121144a802a84e5d266a2, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -58,7 +58,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Alpha: 0.002
+    - _Alpha: 0.02
     - _BlendOp: 0
     - _BumpScale: 1
     - _ColorWriteMask: 15
@@ -70,7 +70,9 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _MaxVal: 1
     - _Metallic: 0
+    - _MinVal: 0
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
@@ -78,7 +80,7 @@ Material:
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
-    - _StepSize: 0.000001
+    - _StepSize: 2e-18
     - _UVSec: 0
     - _WireThickness: 100
     - _ZOffsetFactor: 0
