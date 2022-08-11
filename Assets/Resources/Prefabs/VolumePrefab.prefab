@@ -16,9 +16,9 @@ GameObject:
   - component: {fileID: 3689135197275674252}
   - component: {fileID: 7782889736044901389}
   - component: {fileID: 7197093527895118658}
-  m_Layer: 0
+  m_Layer: 1
   m_Name: VolumePrefab
-  m_TagString: Untagged
+  m_TagString: Volume
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -32,7 +32,7 @@ Transform:
   m_GameObject: {fileID: 325284893592168221}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -0.1, z: 0.5}
-  m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -127,7 +127,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 181cd563a8349c34ea8978b0bc8d9c7e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hostTransform: {fileID: 0}
+  hostTransform: {fileID: 8209640745959947772}
   manipulationType: 3
   twoHandedManipulationType: 7
   allowFarManipulation: 1
@@ -144,7 +144,7 @@ MonoBehaviour:
   rotateLerpTime: 0.001
   scaleLerpTime: 0.001
   enableConstraints: 1
-  constraintsManager: {fileID: 0}
+  constraintsManager: {fileID: 9183442160474593495}
   elasticsManager: {fileID: 0}
   onManipulationStarted:
     m_PersistentCalls:
@@ -185,7 +185,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetObject: {fileID: 325284893592168221}
-  boundsOverride: {fileID: 0}
+  boundsOverride: {fileID: -3968623608941980825}
   boundsCalculationMethod: 0
   activation: 0
   flattenAxis: 0

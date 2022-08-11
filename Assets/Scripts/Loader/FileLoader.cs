@@ -14,9 +14,9 @@ public abstract class FileLoader
     /*3D model data*/
     //public PolygonalDataset polygonalDataset;
 
-    public abstract Task loadData(string filePath);
+    public abstract Task LoadData(string filePath);
 
-    public abstract void createDataset();
+    public abstract void CreateDataset();
 
     public override string ToString()
     {

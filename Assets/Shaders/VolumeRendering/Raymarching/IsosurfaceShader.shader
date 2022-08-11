@@ -1,4 +1,4 @@
-Shader "Volume Rendering/RaymarchingShader/MIP"
+Shader "Volume Rendering/RaymarchingShader/Isosurface"
 {
     Properties
     {
@@ -27,7 +27,6 @@ Shader "Volume Rendering/RaymarchingShader/MIP"
 
                 // Maximum amount of raymarching samples
                 //#define MAX_STEP_COUNT 512
-                //#define MAX_STEP_COUNT 256
 
                 struct vert_in
                 {
@@ -98,6 +97,17 @@ Shader "Volume Rendering/RaymarchingShader/MIP"
                     return ray;
                 }
 
+                // Get a ray for the specified fragment (front-to-back)
+                RayInfo getRayFront2Back(float3 vertexLocal)
+                {
+                    RayInfo ray = getRayBack2Front(vertexLocal);
+                    ray.direction = -ray.direction;
+                    float3 tmp = ray.startPos;
+                    ray.startPos = ray.endPos;
+                    ray.endPos = tmp;
+                    return ray;
+                }
+
                 RaymarchInfo initRaymarch(RayInfo ray, int maxNumSteps)
                 {
                     RaymarchInfo raymarchInfo;
@@ -125,9 +135,9 @@ Shader "Volume Rendering/RaymarchingShader/MIP"
                     v2f output;
 
                     UNITY_SETUP_INSTANCE_ID(v);
+                    UNITY_TRANSFER_INSTANCE_ID(v, output);
                     UNITY_INITIALIZE_OUTPUT(v2f, output);
                     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
-                    UNITY_TRANSFER_INSTANCE_ID(v, output);
 
                     output.vertex = UnityObjectToClipPos(v.vertex);
                     output.vertexLocal = v.vertex;
@@ -144,35 +154,24 @@ Shader "Volume Rendering/RaymarchingShader/MIP"
                     UNITY_SETUP_INSTANCE_ID(input);
                     //fixed4 sampledColor = UNITY_SAMPLE_SCREENSPACE_TEXTURE(_MainTex, input.uv);
 
-                    // Start raymarching at the front surface of the object
-                    //float3 rayOrigin = input.objectVertex;  
-                    RayInfo ray = getRayBack2Front(input.vertexLocal);
+                    RayInfo ray = getRayFront2Back(input.vertexLocal);
                     RaymarchInfo raymarchInfo = initRaymarch(ray, _MAX_STEP_COUNT);
-
-                    // Use vector from camera to object surface to get ray direction
-                    //float3 rayDirection = mul(unity_WorldToObject, float4(normalize(input.vectorToSurface), 1));
                     
-                    float maxDensity = 0.0f;
-                    float3 maxDensityPos = ray.startPos;
-                    
+                    fixed4 sampledColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
-                    // Raymarch through object space
                     for (int step = 0; step < raymarchInfo.numSteps; step++)
                     {
                         const float t = step * raymarchInfo.numStepsRecip;
                         const float3 currPos = lerp(ray.startPos, ray.endPos, t);
-                        //const float density = tex3D(_MainTex, samplePosition + float3(0.5f, 0.5f, 0.5f)); //Density
-                        const float density = getDensity(currPos);
 
-                        if (density > maxDensity && density > _MinVal && density < _MaxVal)
+                        const float density = getDensity(currPos);
+                        if (density > _MinVal && density < _MaxVal)
                         {
-                            maxDensity = density;
-                            maxDensityPos = currPos;
+                            sampledColor = float4(density, density, density, 1.0f);
+                            break;
                         }
                     }
-                        fixed4 sampledColor = float4(1.0f, 1.0f, 1.0f, maxDensity);
-                        //color = BlendUnder(color, sampledColor);
-                        return sampledColor;
+                    return sampledColor;
                 }
                 ENDCG
             }

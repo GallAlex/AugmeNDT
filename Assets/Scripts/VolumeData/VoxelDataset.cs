@@ -62,11 +62,12 @@ public class VoxelDataset : ScriptableObject
 
     /// <summary>
     /// Checks the max size of the 3D texture.
-    /// Maximum resolution of a 3D texture is 2048 x 2048 x 2048.
+    /// Maximum resolution of a 3D texture in Unity is 2048 x 2048 x 2048.
+    /// Windows Mixed Reality supports textures with resolutions up to 4096x4096 but it's recommended that you author at 512x512 
     /// </summary>
     public void FixDimensions()
     {
-        int MAX_DIM = 2048;
+        int MAX_DIM = 512;
 
         while (Mathf.Max(dimX, dimY, dimZ) > MAX_DIM)
         {
@@ -125,6 +126,8 @@ public class VoxelDataset : ScriptableObject
         Texture3D texture = new Texture3D(dimX, dimY, dimZ, texformat, false);
         texture.wrapMode = TextureWrapMode.Clamp;
 
+        
+
         int minValue = GetMinDataValue();
         int maxValue = GetMaxDataValue();
         int maxRange = maxValue - minValue;
@@ -134,6 +137,7 @@ public class VoxelDataset : ScriptableObject
         {
             // Create a byte array for filling the texture. Store has half (16 bit) or single (32 bit) float values.
             int sampleSize = isHalfFloat ? 2 : 4;
+            Debug.Log("Used memory for texture: " + (dimX * dimY * dimZ * sampleSize)/1024/1024 + "MB");
             byte[] bytes = new byte[data.Length * sampleSize]; // This can cause OutOfMemoryException
             for (int iData = 0; iData < data.Length; iData++)
             {
@@ -145,7 +149,7 @@ public class VoxelDataset : ScriptableObject
 
             texture.SetPixelData(bytes, 0);
         }
-        catch (OutOfMemoryException ex)
+        catch (OutOfMemoryException)
         {
             Debug.LogWarning("Out of memory when creating texture. Using fallback method.");
             for (int x = 0; x < dimX; x++)
@@ -173,7 +177,7 @@ public class VoxelDataset : ScriptableObject
         {
             cols = new Color[data.Length];
         }
-        catch (OutOfMemoryException ex)
+        catch (OutOfMemoryException)
         {
             cols = null;
         }

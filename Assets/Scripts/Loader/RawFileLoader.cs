@@ -28,7 +28,7 @@ public class RawFileLoader : FileLoader
     }
 
 
-    public override async Task loadData(string filePath)
+    public override async Task LoadData(string filePath)
     {
         // Check that the file exists (does not work on MHL2)
         //if (!File.Exists(filePath))
@@ -40,11 +40,7 @@ public class RawFileLoader : FileLoader
         Debug.Log("RawFileLoader started for file: " + filePath);
 
         //if (GetDatasetType(filePath) != DatasetType.Raw) return;
-
         await readBinaryInfo(filePath);
-
-
-        Debug.Log("Raw FileStream and BinaryReader closed");
 
         // Check 3D texture max size
         voxelDataset.FixDimensions();
@@ -54,18 +50,16 @@ public class RawFileLoader : FileLoader
     private async Task readBinaryInfo(string filePath)
     {
         long fileLength;
-        BinaryReader reader;
 
 #if UNITY_EDITOR
-        FileStream fs = new FileStream(filePath, FileMode.Open);
+        using FileStream fs = new FileStream(filePath, FileMode.Open);
         fileLength = fs.Length;
-        reader = new BinaryReader(fs);
+        using BinaryReader reader = new BinaryReader(fs);
 #endif
 
 #if !UNITY_EDITOR && UNITY_WSA_10_0
         Task<BinaryReader> binaryReaderTask = getBinaryReader(filePath);
-        reader = await binaryReaderTask;//.ConfigureAwait(false);
-        Debug.Log("After await binaryReaderTask");
+        using BinaryReader reader = await binaryReaderTask;//.ConfigureAwait(false);
 
         //reader = await getBinaryReader(filePath);
         //reader = await Task.Run(() => getBinaryReader(filePath));
@@ -75,14 +69,12 @@ public class RawFileLoader : FileLoader
         fileLength = (long)reader.BaseStream.Length;
 #endif
 
-        Debug.Log("Raw Reader generated");
-
         // Check that the dimension does not exceed the file size
         long expectedFileSize = (long)(rawFile.DimX * rawFile.DimY * rawFile.DimZ) * GetSampleFormatSize(rawFile.ContentFormat) + rawFile.SkipBytes;
         if (fileLength < expectedFileSize)
         {
             Debug.LogError($"The dimension({rawFile.DimX}, {rawFile.DimY}, {rawFile.DimZ}) exceeds the file size. Expected file size is {expectedFileSize} bytes, while the actual file size is {fileLength} bytes");
-            reader.Close();
+            //reader.Close();
             //fs.Close();
             return;
         }
@@ -92,7 +84,7 @@ public class RawFileLoader : FileLoader
         if (expectedFileSize > System.Int32.MaxValue)
         {
             Debug.LogError("File size (" + expectedFileSize + ") is greater then the maximum possible array size (" + System.Int32.MaxValue + ")");
-            reader.Close();
+            //reader.Close();
             //fs.Close();
             return;
         }
@@ -116,11 +108,11 @@ public class RawFileLoader : FileLoader
             voxelDataset.data[i] = ReadDataValue(reader);
         }
 
-        reader.Close();
+        //reader.Close();
         //fs.Close();
     }
 
-    public override void createDataset()
+    public override void CreateDataset()
     {
         Debug.Log("Create Voxel Dataset");
         //voxelDataset = new VoxelDataset();
@@ -280,33 +272,42 @@ public class RawFileLoader : FileLoader
 #if !UNITY_EDITOR && UNITY_WSA_10_0
     protected async Task<StreamReader> getStreamReader(string path)
     {
-        Debug.Log("Create StreamReader\n");
         StorageFile file = await StorageFile.GetFileFromPathAsync(path);
         if (file == null) Debug.LogError("StorageFile is null");
 
         var randomAccessStream = await file.OpenReadAsync();
         Stream stream = randomAccessStream.AsStreamForRead();
-        if (stream == null) Debug.LogError("stream is null");
         StreamReader str = new StreamReader(stream);
-        Debug.Log("Finished creation of StreamReader\n");
 
         return str;
     }
 
     protected async Task<BinaryReader> getBinaryReader(string path)
     {
-        Debug.Log("Create BinaryReader\n");
         StorageFile file = await StorageFile.GetFileFromPathAsync(path);
         if(file == null) Debug.LogError("StorageFile is null");
 
         var randomAccessStream = await file.OpenReadAsync();
         Stream stream = randomAccessStream.AsStreamForRead();
         if (stream == null) Debug.LogError("stream is null");
-        Debug.Log("BinaryReader binr gets now created");
         BinaryReader binr = new BinaryReader(stream);
-        Debug.Log("Finished creation of BinaryReader\n");
 
         return binr;
+    }
+
+    protected async Task<bool> checkIfFileExists(string path)
+    {
+        try
+        {
+            StorageFile file = await StorageFile.GetFileFromPathAsync(path);
+        }
+        catch (Exception)
+        {
+
+            return false;
+        }
+
+        return true;        
     }
 #endif
 }

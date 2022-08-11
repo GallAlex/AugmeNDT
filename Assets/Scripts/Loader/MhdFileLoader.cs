@@ -22,13 +22,9 @@ public class MhdFileLoader : RawFileLoader
         mhdFile = new MhdFileType(filePath);
     }
 
-    public override async Task loadData(string filePath)
+    public override async Task LoadData(string filePath)
     {
-        Debug.Log("MhdFileLoader started");
-
         await ReadMetaInfo(filePath);
-
-        Debug.Log("Mhd MetaInfo reading finished");
 
         //Check if compressed Format
         if (mhdFile.CompressedData == true) 
@@ -38,9 +34,7 @@ public class MhdFileLoader : RawFileLoader
 
         }
 
-        Debug.Log("await base.loadData");
-
-        await base.loadData(rawFile.FilePath);
+        await base.LoadData(rawFile.FilePath);
         Debug.Log(this.ToString());
     }
 
@@ -50,41 +44,24 @@ public class MhdFileLoader : RawFileLoader
         //string[] lines = File.ReadAllLines(filePath);
         string rawFilePath = "";
 
-        // Check that the file exists (does not work on MHL2)
-        //if (!File.Exists(filePath))
-        //{
-        //    Debug.LogError("The mhd file does not exist: " + filePath);
-        //    return;
-        //}
+        #if UNITY_EDITOR
+            string[] lines = File.ReadAllLines(filePath);
+        #endif
 
-        Debug.Log("ReadMetaInfo started for file: " + filePath);
-#if UNITY_EDITOR
-    string[] lines = File.ReadAllLines(filePath);
-#endif
+        #if !UNITY_EDITOR && UNITY_WSA_10_0
+            Task<StreamReader> streamReaderTask = getStreamReader(filePath);
+            using StreamReader sr = await streamReaderTask;//.ConfigureAwait(false);
 
-#if !UNITY_EDITOR && UNITY_WSA_10_0
-        //StreamReader sr = await getStreamReader(filePath);
-
-        Task<StreamReader> streamReaderTask = getStreamReader(filePath);
-        StreamReader sr = await streamReaderTask;//.ConfigureAwait(false);
-
-        //Task<StreamReader> streamReaderTask = Task.Run(() => getStreamReader(filePath));
-        //var results = await Task.WhenAll(streamReaderTask);
-        //StreamReader sr = results[0];
-        //StreamReader sr = streamReaderTask.GetAwaiter().GetResult();
-        //streamReaderTask.Dispose();
-
-        string tempLine;
-        // Read and display lines from the file until the end of
-        // the file is reached.
-        while ((tempLine = sr.ReadLine()) != null)
-        {
-            stringList.Add(tempLine);
-        }
-        string[] lines = stringList.ToArray();
-        //sr.Close();
-#endif
-        Debug.Log("StreamReader valid and start mhd file read ");
+            string tempLine;
+            // Read and display lines from the file until the end of the file is reached.
+            while ((tempLine = sr.ReadLine()) != null)
+            {
+                stringList.Add(tempLine);
+            }
+            string[] lines = stringList.ToArray();
+            //sr.Close();
+        #endif
+        
         foreach (string line in lines)
 
         {
@@ -165,21 +142,14 @@ public class MhdFileLoader : RawFileLoader
             else if (name == "ElementDataFile")
             {
                 mhdFile.ElementDataFile = value;
-                //rawFilePath = Path.GetDirectoryName(filePath) + "/" + value; //Same Path with raw file name (Error wit / instead of \)
-                rawFilePath = Path.Join(Path.GetDirectoryName(filePath), value);
+                //rawFilePath = Path.GetDirectoryName(filePath) + "/" + value; //Same Path with raw file name (Error wit / instead of \)                               
             }
-            Debug.Log("Read Line: " + line);
+            
         }
 
-        //TODO: (File.Exists does not work on MHL2)
-        // if raw name from mhd is missing or wrong
-        //if (!File.Exists(rawFilePath))
-        //{
-        //    rawFilePath = ReplaceTargetPath(filePath); //get whole Path
-        //    mhdFile.ElementDataFile = Path.GetFileName(rawFilePath); // Store raw file name
-        //}
+        //Check path to raw file
+        rawFilePath = CheckRawFilePath(filePath, mhdFile.ElementDataFile);
 
-        Debug.Log("mhd file read!");
         CreateRawFileType(rawFilePath);
 }
 
@@ -195,23 +165,29 @@ public class MhdFileLoader : RawFileLoader
     }
 
     /// <summary>
-    /// Method replaces the mhd Path with the raw extension (zraw, raw)
+    /// Method check the Path of the raw file
     /// </summary>
     /// <param name="mhdFilePath"></param>
-    /// <returns>String with path of .zraw or .raw</returns>
-    private string ReplaceTargetPath(string mhdFilePath)
+    /// <param name="rawFileName"></param>
+    /// <returns>String with path of .raw file</returns>
+    private String CheckRawFilePath(string mhdFilePath, string rawFileName)
     {
-        string targetPath;
-        //Get path to raw data
-        targetPath = mhdFilePath.Replace(".mhd", ".raw");
-
-        //TODO: (File.Exists does not work on MHL2)
-        if (!File.Exists(targetPath))
+        string path = "";
+        //If raw file name is in mhd the look in current folder...
+        if(rawFileName != "")
         {
-            targetPath = mhdFilePath.Replace(".mhd", ".zraw");
+            path = Path.Join(Path.GetDirectoryName(mhdFilePath), rawFileName);
+        }
+        //... or try replacing .mhd with .raw
+        else 
+        { 
+            path = mhdFilePath.Replace(".mhd", ".raw");
+            mhdFile.ElementDataFile = Path.GetFileName(path);
         }
 
-        return targetPath;
+        //Check if file exists for UWP and .NET
+
+        return path;
     }
 
     public override string ToString()
