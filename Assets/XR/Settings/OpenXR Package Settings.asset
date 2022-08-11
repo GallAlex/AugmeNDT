@@ -371,7 +371,7 @@ MonoBehaviour:
   - {fileID: 5861987700243521272}
   - {fileID: 4984542006820529180}
   m_renderMode: 1
-  m_depthSubmissionMode: 1
+  m_depthSubmissionMode: 2
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -611,7 +611,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 056125dd64c0ed540b40a4af74f7b495, type: 3}
   m_Name: RuntimeDebuggerOpenXRFeature WSA
   m_EditorClassIdentifier: 
-  m_enabled: 0
+  m_enabled: 1
   nameUi: Runtime Debugger
   version: 1
   featureIdInternal: com.unity.openxr.features.runtimedebugger

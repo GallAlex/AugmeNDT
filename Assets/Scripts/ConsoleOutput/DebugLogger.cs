@@ -4,7 +4,7 @@ using System.Text;
 using TMPro;
 using UnityEngine;
 
-[RequireComponent(typeof(TextMeshPro))]
+[RequireComponent(typeof(TMP_Text))]
 public class DebugLogger : MonoBehaviour
 {
     [Header("Visual Feedback")]
@@ -35,7 +35,7 @@ public class DebugLogger : MonoBehaviour
 
     private bool newMessageArrived = false;
 
-    private TextMeshPro debugText;
+    private TMP_Text debugText;
 
     // The queue with the messages:
     private Queue<string> messageQueue;
@@ -46,7 +46,7 @@ public class DebugLogger : MonoBehaviour
     void OnEnable()
     {
         messageQueue = new Queue<string>();       
-        debugText = GetComponent<TextMeshPro>();
+        debugText = GetComponent<TMP_Text>();
         Application.logMessageReceivedThreaded += Application_logMessageReceivedThreaded;
         messageSound = this.GetComponent<AudioSource>();
     }
