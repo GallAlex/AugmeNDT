@@ -3,7 +3,7 @@ using UnityEngine;
 using SFB;
 
 public class BasicSample : MonoBehaviour {
-    private string _path;
+    private string path;
 
     void OnGUI() {
         var guiScale = new Vector3(Screen.width / 800.0f, Screen.height / 600.0f, 1.0f);
@@ -68,7 +68,7 @@ public class BasicSample : MonoBehaviour {
         // Save File Samples
 
         if (GUILayout.Button("Save File")) {
-            _path = StandaloneFileBrowser.SaveFilePanel("Save File", "", "", "");
+            path = StandaloneFileBrowser.SaveFilePanel("Save File", "", "", "");
         }
         GUILayout.Space(5);
         if (GUILayout.Button("Save File Async")) {
@@ -76,15 +76,15 @@ public class BasicSample : MonoBehaviour {
         }
         GUILayout.Space(5);
         if (GUILayout.Button("Save File Default Name")) {
-            _path = StandaloneFileBrowser.SaveFilePanel("Save File", "", "MySaveFile", "");
+            path = StandaloneFileBrowser.SaveFilePanel("Save File", "", "MySaveFile", "");
         }
         GUILayout.Space(5);
         if (GUILayout.Button("Save File Default Name Ext")) {
-            _path = StandaloneFileBrowser.SaveFilePanel("Save File", "", "MySaveFile", "dat");
+            path = StandaloneFileBrowser.SaveFilePanel("Save File", "", "MySaveFile", "dat");
         }
         GUILayout.Space(5);
         if (GUILayout.Button("Save File Directory")) {
-            _path = StandaloneFileBrowser.SaveFilePanel("Save File", Application.dataPath, "", "");
+            path = StandaloneFileBrowser.SaveFilePanel("Save File", Application.dataPath, "", "");
         }
         GUILayout.Space(5);
         if (GUILayout.Button("Save File Filter")) {
@@ -93,12 +93,12 @@ public class BasicSample : MonoBehaviour {
                 new ExtensionFilter("Binary", "bin"),
                 new ExtensionFilter("Text", "txt"),
             };
-            _path = StandaloneFileBrowser.SaveFilePanel("Save File", "", "MySaveFile", extensionList);
+            path = StandaloneFileBrowser.SaveFilePanel("Save File", "", "MySaveFile", extensionList);
         }
 
         GUILayout.EndVertical();
         GUILayout.Space(20);
-        GUILayout.Label(_path);
+        GUILayout.Label(path);
         GUILayout.EndHorizontal();
     }
 
@@ -107,13 +107,13 @@ public class BasicSample : MonoBehaviour {
             return;
         }
 
-        _path = "";
+        path = "";
         foreach (var p in paths) {
-            _path += p + "\n";
+            path += p + "\n";
         }
     }
 
     public void WriteResult(string path) {
-        _path = path;
+        this.path = path;
     }
 }

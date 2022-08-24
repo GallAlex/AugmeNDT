@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Class stores the values of a raw dataset
@@ -27,11 +28,12 @@ public class VoxelDataset : ScriptableObject
     private Texture3D gradientTexture = null;
 
 
-    public Texture3D GetDataTexture()
+    public async Task<Texture3D> GetDataTexture()
     {
         if (dataTexture == null)
         {
-            dataTexture = CreateTextureInternal();
+            Debug.Log("Calculate Texture");
+            dataTexture = await CreateTextureInternal();
             Debug.Log("Texture created");
         }
         return dataTexture;
@@ -120,13 +122,11 @@ public class VoxelDataset : ScriptableObject
         }
     }
 
-    private Texture3D CreateTextureInternal()
+    private async Task<Texture3D> CreateTextureInternal()
     {
         TextureFormat texformat = SystemInfo.SupportsTextureFormat(TextureFormat.RHalf) ? TextureFormat.RHalf : TextureFormat.RFloat;
         Texture3D texture = new Texture3D(dimX, dimY, dimZ, texformat, false);
         texture.wrapMode = TextureWrapMode.Clamp;
-
-        
 
         int minValue = GetMinDataValue();
         int maxValue = GetMaxDataValue();
@@ -137,7 +137,7 @@ public class VoxelDataset : ScriptableObject
         {
             // Create a byte array for filling the texture. Store has half (16 bit) or single (32 bit) float values.
             int sampleSize = isHalfFloat ? 2 : 4;
-            Debug.Log("Used memory for texture: " + (dimX * dimY * dimZ * sampleSize)/1024/1024 + "MB");
+            Debug.Log("Used memory for texture: " + (dimX * dimY * dimZ * sampleSize) / 1024 / 1024 + "MB");
             byte[] bytes = new byte[data.Length * sampleSize]; // This can cause OutOfMemoryException
             for (int iData = 0; iData < data.Length; iData++)
             {

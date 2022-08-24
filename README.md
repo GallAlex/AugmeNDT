@@ -13,4 +13,5 @@ Dependencies and versions utilized:
 
 ---
 Developed and maintained by Alexander Gall
+
 Contact: [alexander.gall@fh-wels.at](alexander.gall@fh-wels.at)

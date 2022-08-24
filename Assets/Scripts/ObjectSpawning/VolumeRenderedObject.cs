@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Threading.Tasks;
 
 public class VolumeRenderedObject : MonoBehaviour
 {
@@ -12,7 +13,7 @@ public class VolumeRenderedObject : MonoBehaviour
 
     }
 
-    public GameObject CreateObject(VoxelDataset dataset)
+    public async Task CreateObject(VoxelDataset dataset)
     {
         volume = Instantiate((GameObject)Resources.Load("Prefabs/VolumePrefab"));
 
@@ -22,7 +23,7 @@ public class VolumeRenderedObject : MonoBehaviour
         renderer = volume.GetComponent<Renderer>();
 
         MeshRenderer meshRenderer = volume.GetComponent<MeshRenderer>();
-        meshRenderer.sharedMaterial.SetTexture("_MainTex", dataset.GetDataTexture());
+        meshRenderer.sharedMaterial.SetTexture("_MainTex", await dataset.GetDataTexture());
 
         float maxScale = Mathf.Max(dataset.dimX, dataset.dimY, dataset.dimZ);
         maxScale = 0.1f / maxScale;
@@ -32,7 +33,6 @@ public class VolumeRenderedObject : MonoBehaviour
 
         volume.transform.localScale = new Vector3(dataset.dimX * maxScale, dataset.dimY * maxScale, dataset.dimZ * maxScale);
 
-        return volume;
     }
 
     public void ChangeShader(Shader shader)

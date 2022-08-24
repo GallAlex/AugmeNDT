@@ -8,9 +8,9 @@ public class TransferFunction : ScriptableObject
     private const int TEXTURE_WIDTH = 512;
     private const int TEXTURE_HEIGHT = 2;
 
-    public List<TFColourControlPoint> colourCPs = new List<TFColourControlPoint>();
+    public List<TfColourControlPoint> colourCPs = new List<TfColourControlPoint>();
 
-    public List<TFAlphaControlPoint> alphaCPs = new List<TFAlphaControlPoint>();
+    public List<TfAlphaControlPoint> alphaCPs = new List<TfAlphaControlPoint>();
 
     private Texture2D texture = null;
 

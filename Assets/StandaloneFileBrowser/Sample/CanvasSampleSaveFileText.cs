@@ -11,7 +11,7 @@ public class CanvasSampleSaveFileText : MonoBehaviour, IPointerDownHandler {
     public Text output;
 
     // Sample text data
-    private string _data = "Example text created by StandaloneFileBrowser";
+    private string data = "Example text created by StandaloneFileBrowser";
 
 #if UNITY_WEBGL && !UNITY_EDITOR
     //
@@ -45,7 +45,7 @@ public class CanvasSampleSaveFileText : MonoBehaviour, IPointerDownHandler {
     public void OnClick() {
         var path = StandaloneFileBrowser.SaveFilePanel("Title", "", "sample", "txt");
         if (!string.IsNullOrEmpty(path)) {
-            File.WriteAllText(path, _data);
+            File.WriteAllText(path, data);
         }
     }
 #endif

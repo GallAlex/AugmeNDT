@@ -10,7 +10,7 @@ using SFB;
 public class CanvasSampleSaveFileImage : MonoBehaviour, IPointerDownHandler {
     public Text output;
 
-    private byte[] _textureBytes;
+    private byte[] textureBytes;
 
     void Awake() {
         // Create red texture
@@ -23,7 +23,7 @@ public class CanvasSampleSaveFileImage : MonoBehaviour, IPointerDownHandler {
             }
         }
         tex.Apply();
-        _textureBytes = tex.EncodeToPNG();
+        textureBytes = tex.EncodeToPNG();
         UnityEngine.Object.Destroy(tex);
     }
 
@@ -58,7 +58,7 @@ public class CanvasSampleSaveFileImage : MonoBehaviour, IPointerDownHandler {
     public void OnClick() {
         var path = StandaloneFileBrowser.SaveFilePanel("Title", "", "sample", "png");
         if (!string.IsNullOrEmpty(path)) {
-            File.WriteAllBytes(path, _textureBytes);
+            File.WriteAllBytes(path, textureBytes);
         }
     }
 #endif

@@ -47,6 +47,7 @@ public class DebugLogger : MonoBehaviour
     {
         messageQueue = new Queue<string>();       
         debugText = GetComponent<TMP_Text>();
+        // Triggered regardless of whether the message comes in on the main thread or not -> Handler code has to be thread-safe
         Application.logMessageReceivedThreaded += Application_logMessageReceivedThreaded;
         messageSound = this.GetComponent<AudioSource>();
     }
@@ -69,7 +70,7 @@ public class DebugLogger : MonoBehaviour
             stringBuilder.Append("\n");
 
             //Add Color
-            string colorString = ColorUtility.ToHtmlStringRGB(getTargetColor(type));
+            string colorString = ColorUtility.ToHtmlStringRGB(GetTargetColor(type));
 
             stringBuilder.Append("<color=#").Append(colorString).Append(">");
             stringBuilder.Append(type.ToString()).Append(" at <" + timestamp + ">: ");
@@ -134,7 +135,7 @@ public class DebugLogger : MonoBehaviour
     /// </summary>
     /// <param name="type"></param>
     /// <returns></returns>
-    Color getTargetColor(LogType type)
+    Color GetTargetColor(LogType type)
     {
         switch (type)
         {
