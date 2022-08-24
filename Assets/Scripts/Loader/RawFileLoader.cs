@@ -37,10 +37,12 @@ public class RawFileLoader : FileLoader
         //    return;
         //}
 
-        Debug.Log("RawFileLoader started for file: " + filePath);
+        //Debug.Log("RawFileLoader started for file: " + filePath); 
 
         //if (GetDatasetType(filePath) != DatasetType.Raw) return;
         await readBinaryInfo(filePath);
+
+        Debug.Log(rawFile.ToString());
 
         // Check 3D texture max size
         voxelDataset.FixDimensions();
@@ -61,11 +63,6 @@ public class RawFileLoader : FileLoader
         Task<BinaryReader> binaryReaderTask = getBinaryReader(filePath);
         using BinaryReader reader = await binaryReaderTask;//.ConfigureAwait(false);
 
-        //reader = await getBinaryReader(filePath);
-        //reader = await Task.Run(() => getBinaryReader(filePath));
-        //Task<BinaryReader> binaryReaderTask = Task.Run(() => getBinaryReader(filePath));
-        //var results = await Task.WhenAll(binaryReaderTask);
-        //reader = results[0];
         fileLength = (long)reader.BaseStream.Length;
 #endif
 
@@ -114,7 +111,7 @@ public class RawFileLoader : FileLoader
 
     public override void CreateDataset()
     {
-        Debug.Log("Create Voxel Dataset");
+        //Debug.Log("Create Voxel Dataset");
         //voxelDataset = new VoxelDataset();
         voxelDataset = ScriptableObject.CreateInstance<VoxelDataset>();
         //voxelDataset.datasetName = Path.GetFileName(rawFile.FilePath);
@@ -239,7 +236,6 @@ public class RawFileLoader : FileLoader
                 throw new NotImplementedException("Unimplemented data content format");
         }
     }
-
 
     private int GetSampleFormatSize(DataContentFormat format)
     {

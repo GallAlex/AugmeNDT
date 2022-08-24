@@ -32,7 +32,7 @@ namespace SFB {
         }
 
         public string SaveFilePanel(string title, string directory, string defaultName, ExtensionFilter[] extensions) {
-            var ext = extensions != null ? extensions[0].Extensions[0] : "";
+            var ext = extensions != null ? extensions[0].extensions[0] : "";
             var name = string.IsNullOrEmpty(ext) ? defaultName : defaultName + "." + ext;
             return EditorUtility.SaveFilePanel(title, directory, name, ext);
         }
@@ -45,8 +45,8 @@ namespace SFB {
         private static string[] GetFilterFromFileExtensionList(ExtensionFilter[] extensions) {
             var filters = new string[extensions.Length * 2];
             for (int i = 0; i < extensions.Length; i++) {
-                filters[(i * 2)] = extensions[i].Name;
-                filters[(i * 2) + 1] = string.Join(",", extensions[i].Extensions);
+                filters[(i * 2)] = extensions[i].name;
+                filters[(i * 2) + 1] = string.Join(",", extensions[i].extensions);
             }
             return filters;
         }

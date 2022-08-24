@@ -2,6 +2,16 @@
 using System.IO;
 using System;
 using UnityEngine;
+using SFB;
+using System.Data;
+using System.Threading.Tasks;
+using UnityEngine.Rendering;
+
+
+#if !UNITY_EDITOR && UNITY_WSA_10_0
+using Windows.Storage;
+using Windows.Storage.Pickers;
+#endif
 
 public enum DatasetType
 {
@@ -14,38 +24,101 @@ public enum DatasetType
 
 /// <summary>
 /// Concrete class for loading a file based on its extension and selects the appropriate loader (factory) for it.
+/// Loader depends on System (Hololens2, Windows,...)
 /// </summary>
-public class FileLoadingManager
+public class FileLoadingManager: MonoBehaviour
 {
-    private string filePath;
-    private FileLoader loaderFactory;
+    private string filePath = "";
+    private string fileName = "";
+    private bool loadingSucceded = false;
 
-    public void loadData()
+    private FileLoader loaderFactory;
+    private VoxelDataset dataset;
+    private VolumeRenderedObject renderedVolume;
+
+    #region Getter/Setter
+    public FileLoader LoaderFactory { get => loaderFactory; set => loaderFactory = value; }
+    public VoxelDataset Dataset { get => dataset; set => dataset = value; }
+    public VolumeRenderedObject RenderedVolume { get => renderedVolume; set => renderedVolume = value; }
+    #endregion
+
+    public async Task<String> loadData()
     {
-        //this.filePath = EditorUtility.OpenFilePanel("Select a dataset to load", "DataFiles", "raw, zraw, mhd, dicom, dcm");
+        #if !UNITY_EDITOR && UNITY_WSA_10_0
+                Debug.Log("HOLOLENS 2 PICKER");
+                FilePicker_Hololens();
+            
+        #endif
+
+        #if UNITY_EDITOR
+                Debug.Log("UNITY_STANDALONE PICKER");
+                FilePicker_Win();
+        #endif
+        return filePath;
+    }
+
+    private async Task loadDataset()
+    {
+        if (filePath == "")
+        {
+            filePath = "No Data";
+            Debug.LogError("Failed to import datset");
+            return;
+        }
+
+        fileName = Path.GetFileNameWithoutExtension(filePath);
         DatasetType fileTyp = GetDatasetType(filePath);
 
         //Choose Loader here
         switch (fileTyp)
         {
             case DatasetType.Raw:
-                //open RawFileLoaderWindow
-                //loaderFactory = new RawFileLoader(filePath, dimX, dimY, dimZ, contentFormat, endianness, skipBytes);
+                loadingSucceded = await CreateRawLoader();
                 break;
             case DatasetType.Mhd:
                 loaderFactory = new MhdFileLoader(filePath);
+                loadingSucceded = true;
                 break;
             case DatasetType.Csv:
                 throw new NotImplementedException(fileTyp.ToString() + " extension is currently not supported");
             case DatasetType.DICOM:
                 throw new NotImplementedException(fileTyp.ToString() + " extension is currently not supported");
             case DatasetType.Unknown:
+                throw new NotImplementedException(fileTyp.ToString() + " extension is currently not supported");
             default:
                 return;
         }
 
-    }
+        if (!loadingSucceded) return;
 
+        //FileLoader fileLoader = new MhdFileLoader(filePath);
+        Debug.Log("Create Voxel Dataset");
+        loaderFactory.CreateDataset();
+        await Task.Run(() => loaderFactory.LoadData(filePath));
+
+        dataset = loaderFactory.voxelDataset;
+
+        if (dataset != null)
+        {
+            //Render GameObject
+            GameObject volume = new GameObject("VolumeRenderedObject_" + dataset.datasetName);
+            renderedVolume = volume.AddComponent<VolumeRenderedObject>();
+
+            Debug.Log("Create Volume Object");
+            await renderedVolume.CreateObject(dataset);
+            // Save the texture to your Unity Project
+            //AssetDatabase.CreateAsset(dataset.GetDataTexture(), "Assets/Textures/Example3DTexture.asset");
+
+        }
+        else
+        {
+            //textLabel.text = "Choose File";
+            Debug.LogError("Failed to import dataset");
+            return;
+        }
+
+
+    }
 
     /// <summary>
     /// Returns the detected extension type of the file
@@ -77,10 +150,81 @@ public class FileLoadingManager
                 break;
             default:
                 datasetType = DatasetType.Unknown;
-                throw new NotImplementedException("Data extension format [" + extension  + "] not supported");
+                throw new NotImplementedException("Data extension format [" + extension + "] not supported");
         }
 
         return datasetType;
     }
+
+    private async Task<bool> CreateRawLoader()
+    {
+        GameObject rawFileWindowUI = Instantiate((GameObject)Resources.Load("Prefabs/RawFileWindow"));
+        RawFileWindow rawFileWindow = rawFileWindowUI.GetComponent<RawFileWindow>();
+
+        bool startImport = await rawFileWindow.WaitForInput();
+        
+        if (startImport)
+        {
+            loaderFactory = new RawFileLoader(filePath, rawFileWindow.XDim, rawFileWindow.YDim, rawFileWindow.ZDim, rawFileWindow.DataFormat, rawFileWindow.Endianness, rawFileWindow.BytesToSkip);
+        }
+        else
+        {
+            Debug.LogError("Raw loading canceled");
+        }
+        Destroy(rawFileWindowUI);
+
+        return startImport;
+    }
+
+#if !UNITY_EDITOR && UNITY_WSA_10_0
+    private async Task FilePicker_Hololens()
+    {
+
+        UnityEngine.WSA.Application.InvokeOnUIThread(async () =>
+            {
+                var filepicker = new FileOpenPicker();
+                filepicker.FileTypeFilter.Add("*");
+                filepicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
+                //filepicker.FileTypeFilter.Add(".txt");
+
+                //if (multiSelection)
+                //{
+                //    IReadOnlyList<StorageFile> files = await filePicker.PickMultipleFilesAsync();
+                //    UnityEngine.WSA.Application.InvokeOnAppThread(() =>
+                //    {
+                //        UWPFilesSelected(files);
+                //    }, true);
+                //}
+
+                var file = await filepicker.PickSingleFileAsync();
+
+                UnityEngine.WSA.Application.InvokeOnAppThread(async () =>
+                {
+                    filePath = (file != null) ? file.Path : "Nothing selected";
+                    Debug.Log("Hololens 2 Picker Path = " + filePath);
+                    //await loadDataset();
+                    await loadDataset();
+
+                }, true);
+            }, false);
+    }
+#endif
+
+
+#if UNITY_EDITOR
+    private async Task FilePicker_Win()
+    {
+
+        var paths = StandaloneFileBrowser.OpenFilePanel("Open File", "", "", false);
+        filePath = paths[0];
+        Debug.Log("WIN Picker Path = " + filePath);
+        Task asyncTask = loadDataset();
+        //StartProgressIndicator(asyncTask);
+        await asyncTask;
+
+        //StandaloneFileBrowser.OpenFilePanelAsync("Open File", "", "", false, (string[] paths) => { filePath = paths[0]; });
+
+    }
+#endif
 
 }
