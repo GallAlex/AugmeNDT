@@ -3480,6 +3480,14 @@ PrefabInstance:
       propertyPath: ButtonPressed.m_PersistentCalls.m_Calls.Array.data[2].m_Target
       value: 
       objectReference: {fileID: 1840335939}
+    - target: {fileID: 7936288790693038356, guid: dfd9114285eb7cd4b9a6ee41372e0bd6, type: 3}
+      propertyPath: ButtonPressed.m_PersistentCalls.m_Calls.Array.data[2].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7936288790693038356, guid: dfd9114285eb7cd4b9a6ee41372e0bd6, type: 3}
+      propertyPath: ButtonPressed.m_PersistentCalls.m_Calls.Array.data[2].m_MethodName
+      value: openFile
+      objectReference: {fileID: 0}
     - target: {fileID: 7936288790798231115, guid: dfd9114285eb7cd4b9a6ee41372e0bd6, type: 3}
       propertyPath: m_Name
       value: DataLoadingMenu2
@@ -3674,6 +3682,10 @@ PrefabInstance:
     - target: {fileID: 5690006519146485525, guid: 9c6349cbbdddc1f409dd8182fa846be9, type: 3}
       propertyPath: IgnoreLogLevel
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5690006519146485525, guid: 9c6349cbbdddc1f409dd8182fa846be9, type: 3}
+      propertyPath: maxNumberOfMessages
+      value: 35
       objectReference: {fileID: 0}
     - target: {fileID: 6496374727424303470, guid: 9c6349cbbdddc1f409dd8182fa846be9, type: 3}
       propertyPath: m_RootOrder
