@@ -13,6 +13,9 @@
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta
 
+# 3rdParty Packages
+/[Aa]ssets/3rdParty*
+
 # Example Samples
 /[Aa]ssets/[Ss]amples*
 

@@ -80,7 +80,9 @@ public class FileLoadingManager: MonoBehaviour
                 loadingSucceded = true;
                 break;
             case DatasetType.Csv:
-                throw new NotImplementedException(fileTyp.ToString() + " extension is currently not supported");
+                loaderFactory = new CsvLoader();
+                loadingSucceded = true;
+                break;
             case DatasetType.DICOM:
                 throw new NotImplementedException(fileTyp.ToString() + " extension is currently not supported");
             case DatasetType.Unknown:
@@ -91,10 +93,10 @@ public class FileLoadingManager: MonoBehaviour
 
         if (!loadingSucceded) return;
 
-        //FileLoader fileLoader = new MhdFileLoader(filePath);
+        Debug.Log("LoadData");
+        await Task.Run(() => loaderFactory.LoadData(filePath));
         Debug.Log("Create Voxel Dataset");
         loaderFactory.CreateDataset();
-        await Task.Run(() => loaderFactory.LoadData(filePath));
 
         dataset = loaderFactory.voxelDataset;
 

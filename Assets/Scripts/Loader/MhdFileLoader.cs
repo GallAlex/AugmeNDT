@@ -78,6 +78,12 @@ public class MhdFileLoader : RawFileLoader
                 Int32.TryParse(value, out temp);
                 mhdFile.NDims = temp;
             }
+            else if (name == "HeaderSize")
+            {
+                int temp = 0;
+                Int32.TryParse(value, out temp);
+                mhdFile.HeaderSize = temp;
+            }
             else if (name == "BinaryData")
             {
                 bool temp = true;
