@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -8,15 +9,24 @@ using UnityEngine;
 public class CsvLoader : FileLoader
 {
     private CsvFileType csvFile;
+    private PolyFiberData polyFiberData;
     private List<List<string>> csvValues;
 
+    private Encoding encoding;
     private char splitChar = ',';
     private int skipRows = 4;
+
+    public CsvLoader()
+    {
+        //Has to happen on main thread
+        polyFiberData = ScriptableObject.CreateInstance<PolyFiberData>();
+    }
 
     public override async Task LoadData(string filePath)
     {
         Task<StreamReader> streamReaderTask = GetStreamReader(filePath);
         using var reader = await streamReaderTask;
+        encoding = reader.CurrentEncoding;
 
         csvValues = new List<List<string>>();
 
@@ -47,12 +57,18 @@ public class CsvLoader : FileLoader
             }
 
         }
+
+        csvFile = new CsvFileType(csvValues);
+        PrintCsv();
+
+        polyFiberData.FillPolyFiberData(csvValues);
+
+        //voxelDataset = ScriptableObject.CreateInstance<VoxelDataset>(); // Useless
     }
 
     public override void CreateDataset()
     {
-        csvFile = new CsvFileType(csvValues);
-        PrintCsv();
+
     }
 
     /// <summary>
@@ -74,7 +90,7 @@ public class CsvLoader : FileLoader
             csvOutput += " \n";
         }
 
-        Debug.Log("CSV Output: \n" + csvOutput);
+        Debug.Log("CSV Output [" + encoding + "]: \n" + csvOutput);
     }
 
 }

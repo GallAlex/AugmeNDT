@@ -49,20 +49,20 @@ public class SceneUIHandler : MonoBehaviour
         textLabel.text = "Loading ...";
 
         fileLoadingManager = new FileLoadingManager();
-        Task<string> asyncTask = fileLoadingManager.loadData();
+        Task<string> asyncLoadingTask = fileLoadingManager.loadData();
 
         //Progress Bar
         indicator = indicatorObject.GetComponent<IProgressIndicator>();
-        StartProgressIndicator(asyncTask);
+        StartProgressIndicator(asyncLoadingTask);
 
-        string path = await asyncTask;
+        string path = await asyncLoadingTask;
         textLabel.text = path;
     }
 
     public void changeShader()
     {
         shaderType = (shaderType + 1) % AmountShadertypes;
-        fileLoadingManager.RenderedVolume.ChangeShader(listOfShaders[shaderType]);
+        fileLoadingManager.VolumeRenderedObject.ChangeShader(listOfShaders[shaderType]);
     }
 
     private void ShowDrivesAndFolders()
