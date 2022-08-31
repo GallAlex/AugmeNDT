@@ -13,9 +13,10 @@ public class VolumeRenderedObject : MonoBehaviour
 
     }
 
-    public async Task CreateObject(VoxelDataset dataset)
+    public async Task CreateObject(GameObject container, VoxelDataset dataset)
     {
         volume = Instantiate((GameObject)Resources.Load("Prefabs/VolumePrefab"));
+        volume.transform.SetParent(container.transform);
 
         //Instantiate(volumePrefab, new Vector3(0, 0, 0), Quaternion.identity);
         //Renderer renderer = volume.AddComponent<Renderer>();

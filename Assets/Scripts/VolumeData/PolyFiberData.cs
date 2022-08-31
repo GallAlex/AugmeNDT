@@ -1,3 +1,7 @@
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine;
 
 /// <summary>
@@ -109,27 +113,78 @@ public class PolyFiberData : ScriptableObject, IPolygonDataset
 
     #endregion
 
-    public PolyFiberData()
+    public void FillPolyFiberData(List<List<string>> csvValues)
     {
+        for (int column = 0; column < csvValues.Count; column++)
+        {
+            string[] valuesWithoutHeader = csvValues[column].GetRange(1, csvValues[column].Count - 1).ToArray();
+
+            //ToDo File with possible Spellings for the Headers of the dame value, Check String Encoding
+            switch (csvValues[column][0])
+            {
+                case "Label":
+                    label = Array.ConvertAll(valuesWithoutHeader, int.Parse);
+                    break;
+                case "RealX1 [µm]":
+                    realX1 = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
+                    break;
+                case "RealY1 [µm]":
+                    realY1 = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
+                    break;
+                case "RealZ1 [µm]":
+                    realZ1 = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
+                    break;
+                case "RealX2 [µm]":
+                    realX2 = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
+                    break;
+                case "RealY2 [µm]":
+                    realY2 = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
+                    break;
+                case "RealZ2 [µm]":
+                    realZ2 = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
+                    break;
+                case "StraightLength [µm]":
+                    straightLength = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
+                    break;
+                case "CurvedLength [µm]":
+                    curvedLength = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
+                    break;
+                case "Diameter [µm]":
+                    diameter = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
+                    break;
+                case "SurfaceArea [µm]µm2]":
+                    surfaceArea = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
+                    break;
+                case "Volume [µm]µm3]":
+                    volume = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
+                    break;
+                case "Seperated Fibre":
+                    seperatedFibre = Array.ConvertAll(valuesWithoutHeader, int.Parse);
+                    break;
+                case "Curved Fibre":
+                    curvedFibre = Array.ConvertAll(valuesWithoutHeader, int.Parse);
+                    break;
+            }
+        }
 
     }
 
     public override string ToString()
     {
-        string values = "label = " + label.ToString() + "\n";
-        values += "realX1 = " + realX1.ToString() + "\n";
-        values += "realY1 = " + realY1.ToString() + "\n";
-        values += "realZ1 = " + realZ1.ToString() + "\n";
-        values += "realX2 = " + realX2.ToString() + "\n";
-        values += "realY2 = " + realY2.ToString() + "\n";
-        values += "realZ2 = " + realZ2.ToString() + "\n";
-        values += "straightLength = " + straightLength.ToString() + "\n";
-        values += "curvedLength = " + curvedLength.ToString() + "\n";
-        values += "diameter = " + diameter.ToString() + "\n";
-        values += "surfaceArea = " + surfaceArea.ToString() + "\n";
-        values += "volume = " + volume.ToString() + "\n";
-        values += "seperatedFibre = " + seperatedFibre.ToString() + "\n";
-        values += "curvedFibre = " + curvedFibre.ToString() + "\n";
+        string values = "\nlabel = " + string.Join("\t", label) + "\n";
+        values += "realX1 = " + string.Join("\t", realX1) + "\n";
+        values += "realY1 = " + string.Join("\t", realY1) + "\n";
+        values += "realZ1 = " + string.Join("\t", realZ1) + "\n";
+        values += "realX2 = " + string.Join("\t", realX2) + "\n";
+        values += "realY2 = " + string.Join("\t", realY2) + "\n";
+        values += "realZ2 = " + string.Join("\t", realZ2) + "\n";
+        values += "straightLength = " + string.Join("\t", straightLength) + "\n";
+        values += "curvedLength = " + string.Join("\t", curvedLength) + "\n";
+        values += "diameter = " + string.Join("\t", diameter) + "\n";
+        values += "surfaceArea = " + string.Join("\t", surfaceArea) + "\n";
+        values += "volume = " + string.Join("\t", volume) + "\n";
+        values += "seperatedFibre = " + string.Join("\t", seperatedFibre) + "\n";
+        values += "curvedFibre = " + string.Join("\t", curvedFibre) + "\n";
 
         return base.ToString() + values;
     }

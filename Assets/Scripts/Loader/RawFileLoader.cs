@@ -15,11 +15,13 @@ public class RawFileLoader : FileLoader
     // Only for derived class with meta info
     protected RawFileLoader(string filePath)
     {
+        //Has to happen on main thread
         voxelDataset = ScriptableObject.CreateInstance<VoxelDataset>();
     }
 
     public RawFileLoader(string filePath, int dimX, int dimY, int dimZ, DataContentFormat contentFormat, Endianness endianness, int skipBytes)
     {
+        //Has to happen on main thread
         voxelDataset = ScriptableObject.CreateInstance<VoxelDataset>();
         rawFile = new RawFileType(filePath, dimX, dimY, dimZ, contentFormat, endianness, skipBytes);
     }
