@@ -4,7 +4,7 @@ public class MhdFileType : FileType
     private int headerSize = 0;
     private int nDims = 0;
     private bool binaryData = true;
-    private bool byteOrderMSB = false;
+    private int byteOrderMSB = 0; //false
     private bool compressedData = false;
     private int compressedDataSize = 0;
     private int[] transformMatrix;
@@ -26,7 +26,7 @@ public class MhdFileType : FileType
     public int[] ElementSpacing { get => elementSpacing; set => elementSpacing = value; }
     public int[] DimSize { get => dimSize; set => dimSize = value; }
     public string ElementDataFile { get => elementDataFile; set => elementDataFile = value; }
-    public bool ByteOrderMSB { get => byteOrderMSB; set => byteOrderMSB = value; }
+    public int ByteOrderMSB { get => byteOrderMSB; set => byteOrderMSB = value; }
     public string ElementType { get => elementType; set => elementType = value; }
     public int HeaderSize { get => headerSize; set => headerSize = value; }
     #endregion

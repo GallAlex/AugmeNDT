@@ -3,10 +3,6 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 
-#if !UNITY_EDITOR && UNITY_WSA_10_0
-using Windows.Storage;
-#endif
-
 public class RawFileLoader : FileLoader
 {
     protected RawFileType rawFile;
@@ -31,17 +27,7 @@ public class RawFileLoader : FileLoader
 
     public override async Task LoadData(string filePath)
     {
-        // Check that the file exists (does not work on MHL2)
-        //if (!File.Exists(filePath))
-        //{
-        //    Debug.LogError("The raw file does not exist: " + filePath);
-        //    return;
-        //}
-
-        //Debug.Log("RawFileLoader started for file: " + filePath); 
-
-        //if (GetDatasetType(filePath) != DatasetType.Raw) return;
-        await readBinaryInfo(filePath);
+        await ReadBinaryInfo(filePath);
 
         Debug.Log(rawFile.ToString());
 
@@ -50,30 +36,17 @@ public class RawFileLoader : FileLoader
 
     }
 
-    private async Task readBinaryInfo(string filePath)
+    private async Task ReadBinaryInfo(string filePath)
     {
-        long fileLength;
-
-#if UNITY_EDITOR
-        using FileStream fs = new FileStream(filePath, FileMode.Open);
-        fileLength = fs.Length;
-        using BinaryReader reader = new BinaryReader(fs);
-#endif
-
-#if !UNITY_EDITOR && UNITY_WSA_10_0
-        Task<BinaryReader> binaryReaderTask = getBinaryReader(filePath);
+        Task<BinaryReader> binaryReaderTask = GetBinaryReader(filePath);
         using BinaryReader reader = await binaryReaderTask;//.ConfigureAwait(false);
-
-        fileLength = (long)reader.BaseStream.Length;
-#endif
-
+        long fileLength = (long)reader.BaseStream.Length;
+        
         // Check that the dimension does not exceed the file size
         long expectedFileSize = (long)(rawFile.DimX * rawFile.DimY * rawFile.DimZ) * GetSampleFormatSize(rawFile.ContentFormat) + rawFile.SkipBytes;
         if (fileLength < expectedFileSize)
         {
             Debug.LogError($"The dimension({rawFile.DimX}, {rawFile.DimY}, {rawFile.DimZ}) exceeds the file size. Expected file size is {expectedFileSize} bytes, while the actual file size is {fileLength} bytes");
-            //reader.Close();
-            //fs.Close();
             return;
         }
 
@@ -82,20 +55,17 @@ public class RawFileLoader : FileLoader
         if (expectedFileSize > System.Int32.MaxValue)
         {
             Debug.LogError("File size (" + expectedFileSize + ") is greater then the maximum possible array size (" + System.Int32.MaxValue + ")");
-            //reader.Close();
-            //fs.Close();
             return;
         }
 
-        //createDataset();
-        fillVoxelDataset();
+        FillVoxelDataset();
 
         // Skip header (if any)
         if (rawFile.SkipBytes > 0)
         {
             reader.ReadBytes(rawFile.SkipBytes);
         }
-            
+           
 
         int uDimension = rawFile.DimX * rawFile.DimY * rawFile.DimZ;
         voxelDataset.data = new int[uDimension];
@@ -106,23 +76,14 @@ public class RawFileLoader : FileLoader
             voxelDataset.data[i] = ReadDataValue(reader);
         }
 
-        //reader.Close();
-        //fs.Close();
     }
 
     public override void CreateDataset()
     {
-        //Debug.Log("Create Voxel Dataset");
-        //voxelDataset = new VoxelDataset();
-            //voxelDataset = ScriptableObject.CreateInstance<VoxelDataset>();
-        //voxelDataset.datasetName = Path.GetFileName(rawFile.FilePath);
-        //voxelDataset.filePath = rawFile.FilePath;
-        //voxelDataset.dimX = rawFile.DimX;
-        //voxelDataset.dimY = rawFile.DimY;
-        //voxelDataset.dimZ = rawFile.DimZ;
+
     }
 
-    public void fillVoxelDataset()
+    private void FillVoxelDataset()
     {
         Debug.Log("Fill Voxel Dataset");
         voxelDataset.datasetName = Path.GetFileName(rawFile.FilePath);
@@ -163,7 +124,7 @@ public class RawFileLoader : FileLoader
                     }
                     return (int)dataval;
                 }
-            case DataContentFormat.Int64: //Todo Check!!
+            case DataContentFormat.Int64: 
                 {
                     long dataval = reader.ReadInt64();
                     if (rawFile.Endianness == Endianness.BigEndian)
@@ -174,7 +135,7 @@ public class RawFileLoader : FileLoader
                     }
                     return (int)dataval;
                 }
-            case DataContentFormat.Float32: //Todo Check!!
+            case DataContentFormat.Float32: 
                 {
                     float dataval = reader.ReadSingle();
                     if (rawFile.Endianness == Endianness.BigEndian)
@@ -185,7 +146,7 @@ public class RawFileLoader : FileLoader
                     }
                     return (int)dataval;
                 }
-            case DataContentFormat.Float64: //Todo Check!!
+            case DataContentFormat.Float64: 
                 {
                     double dataval = reader.ReadDouble();
                     if (rawFile.Endianness == Endianness.BigEndian)
@@ -222,7 +183,7 @@ public class RawFileLoader : FileLoader
                     }
                     return (int)dataval;
                 }
-            case DataContentFormat.Uint64: //Todo Check!!
+            case DataContentFormat.Uint64:
                 {
                     ulong dataval = reader.ReadUInt64();
                     if (rawFile.Endianness == Endianness.BigEndian)

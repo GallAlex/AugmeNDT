@@ -6,6 +6,8 @@ using SFB;
 using System.Data;
 using System.Threading.Tasks;
 using UnityEngine.Rendering;
+using static UnityEngine.EventSystems.EventTrigger;
+using System.Collections.Generic;
 
 
 #if !UNITY_EDITOR && UNITY_WSA_10_0
@@ -32,6 +34,7 @@ public class FileLoadingManager: MonoBehaviour
     private string fileName = "";
     private bool loadingSucceded = false;
 
+    //List<FileLoader> entities = new List<FileLoader>(); // get with var mhdFileLoader = entities.OfType<MhdFileLoader>();
     private FileLoader loaderFactory;
     private VoxelDataset dataset;
     private VolumeRenderedObject renderedVolume;
@@ -41,7 +44,7 @@ public class FileLoadingManager: MonoBehaviour
     public VoxelDataset Dataset { get => dataset; set => dataset = value; }
     public VolumeRenderedObject RenderedVolume { get => renderedVolume; set => renderedVolume = value; }
     #endregion
-
+    
     public async Task<String> loadData()
     {
         #if !UNITY_EDITOR && UNITY_WSA_10_0
@@ -114,7 +117,6 @@ public class FileLoadingManager: MonoBehaviour
         }
         else
         {
-            //textLabel.text = "Choose File";
             Debug.LogError("Failed to import dataset");
             return;
         }

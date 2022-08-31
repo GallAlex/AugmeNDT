@@ -1,7 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using static CsvLoader;
 
 /// <summary>
 /// Class stores the values of a polygonal model for fibers

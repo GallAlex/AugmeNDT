@@ -27,10 +27,32 @@ public abstract class FileLoader
         return base.ToString() + ": \n";
     }
 
-#if !UNITY_EDITOR && UNITY_WSA_10_0
-    protected async Task<StreamReader> getStreamReader(string path)
+
+#if UNITY_EDITOR 
+    protected static async Task<StreamReader> GetStreamReader(string filePath)
     {
-        StorageFile file = await StorageFile.GetFileFromPathAsync(path);
+        StreamReader reader = new StreamReader(filePath);
+        return reader;
+    }
+
+    protected static async Task<BinaryReader> GetBinaryReader(string filePath)
+    {
+        BinaryReader reader = new BinaryReader(new FileStream(filePath, FileMode.Open));
+        return reader;
+    }
+
+    protected static async Task<bool> CheckIfFileExists(string filePath)
+    {
+        return File.Exists(filePath);
+    }
+#endif
+
+
+#if !UNITY_EDITOR && UNITY_WSA_10_0
+
+    protected static async Task<StreamReader> GetStreamReader(string filePath)
+    {
+        StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
         if (file == null) Debug.LogError("StorageFile is null");
 
         var randomAccessStream = await file.OpenReadAsync();
@@ -40,9 +62,9 @@ public abstract class FileLoader
         return str;
     }
 
-    protected async Task<BinaryReader> getBinaryReader(string path)
+    protected static async Task<BinaryReader> GetBinaryReader(string filePath)
     {
-        StorageFile file = await StorageFile.GetFileFromPathAsync(path);
+        StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
         if(file == null) Debug.LogError("StorageFile is null");
 
         var randomAccessStream = await file.OpenReadAsync();
@@ -53,11 +75,11 @@ public abstract class FileLoader
         return binr;
     }
 
-    protected async Task<bool> checkIfFileExists(string path)
+    protected static async Task<bool> CheckIfFileExists(string filePath)
     {
         try
         {
-            StorageFile file = await StorageFile.GetFileFromPathAsync(path);
+            StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
         }
         catch (Exception)
         {
