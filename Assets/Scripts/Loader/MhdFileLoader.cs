@@ -5,10 +5,6 @@ using System.Threading.Tasks;
 using UnityEngine;
 using System.Collections.Generic;
 
-#if !UNITY_EDITOR && UNITY_WSA_10_0
-using Windows.Storage;
-#endif
-
 public class MhdFileLoader : RawFileLoader
 {
     private MhdFileType mhdFile;
@@ -44,24 +40,17 @@ public class MhdFileLoader : RawFileLoader
         //string[] lines = File.ReadAllLines(filePath);
         string rawFilePath = "";
 
-        #if UNITY_EDITOR
-            string[] lines = File.ReadAllLines(filePath);
-        #endif
+        Task<StreamReader> streamReaderTask = GetStreamReader(filePath);
+        using StreamReader sr = await streamReaderTask;//.ConfigureAwait(false);
 
-        #if !UNITY_EDITOR && UNITY_WSA_10_0
-            Task<StreamReader> streamReaderTask = getStreamReader(filePath);
-            using StreamReader sr = await streamReaderTask;//.ConfigureAwait(false);
+        string tempLine;
+        // Read and display lines from the file until the end of the file is reached.
+        while ((tempLine = await sr.ReadLineAsync()) != null)
+        {
+            stringList.Add(tempLine);
+        }
+        string[] lines = stringList.ToArray();
 
-            string tempLine;
-            // Read and display lines from the file until the end of the file is reached.
-            while ((tempLine = sr.ReadLine()) != null)
-            {
-                stringList.Add(tempLine);
-            }
-            string[] lines = stringList.ToArray();
-            //sr.Close();
-        #endif
-        
         foreach (string line in lines)
 
         {
@@ -70,7 +59,7 @@ public class MhdFileLoader : RawFileLoader
 
             string name = parts[0].Trim(' '); //Remove spaces
             string value = parts[1].Trim(' '); //Remove spaces
-            value.ToLower(); //because of boolean value names
+            value = value.ToLower(); //because of boolean value names
 
             if (name == "NDims")
             {
@@ -92,8 +81,8 @@ public class MhdFileLoader : RawFileLoader
             }
             else if (name == "BinaryDataByteOrderMSB")
             {
-                bool temp = false;
-                Boolean.TryParse(value, out temp);
+                int temp = 0;
+                Int32.TryParse(value, out temp);
                 mhdFile.ByteOrderMSB = temp;
             }
             else if (name == "CompressedData")
@@ -148,25 +137,20 @@ public class MhdFileLoader : RawFileLoader
             else if (name == "ElementDataFile")
             {
                 mhdFile.ElementDataFile = value;
-                //rawFilePath = Path.GetDirectoryName(filePath) + "/" + value; //Same Path with raw file name (Error wit / instead of \)                               
             }
             
         }
 
         //Check path to raw file
-        rawFilePath = CheckRawFilePath(filePath, mhdFile.ElementDataFile);
+        rawFilePath = await CheckRawFilePath(filePath, mhdFile.ElementDataFile);
 
         CreateRawFileType(rawFilePath);
 }
 
     private void CreateRawFileType(string rawFilePath)
     {
-        Endianness endianness;
-        if (mhdFile.ByteOrderMSB) endianness = Endianness.BigEndian;
-        else endianness = Endianness.LittleEndian;
-
         //Read Info and store in Raw File with path to raw file
-        rawFile = new RawFileType(rawFilePath, mhdFile.DimSize[0], mhdFile.DimSize[1], mhdFile.DimSize[2], MhdFileType.GetFormatByName(mhdFile.ElementType), endianness, mhdFile.HeaderSize);
+        rawFile = new RawFileType(rawFilePath, mhdFile.DimSize[0], mhdFile.DimSize[1], mhdFile.DimSize[2], MhdFileType.GetFormatByName(mhdFile.ElementType), (Endianness)mhdFile.ByteOrderMSB, mhdFile.HeaderSize);
 
     }
 
@@ -176,7 +160,7 @@ public class MhdFileLoader : RawFileLoader
     /// <param name="mhdFilePath"></param>
     /// <param name="rawFileName"></param>
     /// <returns>String with path of .raw file</returns>
-    private String CheckRawFilePath(string mhdFilePath, string rawFileName)
+    private async Task<String> CheckRawFilePath(string mhdFilePath, string rawFileName)
     {
         string path = "";
         //If raw file name is in mhd the look in current folder...
@@ -192,6 +176,11 @@ public class MhdFileLoader : RawFileLoader
         }
 
         //Check if file exists for UWP and .NET
+        if (!await CheckIfFileExists(path))
+        {
+            Debug.LogError("Raw File on Path " + path + " does not exist");
+            return null;
+        }
 
         return path;
     }

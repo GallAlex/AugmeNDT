@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -16,14 +15,8 @@ public class CsvLoader : FileLoader
 
     public override async Task LoadData(string filePath)
     {
-        #if UNITY_EDITOR
-            using var reader = new StreamReader(filePath);
-        #endif
-
-        #if !UNITY_EDITOR && UNITY_WSA_10_0
-            Task<StreamReader> streamReaderTask = getStreamReader(filePath);
-            using var reader = await streamReaderTask;
-        #endif
+        Task<StreamReader> streamReaderTask = GetStreamReader(filePath);
+        using var reader = await streamReaderTask;
 
         csvValues = new List<List<string>>();
 
@@ -65,7 +58,7 @@ public class CsvLoader : FileLoader
     /// <summary>
     /// Prints the csv with the header as as first row
     /// </summary>
-    private void PrintCsv()
+    public void PrintCsv()
     {
         string csvOutput = "";
 
