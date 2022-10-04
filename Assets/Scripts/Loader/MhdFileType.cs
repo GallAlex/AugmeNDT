@@ -1,4 +1,6 @@
 
+using UnityEngine;
+
 public class MhdFileType : FileType
 {
     private int headerSize = 0;
@@ -33,7 +35,9 @@ public class MhdFileType : FileType
 
     public static DataContentFormat GetFormatByName(string format)
     {
-        switch (format)       
+        var upperCaseString = format.ToUpper();
+
+        switch (upperCaseString)       
         {
             case "MET_CHAR":
                 return DataContentFormat.Int8;
@@ -60,6 +64,7 @@ public class MhdFileType : FileType
             case "MET_DOUBLE":
                 return DataContentFormat.Float64;
             default:
+                Debug.LogWarning("DataContentFormat not found - Default Format " + DataContentFormat.Uint32 + " is used");
                 return DataContentFormat.Uint32;
         }
     }

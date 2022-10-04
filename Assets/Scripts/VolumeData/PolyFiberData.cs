@@ -1,4 +1,3 @@
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -9,7 +8,7 @@ using UnityEngine;
 /// </summary>
 public class PolyFiberData : ScriptableObject, IPolygonDataset
 {
-
+    private long numberOfFibers = -1;
     private int[] label;
     private double[] realX1;
     private double[] realY1;
@@ -26,6 +25,12 @@ public class PolyFiberData : ScriptableObject, IPolygonDataset
     private int[] curvedFibre;
 
     #region Getter/Setter
+
+    public long NumberOfFibers
+    {
+        get => numberOfFibers;
+        set => numberOfFibers = value;
+    }
 
     public int[] Label
     {
@@ -115,11 +120,13 @@ public class PolyFiberData : ScriptableObject, IPolygonDataset
 
     public void FillPolyFiberData(List<List<string>> csvValues)
     {
+        numberOfFibers = csvValues[0].GetRange(1, csvValues[0].Count - 1).Count;
+
         for (int column = 0; column < csvValues.Count; column++)
         {
             string[] valuesWithoutHeader = csvValues[column].GetRange(1, csvValues[column].Count - 1).ToArray();
 
-            //ToDo File with possible Spellings for the Headers of the dame value, Check String Encoding
+            //ToDo File with possible Spellings for the Headers of the dame value, Check String Encoding, Maybe changes to position in csv File or compare key Words in string
             switch (csvValues[column][0])
             {
                 case "Label":
@@ -167,6 +174,22 @@ public class PolyFiberData : ScriptableObject, IPolygonDataset
             }
         }
 
+    }
+
+    public List<Vector3> GetFiberCoordinates(int fiberId)
+    {
+        //TODO: Uses float instead of double!!
+        List<Vector3> linePoints = new List<Vector3>();
+        linePoints.Add(new Vector3((float)realX1[fiberId], (float)realY1[fiberId], (float)realZ1[fiberId])); 
+        linePoints.Add(new Vector3((float)realX2[fiberId], (float)realY2[fiberId], (float)realZ2[fiberId]));
+
+        return linePoints;
+    }
+
+    public float GetFiberRadius(int fiberId)
+    {
+        //TODO: Uses float instead of double!!
+        return (float)diameter[fiberId] / 2.0f;
     }
 
     public override string ToString()
