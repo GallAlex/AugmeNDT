@@ -17,11 +17,11 @@ public abstract class FileLoader
     public VoxelDataset voxelDataset;
 
     /*3D model data*/
-    //public PolygonalDataset polygonalDataset;
+    public PolyFiberData polyFiberDataset;
 
     public abstract Task LoadData(string filePath);
 
-    public abstract void CreateDataset();
+    //public abstract void CreateDataset();
 
     public override string ToString()
     {

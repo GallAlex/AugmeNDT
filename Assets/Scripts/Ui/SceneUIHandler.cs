@@ -1,3 +1,4 @@
+using System;
 using Microsoft.MixedReality.Toolkit.UI;
 using System.Collections.Generic;
 using System.IO;
@@ -57,6 +58,18 @@ public class SceneUIHandler : MonoBehaviour
 
         string path = await asyncLoadingTask;
         textLabel.text = path;
+    }
+
+    public void createVisualization()
+    {
+        //Todo: Resize Vis?
+        VisContainer vis = new VisContainer();
+        vis.CreateVisContainer("Basic Euclidean Space");
+        //vis.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+
+        vis.CreateAxis("X Label", Direction.X);
+        vis.CreateAxis("Y label", Direction.Y);
+        vis.CreateAxis("Z label", Direction.Z);
     }
 
     public void changeShader()

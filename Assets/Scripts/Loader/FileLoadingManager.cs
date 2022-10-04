@@ -33,16 +33,17 @@ public class FileLoadingManager : MonoBehaviour
     //List<FileLoader> entities = new List<FileLoader>(); // get with var mhdFileLoader = entities.OfType<MhdFileLoader>();
     private FileLoader loaderFactory;
     private VoxelDataset volumeDataset;
-    private PolyFiberData polyDataset;
+    private PolyFiberData polyFiberDataset;
     private VolumeRenderedObject volumeRenderedObject;
-    private PolyRenderedObject polyRenderedObject;
+    private PolyFiberRenderedObject polyFiberRenderedObject;
+    private GameObject renderContainer;
 
     #region Getter/Setter
     public FileLoader LoaderFactory { get => loaderFactory; set => loaderFactory = value; }
     public VoxelDataset VolumeDataset { get => volumeDataset; set => volumeDataset = value; }
-    public PolyFiberData PolyDataset { get => polyDataset; set => polyDataset = value; }
+    public PolyFiberData PolyDataset { get => polyFiberDataset; set => polyFiberDataset = value; }
     public VolumeRenderedObject VolumeRenderedObject { get => volumeRenderedObject; set => volumeRenderedObject = value; }
-    public PolyRenderedObject PolyRenderedObject { get => polyRenderedObject; set => polyRenderedObject = value; }
+    public PolyFiberRenderedObject PolyFiberRenderedObject { get => polyFiberRenderedObject; set => polyFiberRenderedObject = value; }
     #endregion
 
     public async Task<String> loadData()
@@ -103,7 +104,6 @@ public class FileLoadingManager : MonoBehaviour
 
             Debug.Log("LoadData...");
             await Task.Run(() => loaderFactory.LoadData(filePath));
-            loaderFactory.CreateDataset();
 
             if (!isPolyObject)
             {
@@ -118,6 +118,8 @@ public class FileLoadingManager : MonoBehaviour
             {
                 await RenderPolyObject();
             }
+
+            renderContainer.transform.position = new Vector3(-0.2f, 0.1f, 0.5f); // Best pos Hololens
 
         }
         catch (Exception ex)
@@ -188,24 +190,24 @@ public class FileLoadingManager : MonoBehaviour
         volumeDataset = loaderFactory.voxelDataset;
 
         //Render GameObject
-        GameObject volumeContainer = new GameObject("VolumeRenderedObject_" + fileName);
-        volumeRenderedObject = volumeContainer.AddComponent<VolumeRenderedObject>();
+        renderContainer = new GameObject("VolumeRenderedObject_" + fileName);
+        volumeRenderedObject = renderContainer.AddComponent<VolumeRenderedObject>();
 
         Debug.Log("Create Volume Object");
-        await volumeRenderedObject.CreateObject(volumeContainer, volumeDataset);
+        await volumeRenderedObject.CreateObject(renderContainer, volumeDataset);
         // Save the texture to your Unity Project
         //AssetDatabase.CreateAsset(dataset.GetDataTexture(), "Assets/Textures/Example3DTexture.asset");
     }
 
     private async Task RenderPolyObject()
     {
-        //polyDataset = loaderFactory.voxelDataset;
+        polyFiberDataset = loaderFactory.polyFiberDataset;
 
-        GameObject polyContainer = new GameObject("PolyRenderedObject_" + fileName);
-        polyRenderedObject = polyContainer.AddComponent<PolyRenderedObject>();
+        renderContainer = new GameObject("PolyRenderedObject_" + fileName);
+        polyFiberRenderedObject = renderContainer.AddComponent<PolyFiberRenderedObject>();
 
         Debug.Log("Create Poly Object");
-        await polyRenderedObject.CreateObject(polyContainer, polyDataset);
+        await polyFiberRenderedObject.CreateObject(renderContainer, polyFiberDataset);
     }
 
 #if !UNITY_EDITOR && UNITY_WSA_10_0

@@ -80,11 +80,6 @@ public class RawFileLoader : FileLoader
 
     }
 
-    public override void CreateDataset()
-    {
-
-    }
-
     private void FillVoxelDataset()
     {
         Debug.Log("Fill Voxel Dataset");

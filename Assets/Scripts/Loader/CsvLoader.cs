@@ -9,7 +9,6 @@ using UnityEngine;
 public class CsvLoader : FileLoader
 {
     private CsvFileType csvFile;
-    private PolyFiberData polyFiberData;
     private List<List<string>> csvValues;
 
     private Encoding encoding;
@@ -19,7 +18,7 @@ public class CsvLoader : FileLoader
     public CsvLoader()
     {
         //Has to happen on main thread
-        polyFiberData = ScriptableObject.CreateInstance<PolyFiberData>();
+        polyFiberDataset = ScriptableObject.CreateInstance<PolyFiberData>();
     }
 
     public override async Task LoadData(string filePath)
@@ -41,7 +40,8 @@ public class CsvLoader : FileLoader
 
         foreach (var name in headerNames)
         {
-            csvValues.Add(new List<string> { name });
+            var trimmedName = name.Trim(' '); //Remove leading and trailing spaces
+            csvValues.Add(new List<string> { trimmedName });
         }
 
 
@@ -58,17 +58,13 @@ public class CsvLoader : FileLoader
 
         }
 
+        Debug.Log("CSV File loaded");
         csvFile = new CsvFileType(csvValues);
-        PrintCsv();
+        //PrintCsv();
 
-        polyFiberData.FillPolyFiberData(csvValues);
+        polyFiberDataset.FillPolyFiberData(csvValues);
 
         //voxelDataset = ScriptableObject.CreateInstance<VoxelDataset>(); // Useless
-    }
-
-    public override void CreateDataset()
-    {
-
     }
 
     /// <summary>
