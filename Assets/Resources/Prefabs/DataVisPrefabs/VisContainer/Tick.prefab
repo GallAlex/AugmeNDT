@@ -155,7 +155,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6000890796524768165}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -2.36, z: 0}
+  m_LocalPosition: {x: 0, y: -3.8, z: 0}
   m_LocalScale: {x: 5, y: 0.8333333, z: 5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -214,12 +214,12 @@ TextMesh:
   m_GameObject: {fileID: 6000890796524768165}
   m_Text: Tick Label
   m_OffsetZ: 0
-  m_CharacterSize: 0.4
+  m_CharacterSize: 0.9
   m_LineSpacing: 1
   m_Anchor: 4
   m_Alignment: 0
   m_TabSize: 4
-  m_FontSize: 42
+  m_FontSize: 50
   m_FontStyle: 0
   m_RichText: 1
   m_Font: {fileID: 12800000, guid: e869342c56e54acf989b2422b4b80dcc, type: 3}

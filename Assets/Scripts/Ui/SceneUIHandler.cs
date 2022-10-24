@@ -70,6 +70,26 @@ public class SceneUIHandler : MonoBehaviour
         vis.CreateAxis("X Label", Direction.X);
         vis.CreateAxis("Y label", Direction.Y);
         vis.CreateAxis("Z label", Direction.Z);
+
+        vis.CreateGrid(Direction.X, Direction.Y);
+        vis.CreateGrid(Direction.X, Direction.Z);
+        vis.CreateGrid(Direction.Y, Direction.Z);
+
+        for (float x = 0; x <= 1; x+= 0.01f)
+        {
+            const float pi = 3.14f;
+            double y = 0.5 * (1 + Math.Sin(2 * pi * x));
+            DataMark.Channel channel = new DataMark.Channel
+            {
+                position = new Vector3(x, (float)y, 0.5f),
+                rotation = new Vector3(0, 0, 0),
+                color = new Vector4((float)y, 0, 0, 1)
+            };
+
+            vis.CreateDataMark(channel);
+        }
+        
+
     }
 
     public void changeShader()

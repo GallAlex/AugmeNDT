@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -14,38 +15,43 @@ public class DataAxis : MonoBehaviour
 {
     [SerializeField]
     private GameObject axisLinePrefab;
+
+    [SerializeField]
+    private GameObject axisInstance;
     [SerializeField]
     private AxisTicks axisTicks;
     [SerializeField]
     private TextMesh axisLabel;
 
+    private float tickLabelOffset = 0.03f;
     private Direction axisDirection = Direction.X;
 
 
 
-    public GameObject CreateAxis(Transform visContainer, string axisTitle, Direction direction)
+    public GameObject CreateAxis(Transform visContainer, string axisTitle, Direction direction, int numberOfTicks)
     {
-        axisLinePrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Axis");
+        axisLinePrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Axis");
 
-        GameObject axisInstance = Instantiate(axisLinePrefab, visContainer.position, Quaternion.identity, visContainer);
+        axisInstance = Instantiate(axisLinePrefab, visContainer.position, Quaternion.identity, visContainer);
         //axisInstance.transform.Translate(0, pos - GetLength() / 2.0f, 0);
-
-        axisDirection = direction;
-        ChangeAxisDirection(axisInstance, direction);
 
         //axisLabel = axisInstance.GetComponent<TextMesh>();
         //TODO: Add as reference?
         axisLabel = axisInstance.GetComponentInChildren<TextMesh>();
         axisLabel.text = axisTitle;
 
-        axisInstance.name = axisDirection.ToString() + " Axis";
+        CreateAxisTicks(axisInstance.transform, numberOfTicks);
 
-        CreateAxisTicks(axisInstance.transform);
+        //Rotate after Tick generation
+        axisDirection = direction;
+        axisInstance.name = axisDirection.ToString() + " Axis";
+        ChangeAxisDirection(axisInstance, direction);
 
         return axisInstance;
     }
 
     //TODO: rotate Text
+    //TODO: Show Axis on closer side and grid on side further away
     private void ChangeAxisDirection(GameObject axis, Direction dir)
     {
         switch (dir)
@@ -55,10 +61,15 @@ public class DataAxis : MonoBehaviour
             break;
             case Direction.Y:
                 axis.transform.Rotate(0, 0, 90);    //Rotate 90 degree in z
+
+                float currentYPos = axisTicks.ticks.transform.position.y;
+                Debug.Log("y coord is " + currentYPos);
+                //axisTicks.ticks.transform.Translate(-currentYPos * 2, 0, 0);
             break;
             case Direction.Z:
                 //axis.transform.Translate(0, 0, 1);  //Translate 1 in z
                 axis.transform.Rotate(0, -90, 0);    //Rotate 90 degree in y
+                axisTicks.ticks.transform.localRotation = Quaternion.Euler(0, -180.0f, 0); ;
                 break;
             default:
                 //Use X
@@ -66,12 +77,13 @@ public class DataAxis : MonoBehaviour
         }
     }
 
-    private AxisTicks CreateAxisTicks(Transform axisTransform)
+    private AxisTicks CreateAxisTicks(Transform axisTransform, int numberOfTicks)
     {
-        AxisTicks ticks = new AxisTicks();
-        ticks.CreateTicks(axisTransform, 5);
+        axisTicks = new AxisTicks();
+        axisTicks.CreateTicks(axisTransform, numberOfTicks);
 
-        return ticks;
+        return axisTicks;
     }
+
 
 }
