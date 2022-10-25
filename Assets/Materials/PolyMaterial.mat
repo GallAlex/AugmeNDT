@@ -15,6 +15,7 @@ Material:
   - _HOVER_LIGHT
   - _REFLECTIONS
   - _SPECULAR_HIGHLIGHTS
+  - _VERTEX_COLORS
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 1
@@ -156,7 +157,7 @@ Material:
     - _StencilReference: 0
     - _TriplanarMappingBlendSharpness: 4
     - _UVSec: 0
-    - _VertexColors: 0
+    - _VertexColors: 1
     - _VertexExtrusion: 0
     - _VertexExtrusionSmoothNormals: 0
     - _VertexExtrusionValue: 0
