@@ -2,61 +2,76 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Threading.Tasks;
+using UnityEngine.Rendering;
+using System.Data;
+using UnityEngine.UIElements;
+using Microsoft.MixedReality.Toolkit.UI.BoundsControl;
 
-public class VolumeRenderedObject : MonoBehaviour
+public class VolumeRenderedObject
 {
+    private GameObject containerPrefab;
+    private GameObject volumeContainer;
+
+    private GameObject volumePrefab;
     private GameObject volume;
-    private Renderer renderer;
+
+    private Material volumeMaterial;
+    private MeshRenderer meshRenderer;
+
+    //Data
+    private VoxelDataset voxelDataset;
+
 
     public VolumeRenderedObject()
     {
+        volumeMaterial = new Material((Material)Resources.Load("Materials/VolumeMaterial", typeof(Material)));
 
+        containerPrefab = (GameObject)Resources.Load("Prefabs/VolumeContainer");
+        volumePrefab = (GameObject)Resources.Load("Prefabs/VolumeRenderCube");
     }
 
-    public async Task CreateObject(GameObject container, VoxelDataset dataset)
+    public async Task CreateObject(VoxelDataset dataset)
     {
-        volume = Instantiate((GameObject)Resources.Load("Prefabs/VolumePrefab"));
-        volume.transform.SetParent(container.transform);
+        voxelDataset = dataset;
 
-        //Instantiate(volumePrefab, new Vector3(0, 0, 0), Quaternion.identity);
-        //Renderer renderer = volume.AddComponent<Renderer>();
+        volumeContainer = GameObject.Instantiate(containerPrefab);
+        volumeContainer.name = dataset.datasetName;
 
-        renderer = volume.GetComponent<Renderer>();
+        volume = GameObject.Instantiate(volumePrefab, volumeContainer.transform);
+        volume.name = "Volume";
 
-        MeshRenderer meshRenderer = volume.GetComponent<MeshRenderer>();
+        meshRenderer = volume.GetComponent<MeshRenderer>();
+        meshRenderer.sharedMaterial = volumeMaterial;
         meshRenderer.sharedMaterial.SetTexture("_MainTex", await dataset.GetDataTexture());
 
-        float maxScale = Mathf.Max(dataset.dimX, dataset.dimY, dataset.dimZ);
-        maxScale = 0.1f / maxScale;
-        dataset.scaleX = maxScale;
-        dataset.scaleY = maxScale;
-        dataset.scaleZ = maxScale;
+        BoxCollider meshColl = volume.GetComponent<BoxCollider>() != null ? volume.GetComponent<BoxCollider>() : volume.AddComponent<BoxCollider>();
 
-        //volume.transform.localScale = new Vector3(dataset.dimX * maxScale, dataset.dimY * maxScale, dataset.dimZ * maxScale);
-        container.transform.localScale = new Vector3(dataset.dimX * maxScale, dataset.dimY * maxScale, dataset.dimZ * maxScale);
 
+        Debug.Log("> volume local size " + meshRenderer.localBounds);
+        Debug.Log("volume size " + volume.GetComponent<MeshFilter>().mesh.bounds);
+
+
+        BoundsControl boundsCon = volumeContainer.GetComponent<BoundsControl>() != null ? volumeContainer.GetComponent<BoundsControl>() : volumeContainer.AddComponent<BoundsControl>();
+        BoxCollider boundsColl = volumeContainer.GetComponent<BoxCollider>() != null ? volumeContainer.GetComponent<BoxCollider>() : volumeContainer.AddComponent<BoxCollider>();
+
+
+        //boundsCon.BoundsOverride = boxColl;
+
+        //TODO: Save scale change: dataset.scaleZ = maxScale;
+        //Maintain Volume Scale Ratio
+        GlobalScaleAndPos.ResizeRealtiveObject(volume.transform, 1.0f, new Vector3(dataset.dimX, dataset.dimY, dataset.dimZ));
+        GlobalScaleAndPos.ResizeBoxCollider(volume.transform, boundsColl, meshColl.size, meshColl.center);
+        GlobalScaleAndPos.MoveOriginToLowerFrontLeftPoint(volume.transform);
+        GlobalScaleAndPos.SetToBestInitialScale(volumeContainer.transform, volumeContainer.transform.localScale);
+
+        GlobalScaleAndPos.SetToBestInitialStartPos(volumeContainer.transform);
     }
 
     public void ChangeShader(Shader shader)
     {
         Debug.Log("Change to Shadertyp: " + shader.name);
-        //switch (type)
-        //{
-        //    case 0:
-        //        volume.GetComponent<Renderer>().sharedMaterial.shader = Shader.Find("Volume Rendering/RaymarchingShader/DVR");
-        //        break;
-        //    case 1:
-        //        volume.GetComponent<Renderer>().sharedMaterial.shader = Shader.Find("Volume Rendering/RaymarchingShader/MIP");
-        //        break;
-        //    case 2:
-        //        volume.GetComponent<Renderer>().sharedMaterial.shader = Shader.Find("Volume Rendering/RaymarchingShader/Isosurface");
-        //        break;
-        //    default:
-        //        volume.GetComponent<Renderer>().sharedMaterial.shader = Shader.Find("Volume Rendering/RaymarchingShader/DVR");
-        //        break;
-
-        //}
-        renderer.sharedMaterial.shader = shader;
+        volume.GetComponent<Renderer>().sharedMaterial.shader = shader;
 
     }
+
 }

@@ -29,8 +29,8 @@ public class VisContainer
     public List<DataMark> dataMarkList;     // Data Marks
 
     public bool boundsControl = true;
-    public const float axisOffset = 0.1f;
-    public const int xyzTicks = 5;
+    public Vector3 xyzOffset;
+    public int[] xyzTicks;                     
 
 
     #region CREATION OF ELEMENTS
@@ -58,30 +58,30 @@ public class VisContainer
         return visContainer;
     }
 
-    //TODO: Convert values to 0 to 1 here?
     public void CreateAxis(string axisLabel, Direction axisDirection, Scale dataScale)
     {
         DataAxis axis = new DataAxis();
         //Return Length of current axis
 
-        axis.CreateAxis(axisContainer.transform, axisLabel, axisDirection, dataScale, xyzTicks);
+        axis.CreateAxis(axisContainer.transform, axisLabel, axisDirection, dataScale, xyzTicks[(int)axisDirection]);
 
         dataAxisList.Add(axis);
     }
 
+    //TODO: Create multiple grids on differetn positions (at tick position?)
     public void CreateGrid(Direction axis1, Direction axis2)
     {
         DataGrid grid = new DataGrid();
         Direction[] axisDirections = { axis1, axis2 };
 
-        grid.CreateGrid(gridContainer.transform, worldSpaceWidth, worldSpaceHeight, axisDirections, xyzTicks + 2, xyzTicks + 2);
+        grid.CreateGrid(gridContainer.transform, worldSpaceWidth, worldSpaceHeight, axisDirections, xyzTicks[(int)axis1] + 1, xyzTicks[(int)axis2] + 1);
 
         dataGridList.Add(grid);
     }
 
-    public void CreateDataMark(DataMark.Channel channel)
+    public void CreateDataMark(GameObject markPrefab, DataMark.Channel channel)
     {
-        DataMark dataMark = new DataMark();
+        DataMark dataMark = new DataMark(markPrefab);
         dataMark.CreateDataMark(dataMarkContainer.transform, channel);
 
         dataMarkList.Add(dataMark);
@@ -91,7 +91,7 @@ public class VisContainer
 
     #region CHANGE OF ELEMENTS
 
-    public void ChangeAxis(int axisID, string axisLabel, int numberOfTicks, Scale dataScale)
+    public void ChangeAxis(int axisID, string axisLabel, Scale dataScale, int numberOfTicks)
     {
         if (axisID < 0 || axisID > dataAxisList.Count)
         {
@@ -105,9 +105,9 @@ public class VisContainer
 
     public void ChangeDataMark(int dataMarkID, DataMark.Channel channel)
     {
-        if (dataMarkID < 0 || dataMarkID > dataAxisList.Count)
+        if (dataMarkID < 0 || dataMarkID > dataMarkList.Count)
         {
-            Debug.LogError("Selected DataMark does not exist");
+            Debug.LogError("Data Mark does not exist");
             return;
         }
 
@@ -116,6 +116,32 @@ public class VisContainer
     }
 
     #endregion
+
+    /// <summary>
+    /// Defines the tick offest for every Axis
+    /// Moves the first tick from the axis origin and the last tick from the end of the axis by by the offset
+    /// </summary>
+    /// <param name="xyzOffset"></param>
+    public void SetAxisOffsets(Vector3 xyzOffset)
+    {
+        this.xyzOffset = xyzOffset;
+    }
+
+    /// <summary>
+    /// Sets the amount of Ticks for each Axis
+    /// </summary>
+    /// <param name="xyzTicks"></param>
+    public void SetAxisTickNumber(int[] xyzTicks)
+    {
+        this.xyzTicks = xyzTicks;
+    }
+
+    public void EnableBoundingBox(bool enable)
+    {
+        boundsControl = enable;
+        BoundingBoxVisibility();
+    }
+
 
     private Vector3 UpdateAxisLength()
     {
@@ -126,6 +152,10 @@ public class VisContainer
         return new Vector3(worldSpaceWidth, worldSpaceHeight, worldSpaceLength);
     }
 
+    private void BoundingBoxVisibility()
+    {
+        //TODO
+    }
 
     private void CalculateSpacing(Direction axisDirection)
     {

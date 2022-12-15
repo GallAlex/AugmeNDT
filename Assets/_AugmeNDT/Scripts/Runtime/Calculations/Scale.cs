@@ -9,11 +9,33 @@ public class Scale
         Ordinal,
     }
 
-    public List<float> domain;  // Data Range
-    public List<float> range;   // Existing Range
+    public List<double> domain;  // Data Range
+    public List<double> range;   // Existing Range
 
+    /// <summary>
+    /// Given domain represents data range
+    /// Range is set between 0 and 1  
+    /// </summary>
+    /// <param name="domain"></param>
+    public Scale(List<double> domain)
+    {
+        if (domain == null || domain.Count > 2)
+        {
+            Debug.LogError("Format of domain is not correct");
+            return;
+        }
 
-    public Scale(List<float> domain, List<float> range)
+        this.domain = domain;
+        this.range = new List<double> { 0.0f, 1.0f };
+    }
+
+    /// <summary>
+    /// Given domain represents data range
+    /// Given Range represents existing range to which the domain is mapped to
+    /// </summary>
+    /// <param name="domain"></param>
+    /// <param name="range"></param>
+    public Scale(List<double> domain, List<double> range)
     {
         if ((domain == null || domain.Count > 2) || (range == null || range.Count > 2))
         {
@@ -29,7 +51,7 @@ public class Scale
     ///  Method accepts input between domain min/max and maps it to output between range min/max.
     /// </summary>
     /// <param name="domainValue">Value of datapoint</param>
-    public virtual float GetScaledValue(float domainValue)
+    public virtual double GetScaledValue(double domainValue)
     {
         return 0.0f;
     }
@@ -38,7 +60,7 @@ public class Scale
     ///  Method accepts input between range min/max and maps it to output between domain min/max.
     /// </summary>
     /// <param name="scaledValue">Value of scaled point</param>
-    public virtual float GetDomainValue(float scaledValue)
+    public virtual double GetDomainValue(double scaledValue)
     {
         return 0.0f;
     }

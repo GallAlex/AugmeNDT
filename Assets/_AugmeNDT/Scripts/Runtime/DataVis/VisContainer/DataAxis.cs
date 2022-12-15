@@ -23,13 +23,12 @@ public class DataAxis
     [SerializeField]
     private GameObject axisInstance;
     [SerializeField]
-    private Scale dataScale;
-    [SerializeField]
     private AxisTicks axisTicks;
     [SerializeField]
     private TextMesh axisLabel;
 
     public Direction axisDirection = Direction.X;
+    public Scale dataScale;
 
     private float tickLabelOffset = 0.03f;
     
@@ -47,11 +46,12 @@ public class DataAxis
         axisLabel.text = axisTitle;
 
         this.dataScale = dataScale;
-        CreateAxisTicks(axisInstance.transform, dataScale, numberOfTicks);
 
-        //Rotate after Tick generation
         axisDirection = direction;
         axisInstance.name = axisDirection.ToString() + " Axis";
+
+        CreateAxisTicks(axisInstance.transform, dataScale, numberOfTicks);
+
         ChangeAxisDirection(axisInstance, direction);
 
         return axisInstance;
@@ -59,7 +59,7 @@ public class DataAxis
 
     /// <summary>
     /// Method creates the set amount of ticks on the Axis based on the given scale.
-    /// If numberOfTicks is zero no tick will be created, otherwise the set amount of ticks will be drawn inbetween the min/max ticks
+    /// If numberOfTicks is zero no tick will be created, otherwise the set amount of ticks (>=2) will be drawn
     /// </summary>
     /// <param name="axisTransform"></param>
     /// <param name="dataScale"></param>
@@ -68,8 +68,9 @@ public class DataAxis
     private AxisTicks CreateAxisTicks(Transform axisTransform, Scale dataScale, int numberOfTicks)
     {
         axisTicks = new AxisTicks();
-        axisTicks.SetNumberOfTicksToDraw(numberOfTicks);
-        axisTicks.CreateTicks(axisTransform, dataScale);
+        if (numberOfTicks == 1) numberOfTicks = 2;
+        
+        axisTicks.CreateTicks(axisTransform, dataScale, numberOfTicks);
 
         return axisTicks;
     }
@@ -80,8 +81,8 @@ public class DataAxis
         this.dataScale = dataScale;
 
         axisLabel.text = axisTitle;
-        axisTicks.SetNumberOfTicksToDraw(numberOfTicks);
-        axisTicks.ChangeTicks(this.dataScale);
+        if (numberOfTicks == 1) numberOfTicks = 2;
+        axisTicks.ChangeTicks(this.dataScale, numberOfTicks);
     }
 
 
@@ -97,8 +98,8 @@ public class DataAxis
 
             case Direction.Y:
                 axis.transform.Rotate(0, 0, 90);    //Rotate 90 degree in z
-                Transform axisTitle = axis.transform.Find("Title");
-                axisTitle.localPosition = new Vector3(axisTitle.localPosition.x, (-axisTitle.localPosition.y), axisTitle.localPosition.z);
+                Transform yAxisTitle = axis.transform.Find("Title");
+                yAxisTitle.localPosition = new Vector3(yAxisTitle.localPosition.x, (-yAxisTitle.localPosition.y), yAxisTitle.localPosition.z);
                 
                 foreach (var tickObject in axisTicks.tickList)
                 {
@@ -109,8 +110,15 @@ public class DataAxis
 
             case Direction.Z:
                 axis.transform.Rotate(0, -90, 0);    //Rotate 90 degree in y
-                axis.transform.Find("Title").Rotate(0, 180, 0);
+                //Transform zAxisTitle = axis.transform.Find("Title");
+                //zAxisTitle.localPosition = new Vector3(-zAxisTitle.localPosition.x, zAxisTitle.localPosition.y, zAxisTitle.localPosition.z);
+                //zAxisTitle.Rotate(0, 180, 0);
 
+                //Todo: Speed up by saving?
+                TextMesh titleTextMesh = axis.GetComponentInChildren(typeof(TextMesh)) as TextMesh;
+                titleTextMesh.transform.Rotate(0, 180, 0);
+                titleTextMesh.anchor = TextAnchor.MiddleRight;
+                
                 foreach (var tickObject in axisTicks.tickList)
                 {
                     Transform tickLabel = tickObject.transform.Find("TickLabel");

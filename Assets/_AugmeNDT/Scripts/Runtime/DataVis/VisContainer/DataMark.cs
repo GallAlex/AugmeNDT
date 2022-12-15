@@ -19,49 +19,46 @@ public class DataMark
     private GameObject dataMarkPrefab;
     private GameObject dataMarkInstance;
 
-    private Channel channels;
+    private Channel dataChannel;
     private MeshRenderer meshRenderer;
 
+    public DataMark()
+    {
+        if (this.dataMarkPrefab == null) this.dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Sphere");
+    }
+    
+    public DataMark(GameObject dataMarkPrefab)
+    {
+        if (dataMarkPrefab == null)
+        {
+            this.dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Sphere");
+        }
+        else this.dataMarkPrefab = dataMarkPrefab;
+    }
 
     public GameObject CreateDataMark(Transform visContainer, Channel channel)
     {
-        if(dataMarkPrefab == null) dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Bar");
         dataMarkInstance = GameObject.Instantiate(dataMarkPrefab, channel.position, Quaternion.Euler(channel.rotation), visContainer);
 
         meshRenderer = dataMarkInstance.GetComponent<MeshRenderer>();
 
         // Get initial data of object
-        this.channels = channel;
+        this.dataChannel = channel;
         meshRenderer.sharedMaterial.color = channel.color;
 
-        SetSize(channels.size);
-        SetRot(channel.rotation);
-
-
-        //channels = new Channel
-        //{
-        //    position = this.transform.position,
-        //    rotation = this.transform.eulerAngles,
-        //    facing = this.transform.forward,
-        //    size = meshRenderer.bounds.size,
-        //    color = meshRenderer.sharedMaterial.color
-        //};
+        SetSize(dataChannel.size);
+        SetRot(dataChannel.rotation);
 
         return dataMarkInstance;
     }
 
-    public void SetDataMarkStyle()
-    {
-
-    }
-
     public void ChangeDataMark(Channel channel)
     {
-        SetPos(channels.size);
-        SetSize(channels.size);
+        SetPos(channel.position);
+        SetSize(channel.size);
+        //SetFacing(channel.facing);
         SetRot(channel.rotation);
         SetColor(channel.color);
-
     }
 
     /// <summary>
@@ -84,27 +81,36 @@ public class DataMark
 
     public void SetPos(Vector3 position)
     {
-        channels.position = position;
-        dataMarkInstance.transform.position = channels.position;
+        dataChannel.position = position;
+        dataMarkInstance.transform.localPosition = dataChannel.position;
+    }
+
+    public void SetFacing(Vector3 facingDir)
+    {
+        dataChannel.facing = facingDir;
+        //TODO: Rotate Object
     }
 
     public void SetRot(Vector3 rotation)
     {
-        channels.rotation = rotation;
-        dataMarkInstance.transform.eulerAngles = channels.rotation;
+        dataChannel.rotation = rotation;
+        //dataMarkInstance.transform.eulerAngles = dataChannel.rotation;
     }
 
     public void SetSize(Vector3 size)
     {
-        channels.size = size;
-        dataMarkInstance.transform.localScale = channels.size;
+        dataChannel.size = size;
+        dataMarkInstance.transform.localScale = dataChannel.size;
+
         //Pivot is in Center of Object
-        dataMarkInstance.transform.Translate(0, channels.size.y / 2.0f, 0);
+        float adjustedHeight = dataChannel.size.y / 2.0f;
+        //dataMarkInstance.transform.Translate(0, adjustedHeight, 0); // Somehow doubles the translation value
+        dataMarkInstance.transform.localPosition = new Vector3(dataChannel.position.x, dataChannel.position.y + adjustedHeight, dataChannel.position.z);
     }
 
     public void SetColor(Vector4 color)
     {
-        channels.color = color;
+        dataChannel.color = color;
         meshRenderer.sharedMaterial.color = color;
     }
 

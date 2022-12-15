@@ -1,5 +1,4 @@
 using MathNet.Numerics;
-using Microsoft.MixedReality.Toolkit.Experimental.UI;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,8 +9,8 @@ public class AxisTicks
 
     public GameObject tickContainer;
     public List<GameObject> tickList;  // Ticks with labels
+    //private ObjectPool<GameObject> tickPool;
 
-    public int numberOfTicksToDraw = 2; //Ticks inbetween min/max tick
     public int decimalPoints = 4;
 
     public void SetTickMarkStyle()
@@ -25,7 +24,7 @@ public class AxisTicks
     /// <param name="axisLine"></param>
     /// <param name="scale"></param>
     /// <param name="numberOfTicks"></param>
-    public void CreateTicks(Transform axisLine, Scale scale)
+    public void CreateTicks(Transform axisLine, Scale scale, int numberOfTicks)
     {
         if (tickMarkPrefab == null) SetTickMarkStyle();
 
@@ -34,17 +33,27 @@ public class AxisTicks
 
         tickList = new List<GameObject>();
 
-        if (numberOfTicksToDraw <= 0) return;
+        //Todo: numberOfTicks == 1 should be 2
 
-        float tickSpacing = GetTickSpacing(numberOfTicksToDraw);
+        // if scale is scale.linear, then tickSpacing is calculated
+        double tickSpacing = GetTickSpacing(numberOfTicks);
+        // if scale is scale.ordinal, then tickSpacing is 1
+        //tickSpacing = 1.0f;
+        
 
+        //Debug.Log("Domain " + scale.domain[0] + " to " + scale.domain[1]);
+        //Debug.Log("Range " + scale.range[0] + " to " + scale.range[1]);
+        
         // tick from min to max value
-        for (int tick = 0; tick <= numberOfTicksToDraw; tick++)
+        for (int tick = 0; tick < numberOfTicks; tick++)
         {
-            float step = tick * tickSpacing;
-            float scaledValue = scale.GetDomainValue(step);
+            double step = tick * tickSpacing;
+            double scaledValue = scale.GetDomainValue(step);
+            //Debug.Log("tickPos Nr " + tick + ": " + step);
 
-            Vector3 tickPosition = new Vector3(step + tickContainer.transform.localPosition.x, tickContainer.transform.localPosition.y, tickContainer.transform.localPosition.z);
+            //Debug.Log("Value is " + scaledValue);
+
+            Vector3 tickPosition = new Vector3((float)step + tickContainer.transform.localPosition.x, tickContainer.transform.localPosition.y, tickContainer.transform.localPosition.z);
 
 
             tickList.Add(CreateSingleTick(tick, tickPosition, scaledValue));
@@ -58,26 +67,29 @@ public class AxisTicks
     /// </summary>
     /// <param name="scale"></param>
     /// <param name="numberOfTicks"></param>
-    public void ChangeTicks(Scale scale)
+    public void ChangeTicks(Scale scale, int numberOfTicks)
     {
-        float tickSpacing = GetTickSpacing(numberOfTicksToDraw);
+        double tickSpacing = GetTickSpacing(numberOfTicks);
+        int ticksInList = tickList.Count;
 
-        if (numberOfTicksToDraw == 0 && tickList.Count == 0) return;
+        if (numberOfTicks == 0 && ticksInList == 0) return;
 
-        for (int tick = 0; tick < Math.Max(numberOfTicksToDraw, tickList.Count); tick++)
+        for (int tick = 0; tick < Math.Max(numberOfTicks, ticksInList); tick++)
         {
-            float step = tick * tickSpacing;
-            float scaledValue = scale.GetDomainValue(step);
+            double step = tick * tickSpacing;
+            double scaledValue = scale.GetDomainValue(step);
 
-            var currTickPosition = new Vector3(step + tickContainer.transform.localPosition.x, tickContainer.transform.localPosition.y,
+            
+            var currTickPosition = new Vector3((float)step + tickContainer.transform.localPosition.x, tickContainer.transform.localPosition.y,
                 tickContainer.transform.localPosition.z);
 
-            if (numberOfTicksToDraw <= tickList.Count)
+            // If there are more ticks in the list then needed, move the ones needed and set the additional ones inactive
+            if (numberOfTicks <= ticksInList-1)
             {
-                if (tick <= numberOfTicksToDraw && numberOfTicksToDraw > 0)
+                if (tick < numberOfTicks)
                 {
                     // Change Pos and label and set tick active
-                    MoveAndRenameSingleTick(tickContainer.transform, tick, currTickPosition, scaledValue);
+                    MoveAndRenameSingleTick(tick, currTickPosition, scaledValue);
                 }
                 else
                 {
@@ -85,20 +97,17 @@ public class AxisTicks
                 }
 
             }
-            else if (numberOfTicksToDraw > tickList.Count)
+            // If there are less ticks in the list then needed, move existing ones and create new ones as needed
+            else if (numberOfTicks >= ticksInList-1)
             {
-                if (tick < tickList.Count)
+                if (tick < ticksInList)
                 {
                     // Change Pos and label and set tick active
-                    MoveAndRenameSingleTick(tickContainer.transform, tick, currTickPosition, scaledValue);
+                    MoveAndRenameSingleTick(tick, currTickPosition, scaledValue);
                 }
                 else
                 {
-
-                    //GameObject tickInstance = GameObject.Instantiate(tickMarkPrefab, currTickPosition, Quaternion.identity, tickContainer.transform);
-                    //var tickLabel = tickInstance.GetComponentInChildren<TextMesh>();
-                    //tickLabel.text = scaledValue.Round(decimalPoints).ToString();
-                    //tickInstance.name = "Tick " + tick;
+                    // Create new tick
                     tickList.Add(CreateSingleTick(tick, currTickPosition, scaledValue));
                 }
             }
@@ -113,7 +122,7 @@ public class AxisTicks
     /// <param name="tick">Gameobject of Tick with label</param>
     /// <param name="newPos">New position of the tick</param>
     /// <param name="scaledValue">Value which should be displayed as label</param>
-    private void MoveAndRenameSingleTick(Transform axisLine, int tickID, Vector3 newPos, float scaledValue)
+    private void MoveAndRenameSingleTick(int tickID, Vector3 newPos, double scaledValue)
     {
         var tickObj = tickList[tickID];
         tickObj.SetActive(true);
@@ -130,9 +139,11 @@ public class AxisTicks
     /// <param name="newPos"></param>
     /// <param name="scaledValue"></param>
     /// <returns>Returns a new Tick</returns>
-    private GameObject CreateSingleTick(int tickID, Vector3 newPos, float scaledValue)
+    private GameObject CreateSingleTick(int tickID, Vector3 newPos, double scaledValue)
     {
-        GameObject tickInstance = GameObject.Instantiate(tickMarkPrefab, newPos, Quaternion.identity, tickContainer.transform);
+        //GameObject tickInstance = GameObject.Instantiate(tickMarkPrefab, newPos, Quaternion.identity, tickContainer.transform);
+        GameObject tickInstance = GameObject.Instantiate(tickMarkPrefab, tickContainer.transform, false);
+        tickInstance.transform.localPosition = newPos;
         tickInstance.name = "Tick " + tickID;
 
         TextMesh tickLabel = tickInstance.GetComponentInChildren<TextMesh>();
@@ -142,29 +153,17 @@ public class AxisTicks
     }
 
     /// <summary>
-    /// Method sets the amount of ticks that should be drawn.
-    /// If numberOfTicks <= 0, then no tick will be drawn.
-    /// If numberOfTicks > 0 then that many ticks inbetween min tick and max tick are drawn
-    /// Example: numberOfTicks = 1 -> then 3 ticks will be drawn
-    /// </summary>
-    /// <param name="numberOfTicks"></param>
-    public void SetNumberOfTicksToDraw(int numberOfTicks)
-    {
-        if (numberOfTicks <= 0) numberOfTicksToDraw = 0;
-        else numberOfTicksToDraw = numberOfTicks + 1;
-    }
-
-    /// <summary>
     /// Calculates the distance between ticks based on the lenght of the Axis and the number of Ticks (for that range)
     /// The Axis length is assumed to be 1 Unity Unit.
     /// </summary>
     /// <param name="numberOfTicks"></param>
     /// <returns></returns>
-    private float GetTickSpacing(int numberOfTicks)
+    private double GetTickSpacing(int numberOfTicks)
     {
-        if (numberOfTicksToDraw <= 0) return -1;
-
-        return 1.0f / (float)numberOfTicks;
+        if (numberOfTicks <= 0) return 0;
+        int numberOfSpacings = numberOfTicks - 1;
+        
+        return 1.0f / (double)numberOfSpacings;
     }
 
 }
