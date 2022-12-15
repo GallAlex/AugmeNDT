@@ -11,9 +11,7 @@ public class VisBarChart : Vis
     public VisBarChart()
     {
         title = "Basic Bar Chart";                                  
-        axes = 3;                                                   
-        dataScale = Scale.DataScale.Linear;
-
+        axes = 3;
 
         dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Bar");
         tickMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Tick");
@@ -21,31 +19,36 @@ public class VisBarChart : Vis
 
     public override GameObject CreateVis()
     {
-        visContainer = new VisContainer();
-        visContainerObject = visContainer.CreateVisContainer(title);
+        base.CreateVis();
 
-        if (dimensions < axes) axes = dimensions;
+        //Initialize dataScales
+        dataScales = new List<Scale.DataScale>();
+        for (int attrScale = 0; attrScale < dimensions; attrScale++)
+        {
+            dataScales.Add(Scale.DataScale.Linear);
+        }
 
         //## 01: Create Data Scales
         List<Scale> scale = new List<Scale>(axes);
 
         for (int drawnDim = 0; drawnDim < axes; drawnDim++)
         {
-            List<float> domain = new List<float>(2);
-            List<float> range = new List<float>(2);
+            List<double> domain = new List<double>(2);
+            List<double> range = new List<double>(2);
 
-            domain.Add((float)dataValues.ElementAt(drawnDim).Value.Min());
-            domain.Add((float)dataValues.ElementAt(drawnDim).Value.Max());
+            domain.Add((double)dataValues.ElementAt(drawnDim).Value.Min());
+            domain.Add((double)dataValues.ElementAt(drawnDim).Value.Max());
 
             range.Add(0);
             range.Add(1);
 
-            scale.Add(CreateScale(domain, range));
+            scale.Add(CreateScale(dataScales[drawnDim], domain, range));
         }
 
         //## 02: Create Axes and Grids
         for (int currAxis = 0; currAxis < axes; currAxis++)
         {
+            encodedAttribute.Add(currAxis);
             int nextDim = (currAxis + 1) % axes;
             //visContainer.CreateAxis(((Direction)currAxis).ToString() + " Label", (Direction)currAxis);
             visContainer.CreateAxis(dataValues.ElementAt(currAxis).Key, (Direction)currAxis, scale[currAxis]);
@@ -61,21 +64,21 @@ public class VisBarChart : Vis
             DataMark.Channel channel = DataMark.DefaultDataChannel();
 
             //X Axis
-            var xCoordinate = scale[0].GetScaledValue((float)dataValues.ElementAt(0).Value[value]);
-            channel.position[0] = xCoordinate;
+            var xCoordinate = scale[0].GetScaledValue(dataValues.ElementAt(0).Value[value]);
+            channel.position[0] = (float)xCoordinate;
 
             //Y Axis
-            var barHeight = scale[1].GetScaledValue((float)dataValues.ElementAt(1).Value[value]);
-            channel.size[1] = barHeight;
+            var barHeight = scale[1].GetScaledValue(dataValues.ElementAt(1).Value[value]);
+            channel.size[1] = (float)barHeight;
 
             //Z Axis
             if (axes == 3)
             {
-                var zCoordinate = scale[2].GetScaledValue((float)dataValues.ElementAt(2).Value[value]);
-                channel.position[2] = zCoordinate;
+                var zCoordinate = scale[2].GetScaledValue(dataValues.ElementAt(2).Value[value]);
+                channel.position[2] = (float)zCoordinate;
             }
 
-            visContainer.CreateDataMark(channel);
+            visContainer.CreateDataMark(dataMarkPrefab, channel);
         }
 
 
@@ -83,5 +86,52 @@ public class VisBarChart : Vis
         visContainerObject.transform.localScale = new Vector3(width, height, depth);
 
         return visContainerObject;
+    }
+
+    public override void ChangeAxisAttribute(int axisId, int selectedDimension, int numberOfTicks)
+    {
+        // Record new selected attribute
+        encodedAttribute[axisId] = selectedDimension;
+
+        // Calculate new Scale based on selected Attribute
+        List<double> domain = new List<double>(2);
+        List<double> range = new List<double> { 0, 1 };
+
+        domain.Add(dataValues.ElementAt(selectedDimension).Value.Min());
+        domain.Add(dataValues.ElementAt(selectedDimension).Value.Max());
+
+        Scale scale = CreateScale(dataScales[axisId], domain, range);
+
+
+        visContainer.ChangeAxis(axisId, dataValues.ElementAt(selectedDimension).Key, scale, numberOfTicks);
+
+        //Change Data Marks
+        ChangeDataMarks();
+    }
+
+    public override void ChangeDataMarks()
+    {
+        for (int value = 0; value < numberOfValues; value++)
+        {
+            //Default:
+            DataMark.Channel channel = DataMark.DefaultDataChannel();
+
+            //X Axis
+            var xCoordinate = visContainer.dataAxisList[0].dataScale.GetScaledValue(dataValues.ElementAt(encodedAttribute[0]).Value[value]);
+            channel.position[0] = (float)xCoordinate;
+
+            //Y Height
+            var barHeight = visContainer.dataAxisList[1].dataScale.GetScaledValue(dataValues.ElementAt(encodedAttribute[1]).Value[value]);
+            channel.size[1] = (float)barHeight;
+
+            //Z Axis
+            if (axes == 3)
+            {
+                var zCoordinate = visContainer.dataAxisList[2].dataScale.GetScaledValue(dataValues.ElementAt(encodedAttribute[2]).Value[value]);
+                channel.position[2] = (float)zCoordinate;
+            }
+
+            visContainer.ChangeDataMark(value, channel);
+        }
     }
 }

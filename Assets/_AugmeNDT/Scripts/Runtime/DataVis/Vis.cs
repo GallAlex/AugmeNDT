@@ -26,87 +26,41 @@ public class Vis : MonoBehaviour
     // Visualization Properties:
     public string title = "Basic Euclidean Vis";                // Title of vis.
     public int axes = 3;                                        // Amount of Axes for Vis container
-    public Scale.DataScale dataScale = Scale.DataScale.Linear;  // Applied scaling for dataValues domain
-    public float width = 0.5f;                                  // Vis container width in centimeters.
-    public float height = 0.5f;                                 // Vis container height in centimeters.
-    public float depth = 0.5f;                                  // Vis container depth in centimeters.
-    public float[] xyzOffset = { 0.1f, 0.1f, 0.1f };            // Offset from origin (0,0) for Axes (x,y,z).
-    public int[] xyzTicks = { 10, 10, 10 };                    // Amount of Ticks between min/max tick for Axes (x,y,z).
+    public List<int> encodedAttribute;                          // Cross-reference which encoding (Axes, Color,..) uses which attribute of the data
+    //TODO: Enum whith possible encoding needed
+
+    public List<Scale.DataScale> dataScales;                    // Applied scaling for dataValues domain of respective encoding
+    public float width = 0.2f;                                  // Vis container width in centimeters.
+    public float height = 0.2f;                                 // Vis container height in centimeters.
+    public float depth = 0.2f;                                  // Vis container depth in centimeters.
+    public Vector3 xyzOffset = new(0.1f, 0.1f, 0.1f);           // Offset from origin (0,0) for Axes (x,y,z).
+    public int[] xyzTicks = { 10, 10, 10 };                        // Amount of Ticks between min/max tick for Axes (x,y,z).
 
 
-    public virtual void InitVisParams(string visTitle, int numberOfAxes, Scale.DataScale dataScale, float width, float height, float depth)
+    public virtual void InitVisParams(string visTitle, int numberOfAxes, List<Scale.DataScale> dataScales, float width, float height, float depth, Vector3 xyzOffset)
     {
         title = visTitle;
         this.axes = numberOfAxes;
-        this.dataScale = dataScale;
+        this.dataScales = dataScales;
         this.width = width;
         this.height = height;
         this.depth = depth;
+        this.xyzOffset = xyzOffset;
     }
 
     public virtual GameObject CreateVis()
     {
+        //TODO: Move into Constructor?
+
         visContainer = new VisContainer();
-        if (dataMarkPrefab == null) dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Bar");
-        if (tickMarkPrefab == null) tickMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Tick");
-
-
+        
         visContainerObject =  visContainer.CreateVisContainer(title);
+        encodedAttribute = new List<int>();
+
+        visContainer.SetAxisOffsets(xyzOffset);
+        visContainer.SetAxisTickNumber(xyzTicks);
 
         if (dimensions < axes) axes = dimensions;
-
-        //## 01: Create Data Scales
-        List<Scale> scale = new List<Scale>(axes);
-
-        for (int drawnDim = 0; drawnDim < axes; drawnDim++)
-        {
-            List<float> domain = new List<float>(2);
-            List<float> range = new List<float>(2);
-
-            domain.Add((float)dataValues.ElementAt(drawnDim).Value.Min());
-            domain.Add((float)dataValues.ElementAt(drawnDim).Value.Max());
-
-            range.Add(0);
-            range.Add(1);
-
-            scale.Add(CreateScale(domain, range));
-        }
-
-        //## 02: Create Axes and Grids
-        for (int currAxis = 0; currAxis < axes; currAxis++)
-        {
-            int nextDim = (currAxis + 1) % axes;
-            //visContainer.CreateAxis(((Direction)currAxis).ToString() + " Label", (Direction)currAxis);
-            visContainer.CreateAxis(dataValues.ElementAt(currAxis).Key, (Direction)currAxis, scale[currAxis]);
-            visContainer.CreateGrid((Direction)currAxis, (Direction)nextDim);
-        }
-
-        //## 03: Create Data Points
-
-        for (int value = 0; value < numberOfValues; value++)
-        {
-            //Default:
-            DataMark.Channel channel = new DataMark.Channel
-            {
-                position = new Vector3(0, 0, 0),
-                rotation = new Vector3(0, 0, 0),
-                color = new Vector4(1, 0, 0, 1),
-                size = new Vector3(0.01f, 0.01f, 0.01f)
-            };
-
-            for (int currAxis = 0; currAxis < axes; currAxis++)
-            {
-                var coordinate = scale[currAxis].GetScaledValue((float)dataValues.ElementAt(currAxis).Value[value]);
-                channel.position[currAxis] = coordinate;
-            }
-
-            visContainer.CreateDataMark(channel);
-        }
-
-
-        //## 04: Rescale
-        visContainerObject.transform.localScale = new Vector3(width, height, depth);
-        visContainerObject.GetComponent<BoundsControl>().UpdateBounds();
 
         return visContainerObject;
     }
@@ -141,24 +95,39 @@ public class Vis : MonoBehaviour
 
     }
 
-    public void ChangeAxisAttribute(int axisId, int selectedDimension, int numberOfTicks)
+    public virtual Dictionary<string, double[]> GetAppendedData()
     {
-        // Calculate new Scale based on selected Attribute
+        return dataValues;
+    }
 
-        List<float> domain = new List<float>(2);
-        List<float> range = new List<float> { 0, 1 };
+    public virtual void ChangeAxisAttribute(int axisId, int selectedDimension, int numberOfTicks)
+    {
+        //// Record new selected attribute
+        //encodedAttribute[axisId] = selectedDimension;
 
-        domain.Add((float)dataValues.ElementAt(selectedDimension).Value.Min());
-        domain.Add((float)dataValues.ElementAt(selectedDimension).Value.Max());
+        //// Calculate new Scale based on selected Attribute
+        //List<double> domain = new List<float>(2);
+        //List<float> range = new List<float> { 0, 1 };
 
-        Scale scale = CreateScale(domain, range);
+        //domain.Add((float)dataValues.ElementAt(selectedDimension).Value.Min());
+        //domain.Add((float)dataValues.ElementAt(selectedDimension).Value.Max());
+
+        //Scale scale = CreateScale(domain, range);
 
 
-        visContainer.ChangeAxis(axisId, dataValues.ElementAt(selectedDimension).Key, numberOfTicks, scale);
+        //visContainer.ChangeAxis(axisId, dataValues.ElementAt(selectedDimension).Key, scale, numberOfTicks);
+
+        ////Change Data Marks
+        //ChangeDataMarks();
+    }
+
+    public virtual void ChangeDataMarks()
+    {
+
     }
 
 
-    public Scale CreateScale(List<float> domain, List<float> range)
+    public Scale CreateScale(Scale.DataScale dataScale, List<double> domain, List<double> range)
     {
         Scale scaleFunction;
 
@@ -169,7 +138,7 @@ public class Vis : MonoBehaviour
                 scaleFunction = new ScaleLinear(domain, range);
                 break;
             case Scale.DataScale.Ordinal:
-                throw new NotImplementedException();
+                scaleFunction = new ScaleOrdinal(domain, range, new List<string>(dataValues.Keys));
                 break;
 
         }

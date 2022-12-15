@@ -1,30 +1,26 @@
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
-public class ScaleLinear: Scale
+public class ScaleOrdinal : Scale
 {
+    private List<string> domainNames;
 
     private double domainMin = 0.0d;
-    private double domainMax = 100.0d;
-
+    private double domainMax = 10.0d;
+            
     private double rangeMin = 0.0d;
     private double rangeMax = 1.0d;
 
 
-    public ScaleLinear(List<double> domain) : base(domain)
+    public ScaleOrdinal(List<double> domain, List<double> range, List<string> names) : base(domain, range)
     {
         domainMin = domain[0];
         domainMax = domain[1];
 
-        rangeMin = range[0];
-        rangeMax = range[1];
-    }
-    
-    public ScaleLinear(List<double> domain, List<double> range) : base(domain, range)
-    {
-        domainMin = domain[0];
-        domainMax = domain[1];
+        if (domainMin != 0.0d || domainMax != names.Count - 1)
+        {
+            Debug.LogWarning("Domain of ordinal scale is not correct! Are some attribute names missing?");
+        }
 
         rangeMin = range[0];
         rangeMax = range[1];
@@ -59,20 +55,16 @@ public class ScaleLinear: Scale
     }
 
     /// <summary>
-    /// Returns a array normalized to the given range from its domain values
+    /// Returns the domain name for the given scaled value.
+    /// Calculates the Domain Value first.
     /// </summary>
-    /// <param name="array"></param>
+    /// <param name="scaledValue"></param>
     /// <returns></returns>
-    public double[] GetNormalizedArray(double[] array)
+    public string GetDomainName(double scaledValue)
     {
-        double[] normalizedArray = new double[array.Length];
-        
-        for (int i = 0; i < array.Length; i++)
-        {
-            normalizedArray[i] = GetScaledValue((double)array[i]);
-        }
+        double domainVal = GetDomainValue(scaledValue);
 
-        return normalizedArray;
+        return domainNames[(int)domainVal];
     }
-}
 
+}

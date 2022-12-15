@@ -9,8 +9,6 @@ public class VisScatterplot : Vis
     {
         title = "Basic Scatterplot";
         axes = 3;
-        dataScale = Scale.DataScale.Linear;
-
 
         dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Sphere");
         tickMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Tick");
@@ -18,8 +16,14 @@ public class VisScatterplot : Vis
 
     public override GameObject CreateVis()
     {
-        visContainer = new VisContainer();
-        visContainerObject = visContainer.CreateVisContainer(title);
+        base.CreateVis();
+
+        //Initialize dataScales
+        dataScales = new List<Scale.DataScale>();
+        for (int attrScale = 0; attrScale < dimensions; attrScale++)
+        {
+            dataScales.Add(Scale.DataScale.Linear);
+        }
 
         if (dimensions < axes) axes = dimensions;
 
@@ -28,16 +32,16 @@ public class VisScatterplot : Vis
 
         for (int drawnDim = 0; drawnDim < axes; drawnDim++)
         {
-            List<float> domain = new List<float>(2);
-            List<float> range = new List<float>(2);
+            List<double> domain = new List<double>(2);
+            List<double> range = new List<double>(2);
 
-            domain.Add((float)dataValues.ElementAt(drawnDim).Value.Min());
-            domain.Add((float)dataValues.ElementAt(drawnDim).Value.Max());
+            domain.Add(dataValues.ElementAt(drawnDim).Value.Min());
+            domain.Add(dataValues.ElementAt(drawnDim).Value.Max());
 
             range.Add(0);
             range.Add(1);
 
-            scale.Add(CreateScale(domain, range));
+            scale.Add(CreateScale(dataScales[drawnDim],domain, range));
         }
 
         //## 02: Create Axes and Grids
@@ -58,21 +62,21 @@ public class VisScatterplot : Vis
             DataMark.Channel channel = DataMark.DefaultDataChannel();
 
             //X Axis
-            var xCoordinate = scale[0].GetScaledValue((float)dataValues.ElementAt(0).Value[value]);
-            channel.position[0] = xCoordinate;
+            var xCoordinate = scale[0].GetScaledValue(dataValues.ElementAt(0).Value[value]);
+            channel.position[0] = (float)xCoordinate;
 
             //Y Axis
-            var yCoordinate = scale[1].GetScaledValue((float)dataValues.ElementAt(1).Value[value]);
-            channel.position[1] = yCoordinate;
+            var yCoordinate = scale[1].GetScaledValue(dataValues.ElementAt(1).Value[value]);
+            channel.position[1] = (float)yCoordinate;
 
             //Z Axis
             if (axes == 3)
             {
-                var zCoordinate = scale[2].GetScaledValue((float)dataValues.ElementAt(2).Value[value]);
-                channel.position[2] = zCoordinate;
+                var zCoordinate = scale[2].GetScaledValue(dataValues.ElementAt(2).Value[value]);
+                channel.position[2] = (float)zCoordinate;
             }
 
-            visContainer.CreateDataMark(channel);
+            visContainer.CreateDataMark(dataMarkPrefab, channel);
         }
 
 

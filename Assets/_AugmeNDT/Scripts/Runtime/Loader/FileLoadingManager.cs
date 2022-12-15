@@ -1,6 +1,7 @@
 //using UnityEditor;
 using System.IO;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using SFB;
 using System.Threading.Tasks;
@@ -34,18 +35,24 @@ public class FileLoadingManager : MonoBehaviour
     private FileLoader loaderFactory;
     private VoxelDataset volumeDataset;
     private PolyFiberData polyFiberDataset;
-    private VolumeRenderedObject volumeRenderedObject;
-    private PolyFiberRenderedObject polyFiberRenderedObject;
-    private GameObject renderContainer;
-    private Vis vis;
+
+    private List<VolumeRenderedObject> volumeRenderedObjectList;        // Stores all loaded & rendered Volumes
+    private List<PolyFiberRenderedObject> polyFiberRenderedObjectList;  // Stores all loaded & rendered Poly Models
+    public List<Vis> visList;                                          // Stores all loaded & rendered Visulaizations
 
     #region Getter/Setter
     public FileLoader LoaderFactory { get => loaderFactory; set => loaderFactory = value; }
     public VoxelDataset VolumeDataset { get => volumeDataset; set => volumeDataset = value; }
     public PolyFiberData PolyDataset { get => polyFiberDataset; set => polyFiberDataset = value; }
-    public VolumeRenderedObject VolumeRenderedObject { get => volumeRenderedObject; set => volumeRenderedObject = value; }
-    public PolyFiberRenderedObject PolyFiberRenderedObject { get => polyFiberRenderedObject; set => polyFiberRenderedObject = value; }
     #endregion
+
+
+    public FileLoadingManager()
+    {
+        volumeRenderedObjectList = new List<VolumeRenderedObject>();
+        polyFiberRenderedObjectList = new List<PolyFiberRenderedObject>();
+        visList = new List<Vis>();
+    }
 
     public async Task<String> loadData()
     {
@@ -120,7 +127,7 @@ public class FileLoadingManager : MonoBehaviour
                 await RenderPolyObject();
             }
 
-            renderContainer.transform.position = new Vector3(-0.2f, 0.1f, 0.5f); // Best pos Hololens
+            //renderContainer.transform.position = new Vector3(-0.2f, 0.1f, 0.5f); // Best pos Hololens
 
         }
         catch (Exception ex)
@@ -189,13 +196,15 @@ public class FileLoadingManager : MonoBehaviour
     private async Task RenderVolumeObject()
     {
         volumeDataset = loaderFactory.voxelDataset;
-
-        //Render GameObject
-        renderContainer = new GameObject("VolumeRenderedObject_" + fileName);
-        volumeRenderedObject = renderContainer.AddComponent<VolumeRenderedObject>();
-
+        
         Debug.Log("Create Volume Object");
-        await volumeRenderedObject.CreateObject(renderContainer, volumeDataset);
+
+        //Render Volume Object
+        VolumeRenderedObject volumeRenderedObject = new VolumeRenderedObject();
+        volumeRenderedObjectList.Add(volumeRenderedObject);
+
+        await volumeRenderedObject.CreateObject(volumeDataset);
+
         // Save the texture to your Unity Project
         //AssetDatabase.CreateAsset(dataset.GetDataTexture(), "Assets/Textures/Example3DTexture.asset");
     }
@@ -204,25 +213,32 @@ public class FileLoadingManager : MonoBehaviour
     {
         polyFiberDataset = loaderFactory.polyFiberDataset;
 
-        renderContainer = new GameObject("PolyRenderedObject_" + fileName);
-        polyFiberRenderedObject = renderContainer.AddComponent<PolyFiberRenderedObject>();
-
         Debug.Log("Create Poly Object");
 
-        //vis = new Vis();
-        //vis.AppendData(polyFiberDataset.ExportForDataVis());
-        //vis.CreateVis();
+        //Render Poly Object
+        PolyFiberRenderedObject polyFiberRenderedObject = new PolyFiberRenderedObject();
+        polyFiberRenderedObjectList.Add(polyFiberRenderedObject);
 
-        vis = new VisBarChart();
+        // Render Visualization
+        Vis vis = new VisMDDGlyphs();
+        visList.Add(vis);
+
         vis.AppendData(polyFiberDataset.ExportForDataVis());
         vis.CreateVis();
 
-        await polyFiberRenderedObject.CreateObject(renderContainer, polyFiberDataset);
+        await polyFiberRenderedObject.CreateObject(polyFiberDataset);
     }
 
-    public void ChangeAxis(int axisID, int selectedDimension, int numberOfTicks)
+    public void ChangeAxis(int selectedVis, int axisID, int selectedDimension, int numberOfTicks)
     {
-        vis.ChangeAxisAttribute(axisID, selectedDimension, numberOfTicks);
+        //TODO: Change int selectedVis to reference of Object during interaction
+        visList[selectedVis].ChangeAxisAttribute(axisID, selectedDimension, numberOfTicks);
+    }
+
+    public void ChangeVolumeShader(int selectedVolume, Shader shader)
+    {
+        //TODO: Change int selectedVolume to reference of Object during interaction
+        volumeRenderedObjectList[selectedVolume].ChangeShader(shader);
     }
 
 #if !UNITY_EDITOR && UNITY_WSA_10_0
