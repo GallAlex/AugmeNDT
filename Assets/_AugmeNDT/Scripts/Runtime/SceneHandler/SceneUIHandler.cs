@@ -9,7 +9,7 @@ using TMPro;
 using UnityEngine;
 
 /// <summary>
-/// Class handels the interactions inside the scene (Windows, Buttons,...)
+/// Class handels the interactions with global GUI elements inside the scene (Windows, Buttons,...)
 /// </summary>
 public class SceneUIHandler : MonoBehaviour
 {
@@ -24,18 +24,31 @@ public class SceneUIHandler : MonoBehaviour
 
     public List<Shader> listOfShaders;
 
-    private FileLoadingManager fileLoadingManager;
+
     private const int AmountShadertypes = 3;
     private int shaderType = 0;
     private int ticks = -1;
     private int attribute = 0;
 
-    void Start()
+    private SceneFileHandler refSceneFileHandler;   // Reference to the SceneFileHandler
+    private SceneVisHandler refSceneVisHandler;     // Reference to the SceneVisHandler
+
+    /// <summary>
+    /// Sets a reference to the sceneFileHandler
+    /// </summary>
+    /// <param name="sceneFileHandler"></param>
+    public void SetSceneFileHandler(SceneFileHandler sceneFileHandler)
     {
-        Debug.Log("DeviceName: " + SystemInfo.deviceName);
-        Debug.Log("GraphicsMemorySize: " + (double)SystemInfo.graphicsMemorySize + " MB");
-        Debug.Log("MaxTextureSize: " + (double)SystemInfo.maxTextureSize);
-        Debug.Log("MaxGraphicsBufferSize: " + (double)SystemInfo.maxGraphicsBufferSize / 1024.0f / 1024.0f + " MB");
+        refSceneFileHandler = sceneFileHandler;
+    }
+
+    /// <summary>
+    /// Sets a reference to the sceneVisHandler
+    /// </summary>
+    /// <param name="sceneVisHandler"></param>
+    public void SetSceneVisHandler(SceneVisHandler sceneVisHandler)
+    {
+        refSceneVisHandler = sceneVisHandler;
     }
 
     /// <summary>
@@ -55,8 +68,7 @@ public class SceneUIHandler : MonoBehaviour
         Debug.Log("Started loading file with ...");
         textLabel.text = "Loading ...";
 
-        fileLoadingManager = new FileLoadingManager();
-        Task<string> asyncLoadingTask = fileLoadingManager.loadData();
+        Task<string> asyncLoadingTask = refSceneFileHandler.LoadData();
 
         //Progress Bar
         indicator = indicatorObject.GetComponent<IProgressIndicator>();
@@ -64,6 +76,9 @@ public class SceneUIHandler : MonoBehaviour
 
         string path = await asyncLoadingTask;
         textLabel.text = path;
+
+        // Update SceneVisHandler
+        refSceneVisHandler.UpdateRenderedObjects(refSceneFileHandler.GetFileLoadingManager());
     }
 
     public void CreateVisualization()
@@ -71,7 +86,7 @@ public class SceneUIHandler : MonoBehaviour
         attribute++;
         attribute = attribute % 8;
 
-        fileLoadingManager.ChangeAxis(0, 1, attribute, 5);
+        refSceneVisHandler.ChangeAxis(0, 1, attribute, 5);
 
         //VisContainer vis = new VisContainer();
         //vis.CreateVisContainer("Basic Euclidean Space");
@@ -125,14 +140,14 @@ public class SceneUIHandler : MonoBehaviour
         //ticks++;
         //ticks = ticks % 12;
 
-        //fileLoadingManager.ChangeAxis(0, 0, 0, ticks);
+        //refSceneVisHandler.ChangeAxis(0, 0, 0, ticks);
 
         FillGridObject();
     }
 
     public void FillGridObject()
     {
-        Dictionary<string, double[]> dataVal = fileLoadingManager.visList[0].dataValues;
+        Dictionary<string, double[]> dataVal = refSceneVisHandler.visObjectList[0].dataValues;
         scrollGridUtility.FillScrollGrid(dataVal.Keys.ToList());
 
         //// Load Button Prefab
@@ -165,7 +180,7 @@ public class SceneUIHandler : MonoBehaviour
     public void ChangeShader()
     {
         shaderType = (shaderType + 1) % AmountShadertypes;
-        fileLoadingManager.ChangeVolumeShader(0, listOfShaders[shaderType]);
+        refSceneVisHandler.ChangeVolumeShader(0, listOfShaders[shaderType]);
     }
 
     private void ShowDrivesAndFolders()

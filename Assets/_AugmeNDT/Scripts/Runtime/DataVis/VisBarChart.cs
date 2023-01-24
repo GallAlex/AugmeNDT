@@ -22,10 +22,10 @@ public class VisBarChart : Vis
         base.CreateVis();
 
         //Initialize dataScales
-        dataScales = new List<Scale.DataScale>();
+        dataScaleTypes = new List<Scale.DataScale>();
         for (int attrScale = 0; attrScale < dimensions; attrScale++)
         {
-            dataScales.Add(Scale.DataScale.Linear);
+            dataScaleTypes.Add(Scale.DataScale.Linear);
         }
 
         //## 01: Create Data Scales
@@ -42,7 +42,7 @@ public class VisBarChart : Vis
             range.Add(0);
             range.Add(1);
 
-            scale.Add(CreateScale(dataScales[drawnDim], domain, range));
+            scale.Add(CreateScale(dataScaleTypes[drawnDim], domain, range));
         }
 
         //## 02: Create Axes and Grids
@@ -100,7 +100,7 @@ public class VisBarChart : Vis
         domain.Add(dataValues.ElementAt(selectedDimension).Value.Min());
         domain.Add(dataValues.ElementAt(selectedDimension).Value.Max());
 
-        Scale scale = CreateScale(dataScales[axisId], domain, range);
+        Scale scale = CreateScale(dataScaleTypes[axisId], domain, range);
 
 
         visContainer.ChangeAxis(axisId, dataValues.ElementAt(selectedDimension).Key, scale, numberOfTicks);

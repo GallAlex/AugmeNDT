@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class DataMark
 {
@@ -22,6 +23,7 @@ public class DataMark
     private Channel dataChannel;
     private MeshRenderer meshRenderer;
 
+    
     public DataMark()
     {
         if (this.dataMarkPrefab == null) this.dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Sphere");
@@ -40,7 +42,11 @@ public class DataMark
     {
         dataMarkInstance = GameObject.Instantiate(dataMarkPrefab, channel.position, Quaternion.Euler(channel.rotation), visContainer);
 
+        //Todo: Set Color
         meshRenderer = dataMarkInstance.GetComponent<MeshRenderer>();
+        meshRenderer.material.SetColor("_Color", channel.color);
+
+        Debug.Log("DataMark color " + channel.color);
 
         // Get initial data of object
         this.dataChannel = channel;
@@ -111,7 +117,8 @@ public class DataMark
     public void SetColor(Vector4 color)
     {
         dataChannel.color = color;
-        meshRenderer.sharedMaterial.color = color;
+        meshRenderer.material.SetColor("_Color", color);
+        //meshRenderer.sharedMaterial.color = color;
     }
 
 }

@@ -152,18 +152,115 @@ public class VisContainer
         return new Vector3(worldSpaceWidth, worldSpaceHeight, worldSpaceLength);
     }
 
+    private Vector3 GetCenterOfVisContainer()
+    {
+        Vector3 center = visContainer.transform.position + visContainer.transform.localScale / 2f; ;
+        return center;
+    }
+
     private void BoundingBoxVisibility()
     {
         //TODO
     }
 
-    private void CalculateSpacing(Direction axisDirection)
+    /// <summary>
+    /// Method moves the Grid in the VisContainer side which is further away from the camera
+    /// For this the Container is viewed as consiting out of 8 octants. 
+    /// </summary>
+    public void MoveGridBasedOnViewingDirection()
     {
-        // Based on Data which is assigned to Axis define gridSize/numberOfTicks
-        // dataAxisList.at(0) has DataAttribut "A1" with minValue & maxValue and numberOfTicks
-        // VisContainer can supply ranges from respective Axis to different VisCalculation (Bar Chart, Line Chart,...)
-        // TODO: Should the range Calculation be in own class which is added to VisContainer/VisCalculation? Should a scriptable class store it?
+        Vector3 center = GetCenterOfVisContainer();
+        Vector3 cDir = Camera.main.transform.position;
+
+        // Calculate in which octant  (8 possibilities) of the cube the camera is located
+        // >-Bottom->  --+  |  +-+   >-Top->  -++  |  +++
+        // >-Bottom->  ---  |  +--   >-Top->  -+-  |  ++-
+
+        //## Bottom Part ##
+        // --+
+        if (cDir.x < center.x && cDir.y < center.y && cDir.z > center.z)
+        {
+            //XY
+            dataGridList[0].GetGridObject().transform.localPosition = new Vector3(0, 0, 0);
+            //YZ
+            dataGridList[1].GetGridObject().transform.localPosition = new Vector3(1, 0, 0);
+            //XZ
+            dataGridList[2].GetGridObject().transform.localPosition = new Vector3(0, 1, 0);
+        }
+        //+-+
+        else if (cDir.x > center.x && cDir.y < center.y && cDir.z > center.z)
+        {
+            //XY
+            dataGridList[0].GetGridObject().transform.localPosition = new Vector3(0, 0, 0);
+            //YZ
+            dataGridList[1].GetGridObject().transform.localPosition = new Vector3(0, 0, 0);
+            //XZ
+            dataGridList[2].GetGridObject().transform.localPosition = new Vector3(0, 1, 0);
+        }
+        //---
+        else if (cDir.x < center.x && cDir.y < center.y && cDir.z < center.z)
+        {
+            //XY
+            dataGridList[0].GetGridObject().transform.localPosition = new Vector3(0, 0, 1);
+            //YZ
+            dataGridList[1].GetGridObject().transform.localPosition = new Vector3(1, 0, 0);
+            //XZ
+            dataGridList[2].GetGridObject().transform.localPosition = new Vector3(0, 1, 0);
+        }
+        //+--
+        else if (cDir.x > center.x && cDir.y < center.y && cDir.z < center.z)
+        {
+            //XY
+            dataGridList[0].GetGridObject().transform.localPosition = new Vector3(0, 0, 1);
+            //YZ
+            dataGridList[1].GetGridObject().transform.localPosition = new Vector3(0, 0, 0);
+            //XZ
+            dataGridList[2].GetGridObject().transform.localPosition = new Vector3(0, 1, 0);
+        }
+        //## Top Part ##
+        // -++
+        if (cDir.x < center.x && cDir.y > center.y && cDir.z > center.z)
+        {
+            //XY
+            dataGridList[0].GetGridObject().transform.localPosition = new Vector3(0, 0, 0);
+            //YZ
+            dataGridList[1].GetGridObject().transform.localPosition = new Vector3(1, 0, 0);
+            //XZ
+            dataGridList[2].GetGridObject().transform.localPosition = new Vector3(0, 0, 0);
+        }
+        //+++
+        else if (cDir.x > center.x && cDir.y > center.y && cDir.z > center.z)
+        {
+            //XY
+            dataGridList[0].GetGridObject().transform.localPosition = new Vector3(0, 0, 0);
+            //YZ
+            dataGridList[1].GetGridObject().transform.localPosition = new Vector3(0, 0, 0);
+            //XZ
+            dataGridList[2].GetGridObject().transform.localPosition = new Vector3(0, 0, 0);
+        }
+        //-+-
+        else if (cDir.x < center.x && cDir.y > center.y && cDir.z < center.z)
+        {
+            //XY
+            dataGridList[0].GetGridObject().transform.localPosition = new Vector3(0, 0, 1);
+            //YZ
+            dataGridList[1].GetGridObject().transform.localPosition = new Vector3(1, 0, 0);
+            //XZ
+            dataGridList[2].GetGridObject().transform.localPosition = new Vector3(0, 0, 0);
+        }
+        //++-
+        else if (cDir.x > center.x && cDir.y > center.y && cDir.z < center.z)
+        {
+            //XY
+            dataGridList[0].GetGridObject().transform.localPosition = new Vector3(0, 0, 1);
+            //YZ
+            dataGridList[1].GetGridObject().transform.localPosition = new Vector3(0, 0, 0);
+            //XZ
+            dataGridList[2].GetGridObject().transform.localPosition = new Vector3(0, 0, 0);
+        }
 
     }
+
+
 
 }

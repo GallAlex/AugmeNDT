@@ -3,13 +3,9 @@ using System.IO;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using SFB;
 using System.Threading.Tasks;
 
-#if !UNITY_EDITOR && UNITY_WSA_10_0
-using Windows.Storage;
-using Windows.Storage.Pickers;
-#endif
+
 
 public enum DatasetType
 {
@@ -24,10 +20,8 @@ public enum DatasetType
 /// Concrete class for loading a file based on its extension and selects the appropriate loader (factory) for it.
 /// Loader depends on System (Hololens2, Windows,...)
 /// </summary>
-public class FileLoadingManager : MonoBehaviour
+public class FileLoadingManager
 {
-    private string filePath = "";
-    private string fileName = "";
     private bool loadingSucceded = false;
     bool isPolyObject = false;
 
@@ -36,9 +30,9 @@ public class FileLoadingManager : MonoBehaviour
     private VoxelDataset volumeDataset;
     private PolyFiberData polyFiberDataset;
 
-    private List<VolumeRenderedObject> volumeRenderedObjectList;        // Stores all loaded & rendered Volumes
-    private List<PolyFiberRenderedObject> polyFiberRenderedObjectList;  // Stores all loaded & rendered Poly Models
-    public List<Vis> visList;                                          // Stores all loaded & rendered Visulaizations
+    public List<VolumeRenderedObject> volumeRenderedObjectList;        // Stores all loaded & rendered Volumes
+    public List<PolyFiberRenderedObject> polyFiberRenderedObjectList;  // Stores all loaded & rendered Poly Models
+    public List<Vis> visList;                                          // Stores all loaded & rendered Visualizations
 
     #region Getter/Setter
     public FileLoader LoaderFactory { get => loaderFactory; set => loaderFactory = value; }
@@ -53,23 +47,9 @@ public class FileLoadingManager : MonoBehaviour
         polyFiberRenderedObjectList = new List<PolyFiberRenderedObject>();
         visList = new List<Vis>();
     }
+    
 
-    public async Task<String> loadData()
-    {
-#if !UNITY_EDITOR && UNITY_WSA_10_0
-        Debug.Log("HOLOLENS 2 PICKER");
-        FilePicker_Hololens();
-
-#endif
-
-#if UNITY_EDITOR
-                Debug.Log("UNITY_STANDALONE PICKER");
-                FilePicker_Win();
-#endif
-        return filePath;
-    }
-
-    private async Task loadDataset()
+    public async Task loadDataset(string filePath)
     {
         try
         {
@@ -80,14 +60,14 @@ public class FileLoadingManager : MonoBehaviour
                 return;
             }
 
-            fileName = Path.GetFileNameWithoutExtension(filePath);
+            //fileName = Path.GetFileNameWithoutExtension(filePath);
             DatasetType fileTyp = GetDatasetType(filePath);
 
             //Choose Loader here
             switch (fileTyp)
             {
                 case DatasetType.Raw:
-                    loadingSucceded = await CreateRawLoader();
+                    loadingSucceded = await CreateRawLoader(filePath);
                     isPolyObject = false;
                     break;
                 case DatasetType.Mhd:
@@ -152,7 +132,6 @@ public class FileLoadingManager : MonoBehaviour
         switch (extension)
         {
             case ".raw":
-            case ".zraw":
                 datasetType = DatasetType.Raw;
                 break;
             case ".mhd":
@@ -173,9 +152,9 @@ public class FileLoadingManager : MonoBehaviour
         return datasetType;
     }
 
-    private async Task<bool> CreateRawLoader()
+    private async Task<bool> CreateRawLoader(string filePath)
     {
-        GameObject rawFileWindowUI = Instantiate((GameObject)Resources.Load("Prefabs/UIPrefabs/RawFileWindow"));
+        GameObject rawFileWindowUI = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/UIPrefabs/RawFileWindow"));
         RawFileWindow rawFileWindow = rawFileWindowUI.GetComponent<RawFileWindow>();
 
         bool startImport = await rawFileWindow.WaitForInput();
@@ -188,7 +167,7 @@ public class FileLoadingManager : MonoBehaviour
         {
             Debug.LogError("Raw loading canceled");
         }
-        Destroy(rawFileWindowUI);
+        GameObject.Destroy(rawFileWindowUI);
 
         return startImport;
     }
@@ -212,7 +191,6 @@ public class FileLoadingManager : MonoBehaviour
     private async Task RenderPolyObject()
     {
         polyFiberDataset = loaderFactory.polyFiberDataset;
-
         Debug.Log("Create Poly Object");
 
         //Render Poly Object
@@ -228,68 +206,5 @@ public class FileLoadingManager : MonoBehaviour
 
         await polyFiberRenderedObject.CreateObject(polyFiberDataset);
     }
-
-    public void ChangeAxis(int selectedVis, int axisID, int selectedDimension, int numberOfTicks)
-    {
-        //TODO: Change int selectedVis to reference of Object during interaction
-        visList[selectedVis].ChangeAxisAttribute(axisID, selectedDimension, numberOfTicks);
-    }
-
-    public void ChangeVolumeShader(int selectedVolume, Shader shader)
-    {
-        //TODO: Change int selectedVolume to reference of Object during interaction
-        volumeRenderedObjectList[selectedVolume].ChangeShader(shader);
-    }
-
-#if !UNITY_EDITOR && UNITY_WSA_10_0
-    private async Task FilePicker_Hololens()
-    {
-
-        UnityEngine.WSA.Application.InvokeOnUIThread(async () =>
-            {
-                var filepicker = new FileOpenPicker();
-                filepicker.FileTypeFilter.Add("*");
-                filepicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
-                //filepicker.FileTypeFilter.Add(".txt");
-
-                //if (multiSelection)
-                //{
-                //    IReadOnlyList<StorageFile> files = await filePicker.PickMultipleFilesAsync();
-                //    UnityEngine.WSA.Application.InvokeOnAppThread(() =>
-                //    {
-                //        UWPFilesSelected(files);
-                //    }, true);
-                //}
-
-                var file = await filepicker.PickSingleFileAsync();
-
-                UnityEngine.WSA.Application.InvokeOnAppThread(async () =>
-                {
-                    filePath = (file != null) ? file.Path : "Nothing selected";
-                    Debug.Log("Hololens 2 Picker Path = " + filePath);
-                    //await loadDataset();
-                    await loadDataset();
-
-                }, true);
-            }, false);
-    }
-#endif
-
-
-#if UNITY_EDITOR
-    private async Task FilePicker_Win()
-    {
-
-        var paths = StandaloneFileBrowser.OpenFilePanel("Open File", "", "", false);
-        filePath = paths[0];
-        Debug.Log("WIN Picker Path = " + filePath);
-        Task asyncTask = loadDataset();
-        //StartProgressIndicator(asyncTask);
-        await asyncTask;
-
-        //StandaloneFileBrowser.OpenFilePanelAsync("Open File", "", "", false, (string[] paths) => { filePath = paths[0]; });
-
-    }
-#endif
 
 }

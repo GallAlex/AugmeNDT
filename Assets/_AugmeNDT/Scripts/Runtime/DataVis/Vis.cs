@@ -10,7 +10,8 @@ using UnityEngine.SocialPlatforms;
 /// <summary>
 /// Base class to create different data visualizations charts
 /// </summary>
-public class Vis : MonoBehaviour
+[Serializable]
+public class Vis
 {
     // Vis container and used Prefabs
     public VisContainer visContainer;
@@ -29,19 +30,19 @@ public class Vis : MonoBehaviour
     public List<int> encodedAttribute;                          // Cross-reference which encoding (Axes, Color,..) uses which attribute of the data
     //TODO: Enum whith possible encoding needed
 
-    public List<Scale.DataScale> dataScales;                    // Applied scaling for dataValues domain of respective encoding
+    public List<Scale.DataScale> dataScaleTypes;                    // Applied scaling for dataValues domain of respective encoding
     public float width = 0.2f;                                  // Vis container width in centimeters.
     public float height = 0.2f;                                 // Vis container height in centimeters.
     public float depth = 0.2f;                                  // Vis container depth in centimeters.
     public Vector3 xyzOffset = new(0.1f, 0.1f, 0.1f);           // Offset from origin (0,0) for Axes (x,y,z).
-    public int[] xyzTicks = { 10, 10, 10 };                        // Amount of Ticks between min/max tick for Axes (x,y,z).
+    public int[] xyzTicks = { 10, 10, 10 };                     // Amount of Ticks between min/max tick for Axes (x,y,z).
 
 
     public virtual void InitVisParams(string visTitle, int numberOfAxes, List<Scale.DataScale> dataScales, float width, float height, float depth, Vector3 xyzOffset)
     {
         title = visTitle;
         this.axes = numberOfAxes;
-        this.dataScales = dataScales;
+        this.dataScaleTypes = dataScales;
         this.width = width;
         this.height = height;
         this.depth = depth;
@@ -102,31 +103,14 @@ public class Vis : MonoBehaviour
 
     public virtual void ChangeAxisAttribute(int axisId, int selectedDimension, int numberOfTicks)
     {
-        //// Record new selected attribute
-        //encodedAttribute[axisId] = selectedDimension;
-
-        //// Calculate new Scale based on selected Attribute
-        //List<double> domain = new List<float>(2);
-        //List<float> range = new List<float> { 0, 1 };
-
-        //domain.Add((float)dataValues.ElementAt(selectedDimension).Value.Min());
-        //domain.Add((float)dataValues.ElementAt(selectedDimension).Value.Max());
-
-        //Scale scale = CreateScale(domain, range);
-
-
-        //visContainer.ChangeAxis(axisId, dataValues.ElementAt(selectedDimension).Key, scale, numberOfTicks);
-
-        ////Change Data Marks
-        //ChangeDataMarks();
+        //Todo: Instead of Axis ID use encoding Id to change that encoding(Axis, Color, Size, Shape, ...)
     }
 
     public virtual void ChangeDataMarks()
     {
 
     }
-
-
+    
     public Scale CreateScale(Scale.DataScale dataScale, List<double> domain, List<double> range)
     {
         Scale scaleFunction;
@@ -137,8 +121,9 @@ public class Vis : MonoBehaviour
             case Scale.DataScale.Linear:
                 scaleFunction = new ScaleLinear(domain, range);
                 break;
-            case Scale.DataScale.Ordinal:
-                scaleFunction = new ScaleOrdinal(domain, range, new List<string>(dataValues.Keys));
+            case Scale.DataScale.Nominal:
+                //scaleFunction = new ScaleNominal(domain, range, new List<string>(dataValues.Keys));
+                throw new NotImplementedException("Nominal Scale is currently not implemented");
                 break;
 
         }
@@ -146,8 +131,12 @@ public class Vis : MonoBehaviour
         return scaleFunction;
     }
 
+
     public virtual void UpdateVis()
     {
+        // Update Grid
+        visContainer.MoveGridBasedOnViewingDirection();
+
         // Update different Channels/Marks of Vis (Data, Scale, Color,...)
     }
 }

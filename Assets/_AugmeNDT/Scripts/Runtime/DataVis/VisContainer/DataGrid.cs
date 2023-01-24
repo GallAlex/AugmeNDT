@@ -50,6 +50,15 @@ public class DataGrid
     }
 
     /// <summary>
+    /// Return the Gameobject of the grid
+    /// </summary>
+    /// <returns></returns>
+    public GameObject GetGridObject()
+    {
+        return gridInstance;
+    }
+
+    /// <summary>
     /// Builds a grid mesh with lines
     /// </summary>
     private void Build()
@@ -92,6 +101,12 @@ public class DataGrid
 
     }
 
+    /// <summary>
+    /// Methods creates vector for the vertices of the grid. The position depends on the two axes between the grid should be drawn.
+    /// </summary>
+    /// <param name="xPos"></param>
+    /// <param name="yPos"></param>
+    /// <returns></returns>
     private Vector3 CreateGridInDirection(float xPos, float yPos)
     {
         Direction axisDir1 = gridOrientation[0];

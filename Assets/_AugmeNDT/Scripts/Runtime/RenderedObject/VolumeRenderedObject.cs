@@ -46,22 +46,15 @@ public class VolumeRenderedObject
 
         BoxCollider meshColl = volume.GetComponent<BoxCollider>() != null ? volume.GetComponent<BoxCollider>() : volume.AddComponent<BoxCollider>();
 
-
-        Debug.Log("> volume local size " + meshRenderer.localBounds);
-        Debug.Log("volume size " + volume.GetComponent<MeshFilter>().mesh.bounds);
-
-
         BoundsControl boundsCon = volumeContainer.GetComponent<BoundsControl>() != null ? volumeContainer.GetComponent<BoundsControl>() : volumeContainer.AddComponent<BoundsControl>();
         BoxCollider boundsColl = volumeContainer.GetComponent<BoxCollider>() != null ? volumeContainer.GetComponent<BoxCollider>() : volumeContainer.AddComponent<BoxCollider>();
 
-
-        //boundsCon.BoundsOverride = boxColl;
 
         //TODO: Save scale change: dataset.scaleZ = maxScale;
         //Maintain Volume Scale Ratio
         GlobalScaleAndPos.ResizeRealtiveObject(volume.transform, 1.0f, new Vector3(dataset.dimX, dataset.dimY, dataset.dimZ));
         GlobalScaleAndPos.ResizeBoxCollider(volume.transform, boundsColl, meshColl.size, meshColl.center);
-        GlobalScaleAndPos.MoveOriginToLowerFrontLeftPoint(volume.transform);
+        //GlobalScaleAndPos.MoveOriginToLowerFrontLeftPoint(volume.transform);
         GlobalScaleAndPos.SetToBestInitialScale(volumeContainer.transform, volumeContainer.transform.localScale);
 
         GlobalScaleAndPos.SetToBestInitialStartPos(volumeContainer.transform);

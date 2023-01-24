@@ -1,7 +1,10 @@
+using MathNet.Numerics.Statistics;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
 
 /// <summary>
 /// This class is used to create a multidimensional distribution Glyph chart visualization.
@@ -13,21 +16,26 @@ public class VisMDDGlyphs : Vis
     
     // Calculate statistic data from dataset
     public Dictionary<string, Distribution.DistributionValues> statisticValues;
-    
+
+    // min/max mValues
+    public double[] mValuesExtend;
+
+    // min/max values
+    public double[] minMaxSkewnessValue;
+    public double[] minMaxKurtosisValue;
+
     public VisMDDGlyphs()
     {
         title = "MDD-Glyphs Chart";
         axes = 3;
 
         //Initialize dataScales
-        dataScales = new List<Scale.DataScale>()
-        {
-            Scale.DataScale.Linear,   // X
-            Scale.DataScale.Linear,    // Y
-            Scale.DataScale.Linear,   // Z
-            Scale.DataScale.Linear     // Color
-
-        };
+        //dataScaleTypes = new List<Scale.DataScale>()
+        //{
+        //    Scale.DataScale.Nominal,   // X
+        //    Scale.DataScale.Linear,    // Y
+        //    Scale.DataScale.Linear,   // Z
+        //};
 
         dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Bar");
         tickMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Tick");
@@ -35,19 +43,16 @@ public class VisMDDGlyphs : Vis
 
     public override GameObject CreateVis()
     {
-        xyzTicks = new int[] {dataValues.Keys.Count, 5, 5 };
-        
+        xyzTicks = new int[] {dataValues.Keys.Count, 10, 10 };
+        Debug.Log("dataValues.Keys.Count: " + dataValues.Keys.Count);
         base.CreateVis();
+        
 
         List<Scale> normalizedScales = DataPreparation();
 
         
         //## 01: Create Data Scales for Axes
         List<Scale> scale = new List<Scale>(axes);
-        // Range from 0 to 1
-        List<double> range = new List<double>(2);
-        range.Add(0);
-        range.Add(1);
 
         Debug.Log("MDDGlyph");
 
@@ -55,11 +60,9 @@ public class VisMDDGlyphs : Vis
         List<double> domain = new List<double>(2)
         {
             0,
-            statisticValues.Keys.Count - 1
+            statisticValues.Keys.Count-1
         };
-        scale.Add(CreateScale(dataScales[0], domain, range));
-
-        /*
+        scale.Add(new ScaleNominal(domain, dataValues.Keys.ToList()));
 
         // Y Axis
         domain = new List<double>(2)
@@ -67,22 +70,15 @@ public class VisMDDGlyphs : Vis
             statisticValues.ElementAt(1).Value.smallestElement,
             statisticValues.ElementAt(1).Value.largestElement
         };
-        scale.Add(CreateScale(dataScales[1], domain, range));
+        scale.Add(new ScaleLinear(domain));
 
         // Z Axis
         domain = new List<double>(2)
         {
-            statisticValues.ElementAt(2).Value.smallestElement,
-            statisticValues.ElementAt(2).Value.largestElement
+            mValuesExtend[0], 
+            mValuesExtend[1]
         };
-        scale.Add(CreateScale(dataScales[2], domain, range));
-        */
-        
-        // Color
-        //domain = new List<double>(2);
-        //domain.Add(dataValues.ElementAt(2).Value.Min());
-        //domain.Add(dataValues.ElementAt(2).Value.Max());
-        //scale.Add(CreateScale(dataScales[3], domain, range));
+        scale.Add(new ScaleLinear(domain));
 
 
         //## 02: Create Axes and Grids
@@ -94,19 +90,25 @@ public class VisMDDGlyphs : Vis
 
         // Y Axis
         encodedAttribute.Add(1);
-        visContainer.CreateAxis("Mean", (Direction)1, scale[0]);
+        visContainer.CreateAxis("Attributes Value", (Direction)1, scale[1]);
         visContainer.CreateGrid((Direction)1, (Direction)2);
 
         // Z Axis
         encodedAttribute.Add(2);
-        visContainer.CreateAxis("Median", (Direction)2, scale[0]);
+        visContainer.CreateAxis("Modality", (Direction)2, scale[2]);
         visContainer.CreateGrid((Direction)2, (Direction)0);
 
+        //Output min/max values
+        Debug.Log("Min skewness: " + minMaxSkewnessValue[0] + " Max skewness: " + minMaxSkewnessValue[1]);
+        Debug.Log("Min kurtosis: " + minMaxKurtosisValue[0] + " Max kurtosis: " + minMaxKurtosisValue[1]);
+        
         //## 03: Create Data Points
 
         // For every Attribute one Data Mark
         for (int value = 0; value < statisticValues.Count; value++)
         {
+            Debug.Log("Attribute Nr" + value + ": " + statisticValues.ElementAt(value).Key);
+            
             //Default:
             DataMark.Channel channel = DataMark.DefaultDataChannel();
 
@@ -115,19 +117,25 @@ public class VisMDDGlyphs : Vis
             channel.position[0] = (float)xCoordinate;
             //Debug.Log("xPos Nr" + value + ": " + xCoordinate);
 
-            //Y Axis (Mean)
-            var barHeight = statisticValues.ElementAt(value).Value.mean;
+            //Size - Distance between lower and upper quartiles
+            var q1 = statisticValues.ElementAt(value).Value.lowerQuartile;
+            var q2 = statisticValues.ElementAt(value).Value.upperQuartile;
+
+            var barHeight = q2-q1;
             channel.size[1] = (float)barHeight;
-            
-            //Z Axis (median)
-            var zCoordinate = statisticValues.ElementAt(value).Value.median;
+
+            //Y Axis (Mean)
+            var yCoordinate = q1;
+            channel.position[1] = (float)yCoordinate;
+
+            //Z Axis (Modality)
+            var zCoordinate = scale[2].GetScaledValue(statisticValues.ElementAt(value).Value.modality);
             channel.position[2] = (float)zCoordinate;
 
-            //Debug.Log("## Attr Z: " + statisticValues.ElementAt(value).Key);
-            //Debug.Log("Scale domain " + scale[2].domain[0] + " " + scale[2].domain[1]);
-            //Debug.Log("Scale range " + scale[2].range[0] + " " + scale[2].range[1]);
-            //Debug.Log("Value (Median) " + statisticValues.ElementAt(value).Value.median);
-            //Debug.Log("Scaled Value (Median)" + zCoordinate);
+            //Color (Skewness + Kurtosis)
+            Color c = GetShapeColor(statisticValues.ElementAt(value).Value.skewness, statisticValues.ElementAt(value).Value.kurtosis);
+            Debug.Log("Final Color: " + c);
+            channel.color = c;
 
 
             visContainer.CreateDataMark(dataMarkPrefab, channel);
@@ -184,13 +192,99 @@ public class VisMDDGlyphs : Vis
             output = output + ("variance" + ": " + statisticValue.Value.variance) + "\n";
             output = output + ("stdDev" + ": " + statisticValue.Value.stdDev) + "\n";
             output = output + ("iqr" + ": " + statisticValue.Value.iqr) + "\n";
+            output = output + ("upperQuartile" + ": " + statisticValue.Value.upperQuartile) + "\n";
+            output = output + ("lowerQuartile" + ": " + statisticValue.Value.lowerQuartile) + "\n";
             output = output + ("kurtosis" + ": " + statisticValue.Value.kurtosis) + "\n";
             output = output + ("skewness" + ": " + statisticValue.Value.skewness) + "\n";
+            output = output + ("modality" + ": " + statisticValue.Value.modality) + "\n";
 
             Debug.Log(output);
         }
 
+        double minMValue = double.MaxValue;
+        double maxMValue = double.MinValue;
+        
+        //Check Number of Modes
+        foreach (var normAttributes in normalizedDataValues)
+        {
+            double mValue = Distribution.GetModalityValueIncremental(normAttributes.Value);
+
+            //Store min and max mValue
+            if (mValue < minMValue)
+            {
+                minMValue = mValue;
+            }
+
+            if (mValue > maxMValue)
+            {
+                maxMValue = mValue;
+            }
+        }
+
+        // Fill mValuesExtend
+        mValuesExtend = new[] { minMValue, maxMValue };
+
+        
+        // Calculate min and max skewness and kurtosis
+        minMaxSkewnessValue = new[]{ double.MaxValue, double.MinValue };
+        minMaxKurtosisValue = new[]{ double.MaxValue, double.MinValue };
+
+        foreach (var statisticValue in statisticValues)
+        {
+            //Calculate Skewness
+            double skewness = statisticValue.Value.skewness;
+            //Calculate Kurtosis
+            double kurtosis = statisticValue.Value.kurtosis;
+
+            //Store min and max skewness 
+            if (skewness < minMaxSkewnessValue[0]) minMaxSkewnessValue[0] = skewness;
+            if (skewness > minMaxSkewnessValue[1]) minMaxSkewnessValue[1] = skewness;
+            //Store min and max kurtosis
+            if (kurtosis < minMaxKurtosisValue[0]) minMaxKurtosisValue[0] = kurtosis;
+            if (kurtosis > minMaxKurtosisValue[1]) minMaxKurtosisValue[1] = kurtosis;
+        }
+
+
         return normalizeScales;
+    }
+
+
+    // Method Calculates the resulting Color based on Skewness and Kurtosis
+    private Color GetShapeColor(double skewness, double kurtosis)
+    {
+        Debug.Log("skewness: " + skewness);
+        Debug.Log("kurtosis: " + kurtosis);
+        
+        // Base Colors go from blue to gray to red
+        int baseColors = 3;
+
+        //Decide base color by checking Skewness Value
+        double ratio = (skewness - minMaxSkewnessValue[0]) / (minMaxSkewnessValue[1] - minMaxSkewnessValue[0]);
+        int colorIndex = Convert.ToInt32(ratio * (baseColors - 1));
+
+        // clamp the color index to ensure it's within range
+        colorIndex = Math.Min(Math.Max(colorIndex, 0), baseColors - 1);
+        
+        // Define final color by checking kurtosis Value (Error Value Green)
+        Color finalColor = new Color(0, 1.0f, 0);
+
+        Debug.Log("Used SingleHue Range: " + colorIndex);
+
+        switch (colorIndex)
+        {
+            case 0:
+                finalColor = ScaleColor.GetCategoricalColor(kurtosis, minMaxKurtosisValue[0], minMaxKurtosisValue[1], ColorHelper.blueHueValues);
+                break;
+            case 1:
+                finalColor = ScaleColor.GetCategoricalColor(kurtosis, minMaxKurtosisValue[0], minMaxKurtosisValue[1], ColorHelper.yellowHueValues);
+                break;
+            case 2:
+                finalColor = ScaleColor.GetCategoricalColor(kurtosis, minMaxKurtosisValue[0], minMaxKurtosisValue[1], ColorHelper.orangeHueValues);
+                break;
+        }
+
+        return finalColor;
+
     }
 }
 
