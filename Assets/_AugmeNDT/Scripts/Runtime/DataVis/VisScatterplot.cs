@@ -19,10 +19,10 @@ public class VisScatterplot : Vis
         base.CreateVis();
 
         //Initialize dataScales
-        dataScales = new List<Scale.DataScale>();
+        dataScaleTypes = new List<Scale.DataScale>();
         for (int attrScale = 0; attrScale < dimensions; attrScale++)
         {
-            dataScales.Add(Scale.DataScale.Linear);
+            dataScaleTypes.Add(Scale.DataScale.Linear);
         }
 
         if (dimensions < axes) axes = dimensions;
@@ -41,12 +41,13 @@ public class VisScatterplot : Vis
             range.Add(0);
             range.Add(1);
 
-            scale.Add(CreateScale(dataScales[drawnDim],domain, range));
+            scale.Add(CreateScale(dataScaleTypes[drawnDim],domain, range));
         }
 
         //## 02: Create Axes and Grids
         for (int currAxis = 0; currAxis < axes; currAxis++)
         {
+            encodedAttribute.Add(currAxis);
             int nextDim = (currAxis + 1) % axes;
             //visContainer.CreateAxis(((Direction)currAxis).ToString() + " Label", (Direction)currAxis);
             visContainer.CreateAxis(dataValues.ElementAt(currAxis).Key, (Direction)currAxis, scale[currAxis]);
@@ -86,4 +87,50 @@ public class VisScatterplot : Vis
         return visContainerObject;
     }
 
+    public override void ChangeAxisAttribute(int axisId, int selectedDimension, int numberOfTicks)
+    {
+        // Record new selected attribute
+        encodedAttribute[axisId] = selectedDimension;
+
+        // Calculate new Scale based on selected Attribute
+        List<double> domain = new List<double>(2);
+        List<double> range = new List<double> { 0, 1 };
+
+        domain.Add((float)dataValues.ElementAt(selectedDimension).Value.Min());
+        domain.Add((float)dataValues.ElementAt(selectedDimension).Value.Max());
+
+        Scale scale = CreateScale(dataScaleTypes[axisId], domain, range);
+
+
+        visContainer.ChangeAxis(axisId, dataValues.ElementAt(selectedDimension).Key, scale, numberOfTicks);
+
+        //Change Data Marks
+        ChangeDataMarks();
+    }
+
+    public override void ChangeDataMarks()
+    {
+        for (int value = 0; value < numberOfValues; value++)
+        {
+            //Default:
+            DataMark.Channel channel = DataMark.DefaultDataChannel();
+
+            //X Axis
+            var xCoordinate = visContainer.dataAxisList[0].dataScale.GetScaledValue(dataValues.ElementAt(encodedAttribute[0]).Value[value]);
+            channel.position[0] = (float)xCoordinate;
+
+            //Y Height
+            var yCoordinate = visContainer.dataAxisList[1].dataScale.GetScaledValue(dataValues.ElementAt(encodedAttribute[1]).Value[value]);
+            channel.position[1] = (float)yCoordinate;
+
+            //Z Axis
+            if (axes == 3)
+            {
+                var zCoordinate = visContainer.dataAxisList[2].dataScale.GetScaledValue(dataValues.ElementAt(encodedAttribute[2]).Value[value]);
+                channel.position[2] = (float)zCoordinate;
+            }
+
+            visContainer.ChangeDataMark(value, channel);
+        }
+    }
 }

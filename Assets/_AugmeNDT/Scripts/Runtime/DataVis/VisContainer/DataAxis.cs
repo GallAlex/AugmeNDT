@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using Microsoft.MixedReality.Toolkit.UI;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -25,8 +27,9 @@ public class DataAxis
     [SerializeField]
     private AxisTicks axisTicks;
     [SerializeField]
-    private TextMesh axisLabel;
-
+    //private TextMesh axisLabel;
+    private TextMeshPro axisLabel;
+    
     public Direction axisDirection = Direction.X;
     public Scale dataScale;
 
@@ -36,15 +39,19 @@ public class DataAxis
 
     public GameObject CreateAxis(Transform visContainer, string axisTitle, Direction direction, Scale dataScale, int numberOfTicks)
     {
-        axisLinePrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Axis");
+        axisLinePrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Axis2");
 
         axisInstance = GameObject.Instantiate(axisLinePrefab, visContainer.position, Quaternion.identity, visContainer);
 
         //axisLabel = axisInstance.GetComponent<TextMesh>();
         //TODO: Add as reference?
-        axisLabel = axisInstance.GetComponentInChildren<TextMesh>();
+        //axisLabel = axisInstance.GetComponentInChildren<TextMesh>();
+        //axisLabel.text = axisTitle;
+        
+        axisLabel = axisInstance.GetComponentInChildren<TextMeshPro>();
         axisLabel.text = axisTitle;
-
+        ConnectAttributeButton();
+            
         this.dataScale = dataScale;
 
         axisDirection = direction;
@@ -115,9 +122,14 @@ public class DataAxis
                 //zAxisTitle.Rotate(0, 180, 0);
 
                 //Todo: Speed up by saving?
-                TextMesh titleTextMesh = axis.GetComponentInChildren(typeof(TextMesh)) as TextMesh;
-                titleTextMesh.transform.Rotate(0, 180, 0);
-                titleTextMesh.anchor = TextAnchor.MiddleRight;
+                //TextMesh titleTextMesh = axis.GetComponentInChildren(typeof(TextMesh)) as TextMesh;
+                //titleTextMesh.transform.Rotate(0, 180, 0);
+                //titleTextMesh.anchor = TextAnchor.MiddleRight;
+                
+                Transform zAttrButton = axis.transform.Find("Title").Find("AttributeButton");
+                zAttrButton.Rotate(0, 180, 0);
+                var buttonTextMeshPro = axis.GetComponentInChildren(typeof(TextMeshPro)) as TextMeshPro;
+                buttonTextMeshPro.alignment = TextAlignmentOptions.MidlineRight;
                 
                 foreach (var tickObject in axisTicks.tickList)
                 {
@@ -132,4 +144,9 @@ public class DataAxis
         }
     }
 
+    private void ConnectAttributeButton()
+    {
+        ButtonConfigHelper button = axisInstance.GetComponentInChildren(typeof(ButtonConfigHelper)) as ButtonConfigHelper;
+        button.OnClick.AddListener(() => { Debug.Log("Axis " + (int)axisDirection + "pressed"); });
+    }
 }

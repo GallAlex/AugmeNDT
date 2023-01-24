@@ -20,9 +20,13 @@ public static class Distribution
         public double variance;
         public double stdDev;
         public double iqr;
+        public double upperQuartile;
+        public double lowerQuartile;
 
         public double kurtosis;
         public double skewness;
+
+        public double modality; //peaks
     }
 
     public static double GetQuickSymmetryValue()
@@ -65,17 +69,90 @@ public static class Distribution
     }
 
     /// <summary>
-    /// Method calculates an mvalue (modal value) and compares it to a threshold.
-    /// The mvalue sums the absolute difference in elevation, normalized for the height of the plot
+    /// Method returns the number of modes based on a histogram.
     /// Currently uses the Sturge's Rule for the bin number estimation.
     /// </summary>
     /// <param name="data"></param>
-    /// <returns></returns>
+    /// <returns>Estimated number of modes</returns>
     public static double GetModalityValue(double[] data)
     {
-        Histogram hist = new Histogram(data, GetNumberOfBins(data));
+        int numberOfBins = GetNumberOfBins(data);
+        double mValue = CalculateModalityValue(data, numberOfBins);
 
-        throw new NotImplementedException();
+        return mValue / 2.0d;
+    }
+
+    /// <summary>
+    /// Method returns the number of modes based on multiple histograms (with varying bin numbers).
+    /// Methods calculates multiple mValues by calculating the modality value with histograms of decreasing bin numbers.
+    /// The higest mValue is used do calculate the number of modes.
+    /// Currently, four times the estimated bin count of Sturge's Rule is used.
+    /// </summary>
+    /// <param name="data"></param>
+    /// <returns>Estimated number of modes</returns>
+    public static double GetModalityValueIncremental(double[] data)
+    {
+        int numberOfBins = GetNumberOfBins(data) * 4;
+        int remainingBins = numberOfBins;
+        double max_mValue = 0.0d;
+
+        while (remainingBins > 1)
+        {
+            double mValue = CalculateModalityValue(data, remainingBins);
+
+            //Save largest mValue found
+            if (mValue > max_mValue)
+            {
+                max_mValue = mValue;
+            }
+
+            //restart with less bins
+            remainingBins = remainingBins / 2;
+        }
+
+        return max_mValue / 2.0d;
+    }
+
+    /// <summary>
+    /// Method calculates an mvalue (modal value) based on the frequency diferences of the bins.
+    /// The mvalue sums the absolute difference in elevation, normalized for the height of the plot
+    /// Can be compared to a threshold of 2,4 to determine if the distribution is multimodal.
+    /// </summary>
+    /// <param name="data"></param>
+    /// <param name="numberOfBins"></param>
+    /// <returns></returns>
+    private static double CalculateModalityValue(double[] data, int numberOfBins)
+    {
+        Histogram hist = new Histogram(data, numberOfBins);
+
+        // Calculate for the histogram hist, with maximum bin value maxBinFrequency, the mValue which gets compared to a threshold:
+        double maxBinFrequency = hist[0].Count;
+        double mValue = 0.0d;
+
+        for (int i = 1; i < numberOfBins; i++)
+        {
+            double binFrequency = hist[i].Count;
+
+            //if new binFrequency is greater as maxBinFrequency
+            if (binFrequency > maxBinFrequency)
+            {
+                maxBinFrequency = binFrequency;
+            }
+
+            //Sum up Difference of the frequency in the bins
+            double binDifference = Math.Abs(hist[i].Count - hist[i - 1].Count);
+            mValue += binDifference;
+        }
+
+        mValue = mValue / maxBinFrequency;
+
+        double threshold = 2.4d;
+        if (mValue > threshold)
+        {
+            //Debug.Log("mValue indicates that multiple modes may be present");
+        }
+
+        return mValue;
     }
 
     /// <summary>
@@ -140,6 +217,22 @@ public static class Distribution
         return ArrayStatistics.InterquartileRangeInplace(clonedArray);
     }
 
+    public static double GetUpperQuartileValue(double[] data)
+    {
+        var clonedArray = new double[data.Length];
+        data.CopyTo(clonedArray, 0);
+
+        return ArrayStatistics.UpperQuartileInplace(clonedArray);
+    }
+
+    public static double GetLowerQuartileValue(double[] data)
+    {
+        var clonedArray = new double[data.Length];
+        data.CopyTo(clonedArray, 0);
+
+        return ArrayStatistics.LowerQuartileInplace(clonedArray);
+    }
+
     /// <summary>
     /// Method calculates a whole set of statistical characteristics in one pass
     /// </summary>
@@ -162,6 +255,10 @@ public static class Distribution
 
         values.median = GetMedianValue(data);
         values.iqr = GetIQRValue(data);
+        values.upperQuartile = GetUpperQuartileValue(data);
+        values.lowerQuartile = GetLowerQuartileValue(data);
+        
+        values.modality = GetModalityValueIncremental(data);
 
         return values;
     }

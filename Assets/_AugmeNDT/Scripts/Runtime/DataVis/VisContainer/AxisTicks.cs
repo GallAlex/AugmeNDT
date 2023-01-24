@@ -33,30 +33,26 @@ public class AxisTicks
 
         tickList = new List<GameObject>();
 
-        //Todo: numberOfTicks == 1 should be 2
 
-        // if scale is scale.linear, then tickSpacing is calculated
+        //Todo if scale is scale.ordinal, then numberOfTicks == range.Count || domain.Count
+        //numberOfTicks = scale.range.Count;
+
+        // if scale is scale.linear, then use user defined numberOfTicks
         double tickSpacing = GetTickSpacing(numberOfTicks);
-        // if scale is scale.ordinal, then tickSpacing is 1
-        //tickSpacing = 1.0f;
-        
 
-        //Debug.Log("Domain " + scale.domain[0] + " to " + scale.domain[1]);
-        //Debug.Log("Range " + scale.range[0] + " to " + scale.range[1]);
-        
+
+
+
         // tick from min to max value
         for (int tick = 0; tick < numberOfTicks; tick++)
         {
             double step = tick * tickSpacing;
             double scaledValue = scale.GetDomainValue(step);
-            //Debug.Log("tickPos Nr " + tick + ": " + step);
-
-            //Debug.Log("Value is " + scaledValue);
 
             Vector3 tickPosition = new Vector3((float)step + tickContainer.transform.localPosition.x, tickContainer.transform.localPosition.y, tickContainer.transform.localPosition.z);
 
 
-            tickList.Add(CreateSingleTick(tick, tickPosition, scaledValue));
+            tickList.Add(CreateSingleTick(tick, tickPosition, scaledValue, scale));
 
         }
     }
@@ -89,7 +85,7 @@ public class AxisTicks
                 if (tick < numberOfTicks)
                 {
                     // Change Pos and label and set tick active
-                    MoveAndRenameSingleTick(tick, currTickPosition, scaledValue);
+                    MoveAndRenameSingleTick(tick, currTickPosition, scaledValue, scale);
                 }
                 else
                 {
@@ -103,12 +99,12 @@ public class AxisTicks
                 if (tick < ticksInList)
                 {
                     // Change Pos and label and set tick active
-                    MoveAndRenameSingleTick(tick, currTickPosition, scaledValue);
+                    MoveAndRenameSingleTick(tick, currTickPosition, scaledValue, scale);
                 }
                 else
                 {
                     // Create new tick
-                    tickList.Add(CreateSingleTick(tick, currTickPosition, scaledValue));
+                    tickList.Add(CreateSingleTick(tick, currTickPosition, scaledValue, scale));
                 }
             }
 
@@ -122,14 +118,23 @@ public class AxisTicks
     /// <param name="tick">Gameobject of Tick with label</param>
     /// <param name="newPos">New position of the tick</param>
     /// <param name="scaledValue">Value which should be displayed as label</param>
-    private void MoveAndRenameSingleTick(int tickID, Vector3 newPos, double scaledValue)
+    private void MoveAndRenameSingleTick(int tickID, Vector3 newPos, double scaledValue, Scale scale)
     {
         var tickObj = tickList[tickID];
         tickObj.SetActive(true);
 
         var label = tickObj.GetComponentInChildren<TextMesh>();
         tickObj.transform.localPosition = newPos;
-        label.text = scaledValue.Round(decimalPoints).ToString();
+
+        if (scale.dataScaleType == Scale.DataScale.Linear)
+        {
+            label.text = scaledValue.Round(decimalPoints).ToString();
+        }
+        else if (scale.dataScaleType == Scale.DataScale.Nominal)
+        {
+            label.text = scale.GetScaledValueName(scaledValue);
+        }
+        
     }
 
     /// <summary>
@@ -139,7 +144,7 @@ public class AxisTicks
     /// <param name="newPos"></param>
     /// <param name="scaledValue"></param>
     /// <returns>Returns a new Tick</returns>
-    private GameObject CreateSingleTick(int tickID, Vector3 newPos, double scaledValue)
+    private GameObject CreateSingleTick(int tickID, Vector3 newPos, double scaledValue, Scale scale)
     {
         //GameObject tickInstance = GameObject.Instantiate(tickMarkPrefab, newPos, Quaternion.identity, tickContainer.transform);
         GameObject tickInstance = GameObject.Instantiate(tickMarkPrefab, tickContainer.transform, false);
@@ -147,7 +152,15 @@ public class AxisTicks
         tickInstance.name = "Tick " + tickID;
 
         TextMesh tickLabel = tickInstance.GetComponentInChildren<TextMesh>();
-        tickLabel.text = scaledValue.Round(decimalPoints).ToString();
+
+        if (scale.dataScaleType == Scale.DataScale.Linear)
+        {
+            tickLabel.text = scaledValue.Round(decimalPoints).ToString();
+        }
+        else if (scale.dataScaleType == Scale.DataScale.Nominal)
+        {
+            tickLabel.text = scale.GetScaledValueName(scaledValue);
+        }
 
         return tickInstance;
     }

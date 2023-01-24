@@ -3,31 +3,22 @@ using UnityEngine;
 
 public class Scale
 {
+
+    // Categorical/Nominal (No ordering)
+    // Ordered
+    // --> Ordinal (Ordered/ Ranked)
+    // --> Quantitative (supports arithmetic comparison)
+    //     --> Discrete data
+    //     --> Continuous data (Functions which can be interpolated)
     public enum DataScale
     {
+        Nominal,
         Linear,
-        Ordinal,
     }
 
+    public DataScale dataScaleType;
     public List<double> domain;  // Data Range
     public List<double> range;   // Existing Range
-
-    /// <summary>
-    /// Given domain represents data range
-    /// Range is set between 0 and 1  
-    /// </summary>
-    /// <param name="domain"></param>
-    public Scale(List<double> domain)
-    {
-        if (domain == null || domain.Count > 2)
-        {
-            Debug.LogError("Format of domain is not correct");
-            return;
-        }
-
-        this.domain = domain;
-        this.range = new List<double> { 0.0f, 1.0f };
-    }
 
     /// <summary>
     /// Given domain represents data range
@@ -48,6 +39,23 @@ public class Scale
     }
 
     /// <summary>
+    /// Given domain represents data range
+    /// Range is set between 0 and 1  
+    /// </summary>
+    /// <param name="domain"></param>
+    public Scale(List<double> domain)
+    {
+        if (domain == null || domain.Count > 2)
+        {
+            Debug.LogError("Format of domain is not correct");
+            return;
+        }
+
+        this.domain = domain;
+        this.range = new List<double> { 0.0f, 1.0f };
+    }
+
+    /// <summary>
     ///  Method accepts input between domain min/max and maps it to output between range min/max.
     /// </summary>
     /// <param name="domainValue">Value of datapoint</param>
@@ -63,5 +71,15 @@ public class Scale
     public virtual double GetDomainValue(double scaledValue)
     {
         return 0.0f;
+    }
+
+    /// <summary>
+    /// Method accepts input between domain min/max and maps it to a value in a string array
+    /// </summary>
+    /// <param name="domainValue"></param>
+    /// <returns></returns>
+    public virtual string GetScaledValueName(double domainValue)
+    {
+        return "";
     }
 }

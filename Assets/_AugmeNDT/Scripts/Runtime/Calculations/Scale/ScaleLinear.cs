@@ -1,26 +1,34 @@
 using System.Collections.Generic;
+using MathNet.Numerics;
 using UnityEngine;
 
-public class ScaleOrdinal : Scale
+public class ScaleLinear : Scale
 {
-    private List<string> domainNames;
 
     private double domainMin = 0.0d;
-    private double domainMax = 10.0d;
-            
+    private double domainMax = 100.0d;
+
     private double rangeMin = 0.0d;
     private double rangeMax = 1.0d;
 
 
-    public ScaleOrdinal(List<double> domain, List<double> range, List<string> names) : base(domain, range)
+    public ScaleLinear(List<double> domain) : base(domain)
     {
+        dataScaleType = DataScale.Linear;
+        
         domainMin = domain[0];
         domainMax = domain[1];
 
-        if (domainMin != 0.0d || domainMax != names.Count - 1)
-        {
-            Debug.LogWarning("Domain of ordinal scale is not correct! Are some attribute names missing?");
-        }
+        rangeMin = range[0];
+        rangeMax = range[1];
+    }
+
+    public ScaleLinear(List<double> domain, List<double> range) : base(domain, range)
+    {
+        dataScaleType = DataScale.Linear;
+        
+        domainMin = domain[0];
+        domainMax = domain[1];
 
         rangeMin = range[0];
         rangeMax = range[1];
@@ -54,17 +62,26 @@ public class ScaleOrdinal : Scale
         return (((scaledValue - rangeMin) * newDomain) / scaledRange) + domainMin;
     }
 
-    /// <summary>
-    /// Returns the domain name for the given scaled value.
-    /// Calculates the Domain Value first.
-    /// </summary>
-    /// <param name="scaledValue"></param>
-    /// <returns></returns>
-    public string GetDomainName(double scaledValue)
+    public override string GetScaledValueName(double domainValue)
     {
-        double domainVal = GetDomainValue(scaledValue);
+        return GetScaledValue(domainValue).ToString();
+    }
 
-        return domainNames[(int)domainVal];
+    /// <summary>
+    /// Returns a array normalized to the given range from its domain values
+    /// </summary>
+    /// <param name="array"></param>
+    /// <returns></returns>
+    public double[] GetNormalizedArray(double[] array)
+    {
+        double[] normalizedArray = new double[array.Length];
+
+        for (int i = 0; i < array.Length; i++)
+        {
+            normalizedArray[i] = GetScaledValue((double)array[i]);
+        }
+
+        return normalizedArray;
     }
 
 }

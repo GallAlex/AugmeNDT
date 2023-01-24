@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 
 
-public class PolyFiberRenderedObject : MonoBehaviour
+public class PolyFiberRenderedObject
 {
 
     private GameObject containerPrefab;
