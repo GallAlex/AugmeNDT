@@ -46,8 +46,6 @@ public class DataMark
         meshRenderer = dataMarkInstance.GetComponent<MeshRenderer>();
         meshRenderer.material.SetColor("_Color", channel.color);
 
-        Debug.Log("DataMark color " + channel.color);
-
         // Get initial data of object
         this.dataChannel = channel;
         meshRenderer.sharedMaterial.color = channel.color;
@@ -79,7 +77,8 @@ public class DataMark
             rotation = new Vector3(0, 0, 0),
             facing = new Vector3(0, 0, -1),
             color = new Vector4(1, 0, 0, 1),
-            size = new Vector3(0.01f, 0.01f, 0.01f)
+            //Todo: Size?
+            size = new Vector3(0.03f, 0.03f, 0.03f)
         };
 
         return channel;

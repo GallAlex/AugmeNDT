@@ -27,8 +27,10 @@ public class DataGrid
         worldSpaceWidth = containerWidth;
         worldSpaceHeight = containerHeight;
         gridOrientation = axisDirections;
-        xGridSize = xDivision;
-        yGridSize = yDivision;
+        
+        // Reduce by 1 to get the number of divisions
+        xGridSize = xDivision-1;
+        yGridSize = yDivision-1;
         
         gridInstance = new GameObject("Grid" + axisDirections[0].ToString() + axisDirections[1].ToString());
         gridInstance.transform.parent = visContainer.transform;
@@ -113,17 +115,31 @@ public class DataGrid
         Direction axisDir2 = gridOrientation[1];
 
         //Grid XY
-        if ( (axisDir1 == Direction.X && axisDir2 == Direction.Y) || (axisDir2 == Direction.X && axisDir1 == Direction.Y) )
+        if (axisDir1 == Direction.X && axisDir2 == Direction.Y)
         {
             return new Vector3(xPos, yPos, 0);
         }
+        else if (axisDir2 == Direction.X && axisDir1 == Direction.Y)
+        {
+            return new Vector3(yPos, xPos, 0);
+        }
+        
         //Grid XZ
-        if ((axisDir1 == Direction.X && axisDir2 == Direction.Z) || (axisDir2 == Direction.X && axisDir1 == Direction.Z))
+        if (axisDir1 == Direction.X && axisDir2 == Direction.Z)
         {
             return new Vector3(xPos, 0 , yPos);
         }
+        else if(axisDir2 == Direction.X && axisDir1 == Direction.Z)
+        {
+            return new Vector3(yPos, 0, xPos);
+        }
+        
         //Grid ZY
-        if ((axisDir1 == Direction.Z && axisDir2 == Direction.Y) || (axisDir2 == Direction.Z && axisDir1 == Direction.Y))
+        if ((axisDir1 == Direction.Z && axisDir2 == Direction.Y))
+        {
+            return new Vector3(0, yPos, xPos);
+        }
+        else if (axisDir2 == Direction.Z && axisDir1 == Direction.Y)
         {
             return new Vector3(0, xPos, yPos);
         }

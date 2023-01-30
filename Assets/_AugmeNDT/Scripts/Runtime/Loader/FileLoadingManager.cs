@@ -1,11 +1,13 @@
-//using UnityEditor;
-using System.IO;
+using SFB;
 using System;
-using System.Collections.Generic;
-using UnityEngine;
+using System.IO;
 using System.Threading.Tasks;
+using UnityEngine;
 
-
+#if !UNITY_EDITOR && UNITY_WSA_10_0
+using Windows.Storage;
+using Windows.Storage.Pickers;
+#endif
 
 public enum DatasetType
 {
@@ -23,31 +25,16 @@ public enum DatasetType
 public class FileLoadingManager
 {
     private bool loadingSucceded = false;
-    bool isPolyObject = false;
 
     //List<FileLoader> entities = new List<FileLoader>(); // get with var mhdFileLoader = entities.OfType<MhdFileLoader>();
     private FileLoader loaderFactory;
-    private VoxelDataset volumeDataset;
-    private PolyFiberData polyFiberDataset;
-
-    public List<VolumeRenderedObject> volumeRenderedObjectList;        // Stores all loaded & rendered Volumes
-    public List<PolyFiberRenderedObject> polyFiberRenderedObjectList;  // Stores all loaded & rendered Poly Models
-    public List<Vis> visList;                                          // Stores all loaded & rendered Visualizations
+    private string filePath;
+    private DataVisGroup dataVisGroup;
 
     #region Getter/Setter
     public FileLoader LoaderFactory { get => loaderFactory; set => loaderFactory = value; }
-    public VoxelDataset VolumeDataset { get => volumeDataset; set => volumeDataset = value; }
-    public PolyFiberData PolyDataset { get => polyFiberDataset; set => polyFiberDataset = value; }
     #endregion
 
-
-    public FileLoadingManager()
-    {
-        volumeRenderedObjectList = new List<VolumeRenderedObject>();
-        polyFiberRenderedObjectList = new List<PolyFiberRenderedObject>();
-        visList = new List<Vis>();
-    }
-    
 
     public async Task loadDataset(string filePath)
     {
@@ -68,17 +55,14 @@ public class FileLoadingManager
             {
                 case DatasetType.Raw:
                     loadingSucceded = await CreateRawLoader(filePath);
-                    isPolyObject = false;
                     break;
                 case DatasetType.Mhd:
                     loaderFactory = new MhdFileLoader(filePath);
                     loadingSucceded = true;
-                    isPolyObject = false;
                     break;
                 case DatasetType.Csv:
                     loaderFactory = new CsvLoader();
                     loadingSucceded = true;
-                    isPolyObject = true;
                     break;
                 case DatasetType.DICOM:
                     throw new NotImplementedException(fileTyp.ToString() + " extension is currently not supported");
@@ -93,21 +77,10 @@ public class FileLoadingManager
             Debug.Log("LoadData...");
             await Task.Run(() => loaderFactory.LoadData(filePath));
 
-            if (!isPolyObject)
-            {
-                //if (dataset == null)
-                //{
-                //    Debug.LogError("Failed to import dataset");
-                //    return;
-                //}
-                await RenderVolumeObject();
-            }
-            else
-            {
-                await RenderPolyObject();
-            }
+            // Create new group for the loading action
+            dataVisGroup = new DataVisGroup();
 
-            //renderContainer.transform.position = new Vector3(-0.2f, 0.1f, 0.5f); // Best pos Hololens
+            StoreDataVisGroup(fileTyp);
 
         }
         catch (Exception ex)
@@ -172,39 +145,111 @@ public class FileLoadingManager
         return startImport;
     }
 
-    private async Task RenderVolumeObject()
+
+    /// <summary>
+    /// Methods stores the currently loaded datasets in a DataVisGroup
+    /// </summary>
+    private void StoreDataVisGroup(DatasetType type)
     {
-        volumeDataset = loaderFactory.voxelDataset;
-        
-        Debug.Log("Create Volume Object");
 
-        //Render Volume Object
-        VolumeRenderedObject volumeRenderedObject = new VolumeRenderedObject();
-        volumeRenderedObjectList.Add(volumeRenderedObject);
+        if ((type == DatasetType.Raw || type == DatasetType.Mhd) && loaderFactory.voxelDataset != null)
+        {
+            dataVisGroup.SetVoxelData(loaderFactory.voxelDataset);
+        }
+        if (type == DatasetType.Csv && loaderFactory.polyFiberDataset != null)
+        {
+            // derived from spatial csv
+            dataVisGroup.SetPolyData(loaderFactory.polyFiberDataset);
+        }
+        if (type == DatasetType.Csv && loaderFactory.polyFiberDataset != null)
+        {
+            // Todo: Add Enum for spatial csv and abstract csv
+            // pure abstract csv
+            //dataVisGroup.SetAbstractCsvData(loaderFactory.polyFiberDataset);
+        }
 
-        await volumeRenderedObject.CreateObject(volumeDataset);
-
-        // Save the texture to your Unity Project
-        //AssetDatabase.CreateAsset(dataset.GetDataTexture(), "Assets/Textures/Example3DTexture.asset");
     }
 
-    private async Task RenderPolyObject()
+    /// <summary>
+    /// Returns the most recently DataVisGroup containing the loaded file
+    /// </summary>
+    /// <returns></returns>
+    public DataVisGroup GetDataVisGroup()
     {
-        polyFiberDataset = loaderFactory.polyFiberDataset;
-        Debug.Log("Create Poly Object");
-
-        //Render Poly Object
-        PolyFiberRenderedObject polyFiberRenderedObject = new PolyFiberRenderedObject();
-        polyFiberRenderedObjectList.Add(polyFiberRenderedObject);
-
-        // Render Visualization
-        Vis vis = new VisMDDGlyphs();
-        visList.Add(vis);
-
-        vis.AppendData(polyFiberDataset.ExportForDataVis());
-        vis.CreateVis();
-
-        await polyFiberRenderedObject.CreateObject(polyFiberDataset);
+        return dataVisGroup;
     }
+
+
+    #region FilePickerMethods
+
+    public async Task<String> StartPicker()
+    {
+    #if !UNITY_EDITOR && UNITY_WSA_10_0
+            Debug.Log("HOLOLENS 2 PICKER");
+            await FilePicker_Hololens();
+
+    #endif
+
+    #if UNITY_EDITOR
+        Debug.Log("UNITY_STANDALONE PICKER");
+        await FilePicker_Win();
+    #endif
+        return filePath;
+    }
+
+
+    #if !UNITY_EDITOR && UNITY_WSA_10_0
+    private async Task FilePicker_Hololens()
+    {
+
+        UnityEngine.WSA.Application.InvokeOnUIThread(async () =>
+            {
+                var filepicker = new FileOpenPicker();
+                filepicker.FileTypeFilter.Add("*");
+                filepicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
+                //filepicker.FileTypeFilter.Add(".txt");
+
+                //if (multiSelection)
+                //{
+                //    IReadOnlyList<StorageFile> files = await filePicker.PickMultipleFilesAsync();
+                //    UnityEngine.WSA.Application.InvokeOnAppThread(() =>
+                //    {
+                //        UWPFilesSelected(files);
+                //    }, true);
+                //}
+
+                var file = await filepicker.PickSingleFileAsync();
+
+                UnityEngine.WSA.Application.InvokeOnAppThread(async () =>
+                {
+                    filePath = (file != null) ? file.Path : "Nothing selected";
+                    Debug.Log("Hololens 2 Picker Path = " + filePath);
+                    //await loadDataset();
+                    await loadDataset(filePath);
+
+                }, true);
+            }, false);
+    }
+    #endif
+
+
+    #if UNITY_EDITOR
+    private async Task FilePicker_Win()
+    {
+
+        var paths = StandaloneFileBrowser.OpenFilePanel("Open File", "", "", false);
+        filePath = paths[0];
+        Debug.Log("WIN Picker Path = " + filePath);
+        Task asyncTask = loadDataset(filePath);
+
+        //Task asyncTask = loadDataset();
+        //StartProgressIndicator(asyncTask);
+        await asyncTask;
+
+        //StandaloneFileBrowser.OpenFilePanelAsync("Open File", "", "", false, (string[] paths) => { filePath = paths[0]; });
+    }
+    #endif
+
+    #endregion
 
 }

@@ -3,26 +3,23 @@ using UnityEngine;
 /// <summary>
 /// Class handles settings needed at the start of the application and acts as main class for the application
 /// </summary>
-public class SceneMainHandler : MonoBehaviour
+public class MainHandler : MonoBehaviour
 {
-    // SceneUIHandler controls the UI elements in the scene
+    // SceneObjectHandler controls all, non UI, objects in the scene
+    [SerializeField]
+    private SceneObjectHandler sceneObjectHandler;
+    // SceneUIHandler controls the UI elements and actions in the scene
     [SerializeField]
     private SceneUIHandler sceneUIHandler;
-    // SceneFileHandler controls the loaded files
-    [SerializeField]
-    private SceneFileHandler sceneFileHandler;
-    // SceneVisHandler controls the visualization of the loaded data
-    [SerializeField]
-    private SceneVisHandler sceneVisHandler;
 
 
     // Called only once during the lifetime of the script instance (loading of a scene)
     void Awake()
     {
         //Check if Handlers are set
-        if (sceneUIHandler == null || sceneVisHandler == null || sceneFileHandler == null)
+        if (sceneUIHandler == null || sceneObjectHandler == null)
         {
-            Debug.LogError("SceneUIHandler, SceneFileHandler or SceneVisHandler not set!");
+            Debug.LogError("SceneUIHandler or sceneObjectHandler not set!");
         }
 
         Initialize();
@@ -39,9 +36,7 @@ public class SceneMainHandler : MonoBehaviour
     // Initialize and assign the classes to the handlers
     public void Initialize()
     {
-        sceneVisHandler.SetSceneFileHandler(sceneFileHandler);
-        sceneUIHandler.SetSceneFileHandler(sceneFileHandler);
-        sceneUIHandler.SetSceneVisHandler(sceneVisHandler);
+        sceneUIHandler.SetSceneObjectHandler(sceneObjectHandler);
     }
 
 }

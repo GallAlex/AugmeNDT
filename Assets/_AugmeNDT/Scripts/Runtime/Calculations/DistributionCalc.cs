@@ -6,28 +6,8 @@ using UnityEngine;
 /// Class calculates descriptive statistics of distributions
 /// Uses intern MathNet.Numerics.Statistics library
 /// </summary>
-public static class Distribution
+public static class DistributionCalc
 {
-
-    public struct DistributionValues
-    {
-        public double largestElement;
-        public double smallestElement;
-
-        public double median;
-        public double mean;
-
-        public double variance;
-        public double stdDev;
-        public double iqr;
-        public double upperQuartile;
-        public double lowerQuartile;
-
-        public double kurtosis;
-        public double skewness;
-
-        public double modality; //peaks
-    }
 
     public static double GetQuickSymmetryValue()
     {
@@ -40,6 +20,22 @@ public static class Distribution
     public static double GetSymmetryValue()
     {
         throw new NotImplementedException();
+    }
+
+    public static double GetMinimumValue(double[] data)
+    {
+        var value = Statistics.Minimum(data);
+        if (double.IsNaN(value)) Debug.LogError("Minimum Value is NaN: Data has less than one entry or an entry is NaN");
+
+        return value;
+    }
+
+    public static double GetMaximumValue(double[] data)
+    {
+        var value = Statistics.Maximum(data);
+        if (double.IsNaN(value)) Debug.LogError("Maximum Value is NaN: Data has less than one entry or an entry is NaN");
+
+        return value;
     }
 
     /// <summary>
@@ -231,36 +227,6 @@ public static class Distribution
         data.CopyTo(clonedArray, 0);
 
         return ArrayStatistics.LowerQuartileInplace(clonedArray);
-    }
-
-    /// <summary>
-    /// Method calculates a whole set of statistical characteristics in one pass
-    /// </summary>
-    /// <param name="data"></param>
-    /// <returns>Struct of statistical characteristics of input dataset</returns>
-    public static DistributionValues GetDescriptiveStatisticValues(double[] data)
-    {
-        var statistics = new DescriptiveStatistics(data);
-        DistributionValues values = new DistributionValues();
-
-        values.largestElement = statistics.Maximum;
-        values.smallestElement = statistics.Minimum;
-
-        values.mean = statistics.Mean;
-        values.variance = statistics.Variance;
-        values.stdDev = statistics.StandardDeviation;
-
-        values.kurtosis = statistics.Kurtosis;
-        values.skewness = statistics.Skewness;
-
-        values.median = GetMedianValue(data);
-        values.iqr = GetIQRValue(data);
-        values.upperQuartile = GetUpperQuartileValue(data);
-        values.lowerQuartile = GetLowerQuartileValue(data);
-        
-        values.modality = GetModalityValueIncremental(data);
-
-        return values;
     }
 
     /// <summary>

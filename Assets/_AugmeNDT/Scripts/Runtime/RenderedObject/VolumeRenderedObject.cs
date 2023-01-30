@@ -1,11 +1,8 @@
-using System;
-using System.Collections.Generic;
-using UnityEngine;
-using System.Threading.Tasks;
-using UnityEngine.Rendering;
-using System.Data;
-using UnityEngine.UIElements;
 using Microsoft.MixedReality.Toolkit.UI.BoundsControl;
+using System;
+using System.Threading.Tasks;
+using UnityEngine;
+
 
 public class VolumeRenderedObject
 {
@@ -30,12 +27,13 @@ public class VolumeRenderedObject
         volumePrefab = (GameObject)Resources.Load("Prefabs/VolumeRenderCube");
     }
 
-    public async Task CreateObject(VoxelDataset dataset)
+    public async Task CreateObject(GameObject container, VoxelDataset dataset)
     {
         voxelDataset = dataset;
 
         volumeContainer = GameObject.Instantiate(containerPrefab);
         volumeContainer.name = dataset.datasetName;
+        volumeContainer.transform.parent = container.transform;
 
         volume = GameObject.Instantiate(volumePrefab, volumeContainer.transform);
         volume.name = "Volume";
