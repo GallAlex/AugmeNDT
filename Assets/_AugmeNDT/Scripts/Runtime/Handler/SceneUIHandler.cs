@@ -24,31 +24,21 @@ public class SceneUIHandler : MonoBehaviour
 
     public List<Shader> listOfShaders;
 
+    private SceneObjectHandler sceneObjectHandler;
 
     private const int AmountShadertypes = 3;
     private int shaderType = 0;
     private int ticks = -1;
     private int attribute = 0;
 
-    private SceneFileHandler refSceneFileHandler;   // Reference to the SceneFileHandler
-    private SceneVisHandler refSceneVisHandler;     // Reference to the SceneVisHandler
-
-    /// <summary>
-    /// Sets a reference to the sceneFileHandler
-    /// </summary>
-    /// <param name="sceneFileHandler"></param>
-    public void SetSceneFileHandler(SceneFileHandler sceneFileHandler)
-    {
-        refSceneFileHandler = sceneFileHandler;
-    }
-
+    
     /// <summary>
     /// Sets a reference to the sceneVisHandler
     /// </summary>
     /// <param name="sceneVisHandler"></param>
-    public void SetSceneVisHandler(SceneVisHandler sceneVisHandler)
+    public void SetSceneObjectHandler(SceneObjectHandler handler)
     {
-        refSceneVisHandler = sceneVisHandler;
+        sceneObjectHandler = handler;
     }
 
     /// <summary>
@@ -68,17 +58,14 @@ public class SceneUIHandler : MonoBehaviour
         Debug.Log("Started loading file with ...");
         textLabel.text = "Loading ...";
 
-        Task<string> asyncLoadingTask = refSceneFileHandler.LoadData();
-
+        Task<string> asyncLoadingTask = sceneObjectHandler.loadObject();
+        
         //Progress Bar
-        indicator = indicatorObject.GetComponent<IProgressIndicator>();
-        StartProgressIndicator(asyncLoadingTask);
+        //indicator = indicatorObject.GetComponent<IProgressIndicator>();
+        //StartProgressIndicator(asyncLoadingTask);
 
         string path = await asyncLoadingTask;
         textLabel.text = path;
-
-        // Update SceneVisHandler
-        refSceneVisHandler.UpdateRenderedObjects(refSceneFileHandler.GetFileLoadingManager());
     }
 
     public void CreateVisualization()
@@ -86,68 +73,30 @@ public class SceneUIHandler : MonoBehaviour
         attribute++;
         attribute = attribute % 8;
 
-        refSceneVisHandler.ChangeAxis(0, 1, attribute, 5);
-
-        //VisContainer vis = new VisContainer();
-        //vis.CreateVisContainer("Basic Euclidean Space");
-        ////vis.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
-
-        //vis.CreateAxis("X Label", Direction.X);
-        //vis.CreateAxis("Y label", Direction.Y);
-        //vis.CreateAxis("Z label", Direction.Z);
-
-        //vis.CreateGrid(Direction.X, Direction.Y);
-        //vis.CreateGrid(Direction.X, Direction.Z);
-        //vis.CreateGrid(Direction.Y, Direction.Z);
-
-        //for (double x = 0; x <= 1; x+= 0.01f)
-        //{
-        //    const double pi = 3.14f;
-        //    double y = 0.5 * (1 + Math.Sin(2 * pi * x));
-        //    DataMark.Channel channel = new DataMark.Channel
-        //    {
-        //        position = new Vector3(x, (double)y, 0.5f),
-        //        rotation = new Vector3(0, 0, 0),
-        //        color = new Vector4((double)y, 0, 0, 1)
-        //    };
-
-        //    vis.CreateDataMark(channel);
-        //}
-
-        //New Vis Object
-        //visGameObject = new GameObject();
-        //Vis vis = visGameObject.AddComponent<Vis>();
-
-
-        //Data
-        /*
-
-        var testDat = Generate3DSinData();
-
-        Vis vis = new Vis();
-        vis.AppendData(testDat);
-        vis.CreateVis();
-
-        */
-
-        //Vis vis2 = new Vis();
-        //vis2.InitVisParams("Test 2", 2, 0.1f, 0.1f, 0.1f);
-        //vis2.CreateVis();
+        sceneObjectHandler.ChangeAxis(0, 0, 1, attribute, 5);
     }
 
     public void ChangeVisTicks()
     {
-        //ticks++;
-        //ticks = ticks % 12;
 
-        //refSceneVisHandler.ChangeAxis(0, 0, 0, ticks);
+        List<int> selectedGroups = new List<int>();
+        //Currently add every loaded group into the selection and create a multigroup
+        for (int groupID = 0; groupID < sceneObjectHandler.GetAmountOfDataVisGroups(); groupID++)
+        {
+            selectedGroups.Add(groupID);
+        }
 
-        FillGridObject();
+        //Creates a MultiGroup
+        sceneObjectHandler.CreateMultiGroup(selectedGroups);
+        sceneObjectHandler.RenderAbstractVisObjectForMultiGroup();
+        
     }
 
     public void FillGridObject()
     {
-        Dictionary<string, double[]> dataVal = refSceneVisHandler.visObjectList[0].dataValues;
+        /*
+    
+        Dictionary<string, double[]> dataVal = sceneObjectHandler.visObjectList[0].dataValues;
         scrollGridUtility.FillScrollGrid(dataVal.Keys.ToList());
 
         //// Load Button Prefab
@@ -175,12 +124,14 @@ public class SceneUIHandler : MonoBehaviour
 
         //gridObjectContainer.GetComponentInChildren<GridObjectCollection>().UpdateCollection();
         //scrollingObjectColl.UpdateContent();
+        
+        */
     }
 
     public void ChangeShader()
     {
         shaderType = (shaderType + 1) % AmountShadertypes;
-        refSceneVisHandler.ChangeVolumeShader(0, listOfShaders[shaderType]);
+        sceneObjectHandler.ChangeVolumeShader(0, listOfShaders[shaderType]);
     }
 
     private void ShowDrivesAndFolders()

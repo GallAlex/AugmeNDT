@@ -6,9 +6,10 @@ Currently tested with the Microsoft Hololens 2.
 Dependencies and versions utilized:
 | Name                                                                    | Version  |
 | ----------------------------------------------------------------------- | -------- |
-| Unity                                                                   | 2021.3.6 |
+| Unity                                                                   | 2021.3.14 |
 | C#                                                                      | 9.0      |
-| .NET                                                                    | 4.6      |
+| .NET Standard                                                  | 2.1      |
+| .NET Framework                                             | 4.8      |
 | [MRTK](https://github.com/microsoft/MixedRealityToolkit-Unity/releases)                                                                   | 2.8.2.0  |
 | [Math.NET Numerics](https://numerics.mathdotnet.com/#Math-NET-Numerics)| 5.0.0    | 
 

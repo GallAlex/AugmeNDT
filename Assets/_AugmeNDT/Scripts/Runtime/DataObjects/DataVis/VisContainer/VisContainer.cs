@@ -74,7 +74,7 @@ public class VisContainer
         DataGrid grid = new DataGrid();
         Direction[] axisDirections = { axis1, axis2 };
 
-        grid.CreateGrid(gridContainer.transform, worldSpaceWidth, worldSpaceHeight, axisDirections, xyzTicks[(int)axis1] + 1, xyzTicks[(int)axis2] + 1);
+        grid.CreateGrid(gridContainer.transform, worldSpaceWidth, worldSpaceHeight, axisDirections, xyzTicks[(int)axis1], xyzTicks[(int)axis2]);
 
         dataGridList.Add(grid);
     }

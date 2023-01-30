@@ -1,11 +1,21 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.MixedReality.Toolkit.UI.BoundsControl;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.SocialPlatforms;
+
+/// <summary>
+/// Possible Visulization Channels
+/// </summary>
+public enum VisChannels
+{
+    XAxis,
+    YAxis,
+    ZAxis,
+    Color,
+    Size,
+    Orientation,
+    NumberOfChannels,
+}
 
 /// <summary>
 /// Base class to create different data visualizations charts
@@ -20,9 +30,9 @@ public class Vis
     public GameObject tickMarkPrefab;
 
     // Data
-    public Dictionary<string, double[]> dataValues;       // Dictionary all data attributes with their <name,values>.
-    public int dimensions = 0;                            // Number of attributes retrieved from the dataValues.
-    public int numberOfValues = 0;                        // Number of values for each attribut from the dataValues.
+    public List<Dictionary<string, double[]>> dataSets;   // List of Datasets as Dictionaries with all data attributes with their <name,values>. Dictionaries should all have the same attributes
+    public int dimensions = 0;                              // Number of attributes retrieved from the dataValues.
+    public List<int> numberOfValues;                        // Number of values for each attribut from the dataValues.
 
     // Visualization Properties:
     public string title = "Basic Euclidean Vis";                // Title of vis.
@@ -30,7 +40,7 @@ public class Vis
     public List<int> encodedAttribute;                          // Cross-reference which encoding (Axes, Color,..) uses which attribute of the data
     //TODO: Enum whith possible encoding needed
 
-    public List<Scale.DataScale> dataScaleTypes;                    // Applied scaling for dataValues domain of respective encoding
+    public List<Scale.DataScale> dataScaleTypes;                // Applied scaling for dataValues domain of respective encoding
     public float width = 0.2f;                                  // Vis container width in centimeters.
     public float height = 0.2f;                                 // Vis container height in centimeters.
     public float depth = 0.2f;                                  // Vis container depth in centimeters.
@@ -49,13 +59,15 @@ public class Vis
         this.xyzOffset = xyzOffset;
     }
 
-    public virtual GameObject CreateVis()
+    public virtual GameObject CreateVis(GameObject container)
     {
         //TODO: Move into Constructor?
 
         visContainer = new VisContainer();
         
-        visContainerObject =  visContainer.CreateVisContainer(title);
+        visContainerObject = visContainer.CreateVisContainer(title);
+        visContainerObject.transform.SetParent(container.transform);
+
         encodedAttribute = new List<int>();
 
         visContainer.SetAxisOffsets(xyzOffset);
@@ -68,37 +80,59 @@ public class Vis
 
     public virtual void AppendData(Dictionary<string, double[]> values)
     {
+        //Todo: Move initialize?
+        if (dataSets == null)
+        {
+            dataSets = new List<Dictionary<string, double[]>>();
+            numberOfValues = new List<int>();
+        }
+
         // Preprocess Data
         if (values == null || values.Count < 1)
         {
             Debug.LogError("Appended Data is incorrect (insufficient dimensions, missing values, ...)");
             return;
         }
-        dataValues = values;
         dimensions = values.Count;
 
-        numberOfValues = values.ElementAt(0).Value.Length;
+        //Check other data sets if they have the same amount of attributes
+        if (dataSets.Count > 0)
+        {
+            if (values.Count != dimensions)
+            {
+                Debug.LogError("Number of data attributes do not match with other loaded datasets (Missing Attributes!)");
+                return;
+            }
+        }
+
+        dataSets.Add(values);
+        numberOfValues.Add(values.ElementAt(0).Value.Length);
 
         // Test if every attribute has the same amount of values
         for (int dim = 0; dim < dimensions; dim++)
         {
             var currentValueCount = values.ElementAt(dim).Value.Length;
 
-            if (currentValueCount <= 0 || currentValueCount - numberOfValues != 0)
+            if (currentValueCount <= 0 || currentValueCount - numberOfValues[numberOfValues.Count-1] != 0)
             {
                 Debug.LogError("Number of data values do not match (Missing Values!)");
                 return;
             }
 
-            numberOfValues = currentValueCount;
+            //numberOfValues = currentValueCount;
         }
 
 
     }
 
-    public virtual Dictionary<string, double[]> GetAppendedData()
+    public virtual List<Dictionary<string, double[]>> GetAppendedData()
     {
-        return dataValues;
+        return dataSets;
+    }
+
+    public virtual void CreateDataScales()
+    {
+
     }
 
     public virtual void ChangeAxisAttribute(int axisId, int selectedDimension, int numberOfTicks)
@@ -106,11 +140,16 @@ public class Vis
         //Todo: Instead of Axis ID use encoding Id to change that encoding(Axis, Color, Size, Shape, ...)
     }
 
+    public virtual void CreateDataMarks()
+    {
+
+    }
+
     public virtual void ChangeDataMarks()
     {
 
     }
-    
+
     public Scale CreateScale(Scale.DataScale dataScale, List<double> domain, List<double> range)
     {
         Scale scaleFunction;

@@ -1,14 +1,8 @@
 using System;
-using System.Data;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.MixedReality.Toolkit.Input;
-using Microsoft.MixedReality.Toolkit.UI;
-using Microsoft.MixedReality.Toolkit.UI.BoundsControl;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
-
 
 public class PolyFiberRenderedObject
 {
@@ -17,6 +11,7 @@ public class PolyFiberRenderedObject
     private GameObject polyModelContainer;
 
     //private GameObject polyModelPrefab;
+    [SerializeField]
     private GameObject polyModel;
 
     private Material cylinderMaterial;
@@ -43,11 +38,12 @@ public class PolyFiberRenderedObject
         containerPrefab = (GameObject)Resources.Load("Prefabs/PolyModelContainer");
     }
 
-    public async Task CreateObject(PolyFiberData dataset)
+    public async Task CreateObject(GameObject container, PolyFiberData dataset)
     {
         polyFiberDataset = dataset;
 
-        polyModelContainer = GameObject.Instantiate(containerPrefab, containerPrefab.transform.position, Quaternion.identity);
+        polyModelContainer = GameObject.Instantiate(containerPrefab, container.transform.position, Quaternion.identity);
+        polyModelContainer.transform.parent = container.transform;
         polyModelContainer.name = "FiberModel";
 
         polyModel = new GameObject("Model");
@@ -83,7 +79,7 @@ public class PolyFiberRenderedObject
 
         for (int fiber = 0; fiber < dataset.NumberOfFibers; fiber++)
         {
-            GameObject fiberObject = new GameObject("Fiber_"+ fiber);
+            GameObject fiberObject = new GameObject("Fiber_" + fiber);
             fiberObject.transform.SetParent(polyModel.transform);
 
 
@@ -113,7 +109,7 @@ public class PolyFiberRenderedObject
 
         currentMeshFilter = fiberObject.AddComponent<MeshFilter>();
         MeshRenderer currentMeshRenderer = fiberObject.AddComponent<MeshRenderer>();
-        
+
 
         for (int fiber = 0; fiber < dataset.NumberOfFibers; fiber++)
         {

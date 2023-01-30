@@ -38,8 +38,6 @@ public class ScaleColor
 
         Color selectedColor = range[colorIndex];
 
-        Debug.Log("selectedColor Nr. " + colorIndex + " is " + selectedColor);
-
         return selectedColor;
     }
 

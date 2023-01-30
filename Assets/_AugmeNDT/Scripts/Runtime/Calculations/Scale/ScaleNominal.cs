@@ -67,7 +67,6 @@ public class ScaleNominal:Scale
     {
         //Covert domainValue to int
         int domainValueToInt = Convert.ToInt32(domainValue);
-        Debug.Log("Domain Value: " + (int)domainValue + " = " + scaledValueNames[domainValueToInt]);
         return scaledValueNames[domainValueToInt];
     }
     
