@@ -12,7 +12,6 @@ Material:
   m_ValidKeywords:
   - _DIRECTIONAL_LIGHT
   - _DISABLE_ALBEDO_MAP
-  - _HOVER_LIGHT
   - _REFLECTIONS
   - _SPECULAR_HIGHLIGHTS
   - _VERTEX_COLORS
@@ -117,7 +116,7 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _HoverLight: 1
+    - _HoverLight: 0
     - _IgnoreZScale: 0
     - _IndependentCorners: 0
     - _InnerGlow: 0

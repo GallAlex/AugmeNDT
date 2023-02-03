@@ -1,64 +1,55 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
+using System.Linq;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
 
 /// <summary>
-/// Class enables the manipulation of Meshes
+/// Class enables methods to manipulation a mesh
 /// </summary>
-[ExecuteAlways]
-public class MeshInteractions : MonoBehaviour
+public class MeshInteractions
 {
-    //private Mesh clonedMesh;
-    //private List<Vector3> vertices;
-    //private List<int> triangles;
-    //private List<Vector3> normals;
 
-    void Start()
+    public static void TranslateMesh(Mesh mesh, int[] indexRange, Vector3 translation)
     {
-        MeshFilter meshFilter = GetComponent<MeshFilter>();
-        Mesh originalMesh = meshFilter.sharedMesh;
-        TranslateMesh(new Vector3(60, 0, -60), originalMesh);
-        ColorMesh(Color.black, originalMesh);
+        Vector3[] modifiedVertices = mesh.vertices;
+        for (int vertexID = 0; vertexID < mesh.vertexCount; vertexID++)
+        {
+            // Range is expected to be inclusive startIndex and endIndex (objectID * vertexCount -1)
+            if (vertexID >= indexRange[0] && vertexID <= indexRange[1])
+            {
+                modifiedVertices[vertexID] = modifiedVertices[vertexID] + translation;
+            }
+
+        }
+        mesh.vertices = modifiedVertices;
     }
 
-
-    public void TranslateMesh(Vector3 translation, Mesh mesh)
+    /// <summary>
+    /// Colors a part of the vertices (range from startIndex indexRange[0] to endIndex indexRange[1]) in the mesh in color[0] and the whole remaining mesh with color[1]
+    /// </summary>
+    /// <param name="mesh"></param>
+    /// <param name="indexRange"></param>
+    /// <param name="color"></param>
+    public static void ColorMesh(Mesh mesh, int[] indexRange, Color[] color)
     {
-        // https://docs.unity3d.com/ScriptReference/Mesh.html
-        Vector3[] vertices = mesh.vertices;
+        Color[] newColor = mesh.colors;
 
-        for (int vertexID = 0; vertexID < vertices.Length; vertexID++)
+        if (newColor.Length != mesh.vertexCount)
         {
-            vertices[vertexID] = vertices[vertexID] + translation;
+            Debug.LogError("Mesh has no or too few vertex colors");
+            return;
+        }
+        for (int vertexID = 0; vertexID < mesh.vertexCount; vertexID++)
+        {
+            //Todo: Start at min vertice and end at max vertice
+            // Range is expected to be inclusive startIndex and endIndex (objectID * vertexCount -1)
+            if (vertexID >= indexRange[0] && vertexID <= indexRange[1])
+            {
+                newColor[vertexID] = color[0];
+            }
         }
 
-        mesh.vertices = vertices;
-        //meshFilter.mesh.RecalculateNormals();
-
-    }
-
-    public void RotateMesh(Vector3 rotation)
-    {
-
-    }
-
-    public void ColorMesh(Color color, Mesh mesh)
-    {
-        Vector3[] vertices = mesh.vertices;
-        Color[] verticeColors = mesh.colors;
-
-        for (int vertexID = 0; vertexID < verticeColors.Length; vertexID++)
-        {
-            verticeColors[vertexID] = Color.green;
-        }
-        //for (int vertexID = verticeColors.Length / 2; vertexID < verticeColors.Length; vertexID++)
-        //{
-        //    verticeColors[vertexID] = Color.red;
-        //}
-
-        mesh.colors = verticeColors;
+        mesh.SetColors(newColor);
     }
 
 }

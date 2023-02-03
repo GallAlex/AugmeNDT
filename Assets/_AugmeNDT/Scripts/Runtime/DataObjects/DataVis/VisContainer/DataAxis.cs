@@ -5,6 +5,7 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Timeline;
 using static Vis;
 
 public enum Direction
@@ -33,9 +34,13 @@ public class DataAxis
     public Direction axisDirection = Direction.X;
     public Scale dataScale;
 
+    private float tickOffset;
     private float tickLabelOffset = 0.03f;
-    
 
+    public DataAxis(float tickOffset)
+    {
+        this.tickOffset = tickOffset;
+    }
 
     public GameObject CreateAxis(Transform visContainer, string axisTitle, Direction direction, Scale dataScale, int numberOfTicks)
     {
@@ -76,7 +81,8 @@ public class DataAxis
     {
         axisTicks = new AxisTicks();
         if (numberOfTicks == 1) numberOfTicks = 2;
-        
+
+        axisTicks.SetAxisProperties(tickOffset);
         axisTicks.CreateTicks(axisTransform, dataScale, numberOfTicks);
 
         return axisTicks;

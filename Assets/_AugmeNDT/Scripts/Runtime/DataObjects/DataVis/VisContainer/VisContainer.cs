@@ -18,9 +18,7 @@ public class VisContainer
     public GameObject dataMarkContainer;
 
     private const float axisMeshLength = 1.0f;
-    private float worldSpaceWidth = 1.0f;   // X
-    private float worldSpaceHeight = 1.0f;  // Y
-    private float worldSpaceLength = 1.0f;  // Z
+    private Bounds containerBounds;            // Width, Height, Length of the Container
 
     //TODO: Make Properties of VisContainer as scriptableObject which can be set in Editor?
     // Main Container Elements
@@ -29,7 +27,7 @@ public class VisContainer
     public List<DataMark> dataMarkList;     // Data Marks
 
     public bool boundsControl = true;
-    public Vector3 xyzOffset;
+    public float[] xyzOffset;
     public int[] xyzTicks;                     
 
 
@@ -55,12 +53,15 @@ public class VisContainer
         gridContainer.transform.parent = visContainer.transform;
         dataMarkContainer.transform.parent = visContainer.transform;
 
+        //Set the basic container size by using the visContainer
+        containerBounds = visContainer.GetComponent<BoxCollider>().bounds;
+  
         return visContainer;
     }
 
     public void CreateAxis(string axisLabel, Direction axisDirection, Scale dataScale)
     {
-        DataAxis axis = new DataAxis();
+        DataAxis axis = new DataAxis(xyzOffset[(int)axisDirection]);
         //Return Length of current axis
 
         axis.CreateAxis(axisContainer.transform, axisLabel, axisDirection, dataScale, xyzTicks[(int)axisDirection]);
@@ -74,7 +75,7 @@ public class VisContainer
         DataGrid grid = new DataGrid();
         Direction[] axisDirections = { axis1, axis2 };
 
-        grid.CreateGrid(gridContainer.transform, worldSpaceWidth, worldSpaceHeight, axisDirections, xyzTicks[(int)axis1], xyzTicks[(int)axis2]);
+        grid.CreateGrid(gridContainer.transform, containerBounds, xyzOffset[(int)axis1], xyzOffset[(int)axis2], axisDirections, xyzTicks[(int)axis1], xyzTicks[(int)axis2]);
 
         dataGridList.Add(grid);
     }
@@ -122,7 +123,7 @@ public class VisContainer
     /// Moves the first tick from the axis origin and the last tick from the end of the axis by by the offset
     /// </summary>
     /// <param name="xyzOffset"></param>
-    public void SetAxisOffsets(Vector3 xyzOffset)
+    public void SetAxisOffsets(float[] xyzOffset)
     {
         this.xyzOffset = xyzOffset;
     }
@@ -136,20 +137,15 @@ public class VisContainer
         this.xyzTicks = xyzTicks;
     }
 
+    public void SetContainerBounds(Bounds cBounds)
+    {
+        containerBounds = cBounds;
+    }
+
     public void EnableBoundingBox(bool enable)
     {
         boundsControl = enable;
         BoundingBoxVisibility();
-    }
-
-
-    private Vector3 UpdateAxisLength()
-    {
-        worldSpaceWidth = axisMeshLength * visContainer.transform.localScale.x;
-        worldSpaceHeight = axisMeshLength * visContainer.transform.localScale.y;
-        worldSpaceLength = axisMeshLength * visContainer.transform.localScale.z;
-
-        return new Vector3(worldSpaceWidth, worldSpaceHeight, worldSpaceLength);
     }
 
     private Vector3 GetCenterOfVisContainer()
@@ -158,7 +154,7 @@ public class VisContainer
         return center;
     }
 
-    private void BoundingBoxVisibility()
+    public void BoundingBoxVisibility()
     {
         //TODO
     }
@@ -261,6 +257,18 @@ public class VisContainer
 
     }
 
+    /// <summary>
+    /// Returns the min position and max position of the specific Axis in the Container including the offset
+    /// </summary>
+    /// <returns></returns>
+    private float[] GetAxisOffsetCoord(Direction axis)
+    {
+        Vector3 min = containerBounds.min;
+        Vector3 max = containerBounds.max;
 
+        Debug.Log("Min: " + min + " Max: " + max);
 
+        Debug.Log("Min Pos: " + (min[(int)axis] + xyzOffset[(int)axis]) + " Max Pos: " + (max[(int)axis] - xyzOffset[(int)axis]));
+        return new[] { min[(int)axis] + xyzOffset[(int)axis], max[(int)axis] - xyzOffset[(int)axis] };
+    }
 }

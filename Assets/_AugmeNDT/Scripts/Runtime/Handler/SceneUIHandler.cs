@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// Class handels the interactions with global GUI elements inside the scene (Windows, Buttons,...)
@@ -24,6 +26,9 @@ public class SceneUIHandler : MonoBehaviour
 
     public List<Shader> listOfShaders;
 
+    public Camera mainCamera;
+
+
     private SceneObjectHandler sceneObjectHandler;
 
     private const int AmountShadertypes = 3;
@@ -31,7 +36,17 @@ public class SceneUIHandler : MonoBehaviour
     private int ticks = -1;
     private int attribute = 0;
 
-    
+    private void Update()
+    {
+        
+        //if (Physics.Raycast(mainCamera.transform.position, transform.forward, out var hit, Mathf.Infinity))
+        //{
+        //    var obj = hit.collider.gameObject;
+
+        //    Debug.Log($"looking at {obj.name}", this);
+        //}
+    }
+
     /// <summary>
     /// Sets a reference to the sceneVisHandler
     /// </summary>
@@ -70,10 +85,7 @@ public class SceneUIHandler : MonoBehaviour
 
     public void CreateVisualization()
     {
-        attribute++;
-        attribute = attribute % 8;
-
-        sceneObjectHandler.ChangeAxis(0, 0, 1, attribute, 5);
+        sceneObjectHandler.HighlightPolyFibers(0, new List<int> {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, Color.red);
     }
 
     public void ChangeVisTicks()

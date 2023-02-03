@@ -1,6 +1,8 @@
 using MathNet.Numerics;
 using System;
 using System.Collections.Generic;
+using System.Net;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class AxisTicks
@@ -11,7 +13,34 @@ public class AxisTicks
     public List<GameObject> tickList;  // Ticks with labels
     //private ObjectPool<GameObject> tickPool;
 
-    public int decimalPoints = 4;
+    private double[] axisStartEndPoints;
+    private float tickOffset = 0;
+    private int decimalPoints = 4;
+
+    //Todo: Axis needs to  get the Values and makes a scale between Start/End of Axis (0,0)-(1,0)
+
+    /// <summary>
+    /// Initialize the Axis for the Ticks with StartPoint (0.0f, 0.0f, 0.0f) and Endpoint (1.0f, 0.0f, 0.0f) and Offset of zero.
+    /// </summary>
+    public AxisTicks()
+    {
+        tickOffset = 0.1f;
+
+        double startPoint = 0.0f + tickOffset;
+        double endPoint = 1.0f - tickOffset;
+        axisStartEndPoints = new double[] { startPoint, endPoint };
+    }
+
+    /// <summary>
+    /// Sets the Axis properties like the Offset from Start-/Endoint of the Line for the creation of Ticks.
+    /// Default Value for the StartPoint (0.0f, 0.0f, 0.0f) and Endpoint (1.0f, 0.0f, 0.0f) are assumed.
+    /// </summary>
+    /// <param name="tickOffset"></param>
+    public void SetAxisProperties(float tickOffset)
+    {
+        this.tickOffset = tickOffset;
+        axisStartEndPoints = new double[] { 0.0f + tickOffset, 1.0f - tickOffset };
+    }
 
     public void SetTickMarkStyle()
     {
@@ -33,27 +62,21 @@ public class AxisTicks
 
         tickList = new List<GameObject>();
 
-
         //Todo if scale is scale.ordinal, then numberOfTicks == range.Count || domain.Count
         //numberOfTicks = scale.range.Count;
 
         // if scale is scale.linear, then use user defined numberOfTicks
-        double tickSpacing = GetTickSpacing(numberOfTicks);
-
-
-
+        double tickSpacing = GetOffestTickSpacing(numberOfTicks);
 
         // tick from min to max value
         for (int tick = 0; tick < numberOfTicks; tick++)
         {
-            double step = tick * tickSpacing;
-            double scaledValue = scale.GetDomainValue(step);
+            double step = StepFunction(tick, tickSpacing, axisStartEndPoints[0]);
+            double domainValue = scale.GetDomainValue(step);
 
             Vector3 tickPosition = new Vector3((float)step + tickContainer.transform.localPosition.x, tickContainer.transform.localPosition.y, tickContainer.transform.localPosition.z);
 
-
-            tickList.Add(CreateSingleTick(tick, tickPosition, scaledValue, scale));
-
+            tickList.Add(CreateSingleTick(tick, tickPosition, domainValue, scale));
         }
     }
 
@@ -65,15 +88,15 @@ public class AxisTicks
     /// <param name="numberOfTicks"></param>
     public void ChangeTicks(Scale scale, int numberOfTicks)
     {
-        double tickSpacing = GetTickSpacing(numberOfTicks);
+        double tickSpacing = GetOffestTickSpacing(numberOfTicks);
         int ticksInList = tickList.Count;
 
         if (numberOfTicks == 0 && ticksInList == 0) return;
 
         for (int tick = 0; tick < Math.Max(numberOfTicks, ticksInList); tick++)
         {
-            double step = tick * tickSpacing;
-            double scaledValue = scale.GetDomainValue(step);
+            double step = StepFunction(tick, tickSpacing, axisStartEndPoints[0]);
+            double domainValue = scale.GetDomainValue(step);
 
             
             var currTickPosition = new Vector3((float)step + tickContainer.transform.localPosition.x, tickContainer.transform.localPosition.y,
@@ -85,7 +108,7 @@ public class AxisTicks
                 if (tick < numberOfTicks)
                 {
                     // Change Pos and label and set tick active
-                    MoveAndRenameSingleTick(tick, currTickPosition, scaledValue, scale);
+                    MoveAndRenameSingleTick(tick, currTickPosition, domainValue, scale);
                 }
                 else
                 {
@@ -99,12 +122,12 @@ public class AxisTicks
                 if (tick < ticksInList)
                 {
                     // Change Pos and label and set tick active
-                    MoveAndRenameSingleTick(tick, currTickPosition, scaledValue, scale);
+                    MoveAndRenameSingleTick(tick, currTickPosition, domainValue, scale);
                 }
                 else
                 {
                     // Create new tick
-                    tickList.Add(CreateSingleTick(tick, currTickPosition, scaledValue, scale));
+                    tickList.Add(CreateSingleTick(tick, currTickPosition, domainValue, scale));
                 }
             }
 
@@ -117,8 +140,8 @@ public class AxisTicks
     /// </summary>
     /// <param name="tick">Gameobject of Tick with label</param>
     /// <param name="newPos">New position of the tick</param>
-    /// <param name="scaledValue">Value which should be displayed as label</param>
-    private void MoveAndRenameSingleTick(int tickID, Vector3 newPos, double scaledValue, Scale scale)
+    /// <param name="domainValue">Value which should be displayed as label</param>
+    private void MoveAndRenameSingleTick(int tickID, Vector3 newPos, double domainValue, Scale scale)
     {
         var tickObj = tickList[tickID];
         tickObj.SetActive(true);
@@ -128,11 +151,11 @@ public class AxisTicks
 
         if (scale.dataScaleType == Scale.DataScale.Linear)
         {
-            label.text = scaledValue.Round(decimalPoints).ToString();
+            label.text = domainValue.Round(decimalPoints).ToString();
         }
         else if (scale.dataScaleType == Scale.DataScale.Nominal)
         {
-            label.text = scale.GetScaledValueName(scaledValue);
+            label.text = scale.GetDomainValueName(domainValue);
         }
         
     }
@@ -142,9 +165,9 @@ public class AxisTicks
     /// </summary>
     /// <param name="tickID">Used as name for the Gameobject</param>
     /// <param name="newPos"></param>
-    /// <param name="scaledValue"></param>
+    /// <param name="domainValue"></param>
     /// <returns>Returns a new Tick</returns>
-    private GameObject CreateSingleTick(int tickID, Vector3 newPos, double scaledValue, Scale scale)
+    private GameObject CreateSingleTick(int tickID, Vector3 newPos, double domainValue, Scale scale)
     {
         //GameObject tickInstance = GameObject.Instantiate(tickMarkPrefab, newPos, Quaternion.identity, tickContainer.transform);
         GameObject tickInstance = GameObject.Instantiate(tickMarkPrefab, tickContainer.transform, false);
@@ -155,28 +178,44 @@ public class AxisTicks
 
         if (scale.dataScaleType == Scale.DataScale.Linear)
         {
-            tickLabel.text = scaledValue.Round(decimalPoints).ToString();
+            tickLabel.text = domainValue.Round(decimalPoints).ToString();
         }
         else if (scale.dataScaleType == Scale.DataScale.Nominal)
         {
-            tickLabel.text = scale.GetScaledValueName(scaledValue);
+            tickLabel.text = scale.GetDomainValueName(domainValue);
         }
 
         return tickInstance;
     }
 
+
     /// <summary>
-    /// Calculates the distance between ticks based on the lenght of the Axis and the number of Ticks (for that range)
-    /// The Axis length is assumed to be 1 Unity Unit.
+    /// Calculates the distance between ticks based on the lenght of the Axis (axisStartEndPoints) and the number of Ticks (for that range)
+    /// The Axis length is assumed to be 1 Unity Unit [starting at (0,0,0) and endinf at (1,0,0)].
     /// </summary>
     /// <param name="numberOfTicks"></param>
     /// <returns></returns>
-    private double GetTickSpacing(int numberOfTicks)
+    private double GetOffestTickSpacing(int numberOfTicks)
     {
+       
         if (numberOfTicks <= 0) return 0;
         int numberOfSpacings = numberOfTicks - 1;
-        
-        return 1.0f / (double)numberOfSpacings;
+
+        return (axisStartEndPoints[1] - axisStartEndPoints[0]) / (double)numberOfSpacings;
+    }
+
+    /// <summary>
+    /// Step function which calculates the draw point for the tick (in 2D).
+    /// startPos is therefore a x pos on the line
+    /// </summary>
+    /// <param name="currentTick"></param>
+    /// <param name="tickSpacing"></param>
+    /// <param name="startPos"></param>
+    /// <returns></returns>
+    private double StepFunction(int currentTick, double tickSpacing, double startPos)
+    {
+        double step = (currentTick * tickSpacing) + startPos;
+        return step;
     }
 
 }
