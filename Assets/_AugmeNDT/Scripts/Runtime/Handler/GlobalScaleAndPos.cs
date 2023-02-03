@@ -65,6 +65,38 @@ public static class GlobalScaleAndPos
     }
 
     /// <summary>
+    /// Uses the GetBoundsOfParentAndChildren method to expand the BoxCollider of the Parent Object to fits all its children
+    /// </summary>
+    /// <param name="parentObj"></param>
+    public static void FitBoxColliderToChildren(GameObject parentObj)
+    {
+        // If the parent object has no BoxCollider, add one
+        BoxCollider parentColl = parentObj.GetComponent<BoxCollider>() != null ? parentObj.GetComponent<BoxCollider>() : parentObj.AddComponent<BoxCollider>();
+
+        Bounds newBounds = GetBoundsOfParentAndChildren(parentObj);
+        
+        parentColl.center = newBounds.center;
+        parentColl.size = newBounds.size;
+    }
+
+    /// <summary>
+    /// Returns the Bounds of the Parent Object which fits all its children
+    /// Starts from the bounds of the parent object and expands it iteratively
+    /// </summary>
+    /// <param name="parentObj"></param>
+    /// <returns></returns>
+    public static Bounds GetBoundsOfParentAndChildren(GameObject parentObj)
+    {
+        Bounds bounds = new Bounds(parentObj.transform.position, Vector3.zero);
+        foreach (MeshRenderer renderer in parentObj.GetComponentsInChildren<MeshRenderer>())
+        {
+            bounds.Encapsulate(renderer.bounds);
+        }
+
+        return new Bounds(bounds.center - parentObj.transform.position, bounds.size);
+    }
+
+    /// <summary>
     /// Moves the Gameobjects Pivot from the Center (0,0,0), to start the content of the Gameobject
     /// on its lower front left point.
     /// </summary>

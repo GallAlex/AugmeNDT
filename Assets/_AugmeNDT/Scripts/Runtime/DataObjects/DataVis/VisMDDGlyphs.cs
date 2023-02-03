@@ -44,17 +44,28 @@ public class VisMDDGlyphs : Vis
         if(!use4DData) xyzTicks = new int[] { dataSets[0].Keys.Count, 10, 10 };
         else xyzTicks = new int[] { dataSets[0].Keys.Count, 10, dataSets.Count };
 
-        Debug.Log("Displayed Ticks: X=" + xyzTicks[0] + " Y=" + xyzTicks[1] + " Z=" + xyzTicks[2]);
+        xyzOffset = new float[] { 0.05f, 0.05f, 0.05f };
+        
         base.CreateVis(container);
 
         DataPreparation();
 
-
+        Debug.Log("Create MDDGlyph");
 
         //## 01: Create Data Scales for Axes
         List<Scale> scale = new List<Scale>(axes);
 
-        Debug.Log("MDDGlyph");
+        List<double> range = new List<double>(2)
+        {
+            0.0d + xyzOffset[0],
+            1.0d - xyzOffset[0]
+        };
+
+        List<double> specialYRange = new List<double>(2)
+        {
+            0.0d + xyzOffset[2],
+            1.0d - xyzOffset[2]
+        };
 
         // X Axis
         List<double> domain = new List<double>(2)
@@ -62,7 +73,7 @@ public class VisMDDGlyphs : Vis
             0,
             dataSets[0].Keys.Count-1
         };
-        scale.Add(new ScaleNominal(domain, dataSets[0].Keys.ToList()));
+        scale.Add(new ScaleNominal(domain, range, dataSets[0].Keys.ToList()));
 
         // Y Axis
         domain = new List<double>(2)
@@ -70,7 +81,7 @@ public class VisMDDGlyphs : Vis
             minMaxStatisticValues[0].SmallestElement,
             minMaxStatisticValues[1].LargestElement
         };
-        scale.Add(new ScaleLinear(domain));
+        scale.Add(new ScaleLinear(domain, specialYRange));
 
         if (!use4DData)
         {
@@ -80,7 +91,7 @@ public class VisMDDGlyphs : Vis
                 minMaxStatisticValues[0].Modality,
                 minMaxStatisticValues[1].Modality
             };
-            scale.Add(new ScaleLinear(domain));
+            scale.Add(new ScaleLinear(domain, range));
         }
         else
         {
@@ -97,7 +108,7 @@ public class VisMDDGlyphs : Vis
             {
                 names.Add("Dataset " + i);
             }
-            scale.Add(new ScaleNominal(domain,names));
+            scale.Add(new ScaleNominal(domain, range, names));
         }
 
         //## 02: Create Axes and Grids
@@ -143,11 +154,12 @@ public class VisMDDGlyphs : Vis
                 //X Axis (Attributes)
                 var xCoordinate = scale[0].GetScaledValue(value);
                 channel.position[0] = (float)xCoordinate;
+                
                 //Debug.Log("xPos Nr" + value + ": " + xCoordinate);
 
                 //Size - Distance between lower and upper quartiles
-                var q1 = statisticValue.ElementAt(value).Value.LowerQuartile;
-                var q2 = statisticValue.ElementAt(value).Value.UpperQuartile;
+                var q1 = scale[1].GetScaledValue(statisticValue.ElementAt(value).Value.LowerQuartile);
+                var q2 = scale[1].GetScaledValue(statisticValue.ElementAt(value).Value.UpperQuartile);
 
                 var barHeight = q2 - q1;
                 channel.size[1] = (float)barHeight;
@@ -241,14 +253,14 @@ public class VisMDDGlyphs : Vis
             aggregatedStatisticValues.AddRange(statisticValues.Values.ToList());
 
             //#### PRINT STATISTIC VALUES ####
-            string statisticValuesString = ">> DataSet [" + currentDataSet + "]: ";
-            // Output statisticValues for Debug Purposes
-            foreach (var statisticValue in statisticValues)
-            {
-                statisticValuesString += statisticValue.Key + ": \n" + statisticValue.Value.PrintDistributionValues();
-                statisticValuesString += "\n";
-            }
-            Debug.Log(statisticValuesString);
+            //string statisticValuesString = ">> DataSet [" + currentDataSet + "]: ";
+            //// Output statisticValues for Debug Purposes
+            //foreach (var statisticValue in statisticValues)
+            //{
+            //    statisticValuesString += statisticValue.Key + ": \n" + statisticValue.Value.PrintDistributionValues();
+            //    statisticValuesString += "\n";
+            //}
+            //Debug.Log(statisticValuesString);
             //#### END PRINT STATISTIC VALUES ####
 
             currentDataSet++;

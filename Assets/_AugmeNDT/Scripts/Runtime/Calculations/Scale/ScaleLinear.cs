@@ -62,9 +62,9 @@ public class ScaleLinear : Scale
         return (((scaledValue - rangeMin) * newDomain) / scaledRange) + domainMin;
     }
 
-    public override string GetScaledValueName(double domainValue)
+    public override string GetDomainValueName(double domainValue)
     {
-        return GetScaledValue(domainValue).ToString();
+        return domainValue.ToString();
     }
 
     /// <summary>

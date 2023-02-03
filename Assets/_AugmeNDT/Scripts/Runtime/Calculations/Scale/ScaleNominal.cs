@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
 
 public class ScaleNominal:Scale
 {
     private List<string> scaledValueNames;
 
-    private double domainMin = 0.0d;
-    private double domainMax = 100.0d;
+    private int domainValues = 5;
 
     private double rangeMin = 0.0d;
     private double rangeMax = 1.0d;
@@ -16,14 +17,13 @@ public class ScaleNominal:Scale
     {
         dataScaleType = DataScale.Nominal;
 
-        if (domain[1] == names.Count || domain[0] != 0)
+        domainValues = Convert.ToInt32(domain[1] - domain[0]);
+
+        if (domainValues == names.Count || domain[0] != 0)
         {
             Debug.LogError("Not enough Names for the domain entered");
             return;
         }
-
-        domainMin = domain[0];
-        domainMax = domain[1];
 
         rangeMin = range[0];
         rangeMax = range[1];
@@ -35,14 +35,13 @@ public class ScaleNominal:Scale
     {
         dataScaleType = DataScale.Nominal;
 
-        if (domain[1] == names.Count || domain[0] != 0)
+        domainValues = Convert.ToInt32(domain[1] - domain[0]);
+
+        if (domainValues == names.Count || domain[0] != 0)
         {
             Debug.LogError("Not enough Names for the domain entered");
             return;
         }
-
-        domainMin = domain[0];
-        domainMax = domain[1];
 
         rangeMin = range[0];
         rangeMax = range[1];
@@ -53,17 +52,17 @@ public class ScaleNominal:Scale
 
     public override double GetScaledValue(double domainValue)
     {
-        return domainValue * ((rangeMax-rangeMin) / domainMax);
+        return domainValue * ((rangeMax - rangeMin) / domainValues) + rangeMin;
     }
 
     public override double GetDomainValue(double scaledValue)
     {
         //TODO: Rework to not use double (with int rounding problems obsolete)
-        return Math.Round((domainMax * scaledValue) / (rangeMax - rangeMin));
+        return Math.Round(((scaledValue - rangeMin) * domainValues) / (rangeMax - rangeMin));
     }
 
 
-    public override string GetScaledValueName(double domainValue)
+    public override string GetDomainValueName(double domainValue)
     {
         //Covert domainValue to int
         int domainValueToInt = Convert.ToInt32(domainValue);

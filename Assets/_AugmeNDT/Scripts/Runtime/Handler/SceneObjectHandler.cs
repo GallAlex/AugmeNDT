@@ -26,6 +26,8 @@ public class SceneObjectHandler : MonoBehaviour
     [SerializeField]
     private Dictionary<int, DataVisGroup> multiGroups;
 
+    // When introducing multiple DataVisGroups rearrange first the singular Objects in each group
+    private bool rearrangeObjects = true;
     
     // Called only once during the lifetime of the script instance (loading of a scene)
     void Awake()
@@ -101,6 +103,16 @@ public class SceneObjectHandler : MonoBehaviour
     /// </summary>
     public void ArrangeGroupsSpatially()
     {
+        
+        if (rearrangeObjects)
+        {
+            // First arrange all individual groups again
+            foreach (var group in dataVisGroups)
+            {
+                group.ArrangeObjectsSpatially();
+            }
+        }
+
         if (gridColl == null)
         {
             gridColl = sceneObjectsContainer.AddComponent<GridObjectCollection>();
@@ -129,6 +141,10 @@ public class SceneObjectHandler : MonoBehaviour
 
     //#####################     POLY MODEL METHODS  #####################
 
+    public void HighlightPolyFibers(int selectedGroup, List<int> fiberIDs, Color selectedColor)
+    {
+        dataVisGroups[selectedGroup].HighlightPolyFibers(fiberIDs, selectedColor);
+    }
 
     //#####################     VIS CHART METHODS   #####################
 

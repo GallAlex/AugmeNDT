@@ -1,40 +1,29 @@
-using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.XR.ARFoundation;
 
 public class PolyFiberRenderedObject
 {
 
     private GameObject containerPrefab;
     private GameObject polyModelContainer;
-
-    //private GameObject polyModelPrefab;
     [SerializeField]
-    private GameObject polyModel;
-
+    private GameObject polyModel; // gameobject holding all meshes of the polygonal model
     private Material cylinderMaterial;
-    private MeshFilter currentMeshFilter;
+    
 
     //Data
     private PolyFiberData polyFiberDataset;
 
-
-    //private CombineInstance[] combine;
+    private bool useMeshManager = true;
+    private MeshManager meshManager;
     private CylinderObjectVis cylinderVis;
-
-
-    //How many vertices per combined mesh (max 65535)
-    //Should sometimes be smaller because smaller meshes are faster to modify
-    [System.NonSerialized]
-    public int vertexLimit = 30000;
-    int verticesSoFar = 0;
 
     public PolyFiberRenderedObject()
     {
         cylinderMaterial = new Material((Material)Resources.Load("Materials/PolyMaterial", typeof(Material)));
-
         containerPrefab = (GameObject)Resources.Load("Prefabs/PolyModelContainer");
     }
 
@@ -46,32 +35,45 @@ public class PolyFiberRenderedObject
         polyModelContainer.transform.parent = container.transform;
         polyModelContainer.name = "FiberModel";
 
-        polyModel = new GameObject("Model");
+        polyModel = new GameObject("AllFibers_" + dataset.NumberOfFibers);
         polyModel.transform.SetParent(polyModelContainer.transform);
 
 
-        //TODO:
-        // Mesh is bigger then start - end point (because of radius)
-        // Save real size - either by mhd or by min/max
+        //TODO: Mesh is bigger then start - end point (because of radius), Save real size - either by mhd or by min/max
 
         // CREATE MESH
+        if (useMeshManager)
+        {
+            meshManager = new MeshManager();
 
-        //CreateCylinderRepresentation(polyFiberDataset);
-        GameObject fiberMesh = CreateCombinedCylinderRepresentation(dataset);
-        BoxCollider meshColl = fiberMesh.GetComponent<BoxCollider>() != null ? fiberMesh.GetComponent<BoxCollider>() : fiberMesh.AddComponent<BoxCollider>();
+            CreateCombinedCylinderRepresentation(dataset);
+            //Resize to whole size of all meshes
+            Bounds wholeFiberObjBounds = GlobalScaleAndPos.GetBoundsOfParentAndChildren(polyModel);
 
-        //BoundsControl boundsCon = polyModelContainer.GetComponent<BoundsControl>() != null ? polyModelContainer.GetComponent<BoundsControl>() : polyModelContainer.AddComponent<BoundsControl>();
-        BoxCollider boundsColl = polyModelContainer.GetComponent<BoxCollider>() != null ? polyModelContainer.GetComponent<BoxCollider>() : polyModelContainer.AddComponent<BoxCollider>();
+            //BoundsControl boundsCon = polyModelContainer.GetComponent<BoundsControl>() != null ? polyModelContainer.GetComponent<BoundsControl>() : polyModelContainer.AddComponent<BoundsControl>();
+            BoxCollider boundsColl = polyModelContainer.GetComponent<BoxCollider>() != null ? polyModelContainer.GetComponent<BoxCollider>() : polyModelContainer.AddComponent<BoxCollider>();
 
-        GlobalScaleAndPos.ResizeAbsolutMeshObject(fiberMesh.transform, 1.0f, meshColl.size);
-        GlobalScaleAndPos.ResizeBoxCollider(fiberMesh.transform, boundsColl, meshColl.size, meshColl.center);
+            GlobalScaleAndPos.ResizeAbsolutMeshObject(polyModel.transform, 1.0f, wholeFiberObjBounds.size);
+            GlobalScaleAndPos.ResizeBoxCollider(polyModel.transform, boundsColl, wholeFiberObjBounds.size, wholeFiberObjBounds.center);
+
+        }
+        else
+        {
+            CreateCylinderRepresentation(dataset);
+        }
+
+
         GlobalScaleAndPos.SetToBestInitialScale(polyModelContainer.transform, polyModelContainer.transform.localScale);
-
-
         GlobalScaleAndPos.SetToBestInitialStartPos(polyModelContainer.transform);
 
     }
 
+    /// <summary>
+    /// Draws the polygonal representation with cylinders
+    /// Each cylinder mesh is displayed by one gameobject.
+    /// Note: Can get really slow when many meshes = gameobjects are displayed
+    /// </summary>
+    /// <param name="dataset"></param>
     private void CreateCylinderRepresentation(PolyFiberData dataset)
     {
         cylinderVis = new CylinderObjectVis();
@@ -84,11 +86,11 @@ public class PolyFiberRenderedObject
 
 
             Mesh mesh = cylinderVis.CreateMesh(dataset.Label[fiber].ToString(), dataset.GetFiberRadius(fiber), dataset.GetFiberCoordinates(fiber));
-            currentMeshFilter = fiberObject.AddComponent<MeshFilter>();
+            MeshFilter currentMeshFilter = fiberObject.AddComponent<MeshFilter>();
             currentMeshFilter.mesh = mesh;
             MeshRenderer currentMeshRenderer = fiberObject.AddComponent<MeshRenderer>();
             //currentMeshRenderer.material = new Material(Shader.Find("Mixed Reality Toolkit/Standard"));
-            currentMeshRenderer.material = new Material(cylinderMaterial);
+            currentMeshRenderer.sharedMaterial = cylinderMaterial;
             //currentMeshRenderer.material.SetFloat("Vertex Colors", 1.0f);
             //ResizeToBound(polyFiberObject, fiberObject);
 
@@ -99,66 +101,55 @@ public class PolyFiberRenderedObject
         //polyFiberObject.transform.GetComponent<MeshFilter>().mesh.CombineMeshes(combine);
     }
 
-    private GameObject CreateCombinedCylinderRepresentation(PolyFiberData dataset)
+    /// <summary>
+    /// Draws the polygonal representation with cylinders.
+    /// Uses the MeshManager class to combine the polygonal representation, which consists out of multiple meshes (cylinders), into one Mesh.
+    /// If the Mesh would be too big (decision by MeshManager) it will be split into multiple parts (meshes), each hold by an gameobjects
+    /// </summary>
+    /// <param name="dataset"></param>
+    private void CreateCombinedCylinderRepresentation(PolyFiberData dataset)
     {
         cylinderVis = new CylinderObjectVis();
-        CombineInstance[] combine = new CombineInstance[dataset.NumberOfFibers];
 
-        GameObject fiberObject = new GameObject("AllFibers_" + dataset.NumberOfFibers);
-        fiberObject.transform.SetParent(polyModel.transform);
-
-        currentMeshFilter = fiberObject.AddComponent<MeshFilter>();
-        MeshRenderer currentMeshRenderer = fiberObject.AddComponent<MeshRenderer>();
-
-
+        //Creation of Meshes
+        List<Mesh> listOfFiberMeshes = new List<Mesh>((int)dataset.NumberOfFibers);
         for (int fiber = 0; fiber < dataset.NumberOfFibers; fiber++)
         {
-            Mesh mesh = cylinderVis.CreateMesh(dataset.Label[fiber].ToString(), dataset.GetFiberRadius(fiber), dataset.GetFiberCoordinates(fiber));
-            combine[fiber].mesh = mesh;
-            combine[fiber].transform = Matrix4x4.identity;
-
-
-            verticesSoFar += mesh.vertexCount;
-
-            //Have we reached the limit?
-            if (verticesSoFar > vertexLimit)
-            {
-                Debug.Log("Until Fiber [" + fiber + "] the number of vertices is [" + verticesSoFar + "]");
-            }
+            listOfFiberMeshes.Add(cylinderVis.CreateMesh(dataset.Label[fiber].ToString(), dataset.GetFiberRadius(fiber), dataset.GetFiberCoordinates(fiber)));
         }
 
-        currentMeshFilter.mesh = new Mesh();
-        currentMeshFilter.mesh.indexFormat = IndexFormat.UInt32;
-        currentMeshFilter.mesh.CombineMeshes(combine, true, true);
-        currentMeshRenderer.material = new Material(cylinderMaterial);
+        List<Mesh> combinedMeshes = meshManager.CreateCombinedMesh(listOfFiberMeshes);
 
-        return fiberObject;
-    }
-
-    public void ResizeToBound(GameObject targetGameObject, GameObject newGameObject)
-    {
-        var targetCollider = targetGameObject.GetComponent<BoxCollider>();
-        var modelMesh = newGameObject.GetComponent<MeshFilter>().mesh;
-
-        var targetScale = targetCollider.bounds.size;
-        var modelScale = modelMesh.bounds.size;
-
-        var xFraction = modelScale.x / targetScale.x;
-        var yFraction = modelScale.y / targetScale.y;
-        var zFraction = modelScale.z / targetScale.z;
-
-        var fraction = Mathf.Min(xFraction, yFraction, zFraction);
-
-        newGameObject.transform.localScale *= fraction;
-    }
-
-    private Bounds GetMaxBounds(GameObject g)
-    {
-        var b = new Bounds(g.transform.position, Vector3.zero);
-        foreach (Renderer r in g.GetComponentsInChildren<Renderer>())
+        for (int i = 0; i < combinedMeshes.Count; i++)
         {
-            b.Encapsulate(r.bounds);
+            GameObject fiberMeshObj = new GameObject("FiberMesh_" + i);
+            fiberMeshObj.transform.SetParent(polyModel.transform);
+
+            MeshFilter currentMeshFilter = fiberMeshObj.AddComponent<MeshFilter>();
+            MeshRenderer currentMeshRenderer = fiberMeshObj.AddComponent<MeshRenderer>();
+
+            currentMeshFilter.mesh = combinedMeshes[i];
+            currentMeshRenderer.material = cylinderMaterial;
         }
-        return b;
     }
+
+    public void HighlightFibers(List<int> selectedFiberIDs, Color selectionColor)
+    {
+        Color defaultCol = cylinderMaterial.color;
+
+
+        foreach (var fiberID in selectedFiberIDs)
+        {
+            MeshInteractions.ColorMesh(meshManager.GetCombinedMesh(meshManager.GetIndexOfCombinedMesh(fiberID)), meshManager.GetMeshVerticeIndices(fiberID), new Color[]{selectionColor, defaultCol});
+        }
+    }
+
+    public void TranslateFibers(List<int> selectedFiberIDs, Vector3 translation)
+    {
+        foreach (var fiberID in selectedFiberIDs)
+        {
+            MeshInteractions.TranslateMesh(meshManager.GetCombinedMesh(meshManager.GetIndexOfCombinedMesh(fiberID)), meshManager.GetMeshVerticeIndices(fiberID), translation);
+        }
+    }
+
 }

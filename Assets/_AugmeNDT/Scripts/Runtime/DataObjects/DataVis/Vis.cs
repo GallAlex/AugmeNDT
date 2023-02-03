@@ -41,14 +41,14 @@ public class Vis
     //TODO: Enum whith possible encoding needed
 
     public List<Scale.DataScale> dataScaleTypes;                // Applied scaling for dataValues domain of respective encoding
-    public float width = 0.2f;                                  // Vis container width in centimeters.
-    public float height = 0.2f;                                 // Vis container height in centimeters.
-    public float depth = 0.2f;                                  // Vis container depth in centimeters.
-    public Vector3 xyzOffset = new(0.1f, 0.1f, 0.1f);           // Offset from origin (0,0) for Axes (x,y,z).
+    public float width = 0.25f;                                  // Vis container width in centimeters.
+    public float height = 0.25f;                                 // Vis container height in centimeters.
+    public float depth = 0.25f;                                  // Vis container depth in centimeters.
+    public float[] xyzOffset = new[]{0.1f, 0.1f, 0.1f};           // Offset from origin (0,0) and End (1,0) for the Axes (x,y,z).
     public int[] xyzTicks = { 10, 10, 10 };                     // Amount of Ticks between min/max tick for Axes (x,y,z).
 
 
-    public virtual void InitVisParams(string visTitle, int numberOfAxes, List<Scale.DataScale> dataScales, float width, float height, float depth, Vector3 xyzOffset)
+    public virtual void InitVisParams(string visTitle, int numberOfAxes, List<Scale.DataScale> dataScales, float width, float height, float depth, float[] xyzOffset)
     {
         title = visTitle;
         this.axes = numberOfAxes;

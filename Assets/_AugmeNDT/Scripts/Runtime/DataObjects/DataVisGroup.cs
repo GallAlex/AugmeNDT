@@ -252,6 +252,10 @@ public class DataVisGroup
 
     //#####################     POLY MODEL METHODS  #####################
 
+    public void HighlightPolyFibers(List<int> fiberIDs, Color selectedColor)
+    {
+        polyFiberRenObj.HighlightFibers(fiberIDs, selectedColor);
+    }
 
     //#####################     VIS CHART METHODS   #####################
 

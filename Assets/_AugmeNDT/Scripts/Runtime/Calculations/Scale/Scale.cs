@@ -74,11 +74,11 @@ public class Scale
     }
 
     /// <summary>
-    /// Method accepts input between domain min/max and maps it to a value in a string array
+    /// Method accepts input between range min/max and maps it to a domain value in a string array
     /// </summary>
     /// <param name="domainValue"></param>
     /// <returns></returns>
-    public virtual string GetScaledValueName(double domainValue)
+    public virtual string GetDomainValueName(double domainValue)
     {
         return "";
     }

@@ -6,6 +6,9 @@ using UnityEngine.InputSystem;
 
 public class DataMark
 {
+    private static int IDCounter = 0;
+    private readonly int markID = 0;
+    
     public struct Channel
     {
         public Vector3 position;
@@ -27,6 +30,9 @@ public class DataMark
     public DataMark()
     {
         if (this.dataMarkPrefab == null) this.dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Sphere");
+        
+        markID = IDCounter;
+        IDCounter++;
     }
     
     public DataMark(GameObject dataMarkPrefab)
@@ -36,12 +42,16 @@ public class DataMark
             this.dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Sphere");
         }
         else this.dataMarkPrefab = dataMarkPrefab;
+
+        markID = IDCounter;
+        IDCounter++;
     }
 
     public GameObject CreateDataMark(Transform visContainer, Channel channel)
     {
         dataMarkInstance = GameObject.Instantiate(dataMarkPrefab, channel.position, Quaternion.Euler(channel.rotation), visContainer);
-
+        dataMarkInstance.name = dataMarkPrefab.name+ "_" + markID;
+        
         //Todo: Set Color
         meshRenderer = dataMarkInstance.GetComponent<MeshRenderer>();
         meshRenderer.material.SetColor("_Color", channel.color);
