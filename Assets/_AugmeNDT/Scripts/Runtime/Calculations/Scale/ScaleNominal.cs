@@ -15,7 +15,7 @@ public class ScaleNominal:Scale
 
     public ScaleNominal(List<double> domain, List<double> range, List<string> names) : base(domain, range)
     {
-        dataScaleType = DataScale.Nominal;
+        dataScaleType = DataScaleType.Nominal;
 
         domainValues = Convert.ToInt32(domain[1] - domain[0]);
 
@@ -33,7 +33,7 @@ public class ScaleNominal:Scale
 
     public ScaleNominal(List<double> domain, List<string> names) : base(domain)
     {
-        dataScaleType = DataScale.Nominal;
+        dataScaleType = DataScaleType.Nominal;
 
         domainValues = Convert.ToInt32(domain[1] - domain[0]);
 

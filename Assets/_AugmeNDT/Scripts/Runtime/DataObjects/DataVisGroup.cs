@@ -2,6 +2,7 @@ using Microsoft.MixedReality.Toolkit.Utilities;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 /// <summary>
 /// Class groups & stores all loaded data & its derived representations for one (related/matching) dataset.
@@ -181,6 +182,7 @@ public class DataVisGroup
         Debug.Log("Render Volume Object");
 
         volumeRenObj = new VolumeRenderedObject();
+        volumeRenObj.SetDataVisGroup(this);
         volumeRenObj.CreateObject(dataVisGroupContainer, voxelData);
 
         // Save the texture of volume in this Group (in Unity Project?)
@@ -200,13 +202,14 @@ public class DataVisGroup
         Debug.Log("Render Poly Object");
 
         polyFiberRenObj = new PolyFiberRenderedObject();
+        polyFiberRenObj.SetDataVisGroup(this);
         polyFiberRenObj.CreateObject(dataVisGroupContainer, polyData);
     }
 
     /// <summary>
     /// Renders Abstract Visualization Objects from csv files
     /// </summary>
-    public void RenderAbstractVisObject()
+    public void RenderAbstractVisObject(VisType visType)
     {
         if (!hasAbstractDataset || (polyData == null && csvAbstractData == null))
         {
@@ -215,11 +218,12 @@ public class DataVisGroup
 
         Debug.Log("Render Abstract Vis Object");
 
-        Vis vis = new VisMDDGlyphs();
+        Vis vis = Vis.GetSpecificVisType(visType);
         visualizations.Add(vis);
 
         //Todo: Currently uses poly data and not csvAbstractData
         vis.AppendData(polyData.ExportForDataVis());
+        vis.SetDataVisGroup(this);
         vis.CreateVis(dataVisGroupContainer);
     }
 
@@ -229,8 +233,8 @@ public class DataVisGroup
     public void ArrangeObjectsSpatially()
     {
         GridObjectCollection gridColl = dataVisGroupContainer.AddComponent<GridObjectCollection>();
-        gridColl.CellWidth = 0.25f;     //Todo: Use biggest dimension of all representations
-        gridColl.CellHeight = 0.25f;    //Todo: Use biggest dimension of all representations
+        gridColl.CellWidth = 0.28f;     //Todo: Use biggest dimension of all representations
+        gridColl.CellHeight = 0.28f;    //Todo: Use biggest dimension of all representations
         gridColl.SortType = CollationOrder.ChildOrder;
         gridColl.Layout = LayoutOrder.ColumnThenRow;
         gridColl.Columns = 2;

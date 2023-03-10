@@ -1,9 +1,12 @@
+using System;
 using System.Collections.Generic;
+using Microsoft.MixedReality.Toolkit;
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.UI;
 using Microsoft.MixedReality.Toolkit.UI.BoundsControl;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
 using static DataMark;
 
 /// <summary>
@@ -17,18 +20,20 @@ public class VisContainer
     public GameObject gridContainer;
     public GameObject dataMarkContainer;
 
-    private const float axisMeshLength = 1.0f;
-    private Bounds containerBounds;            // Width, Height, Length of the Container
-
-    //TODO: Make Properties of VisContainer as scriptableObject which can be set in Editor?
+    
     // Main Container Elements
     public List<DataAxis> dataAxisList;     // Axes with Ticks
     public List<DataGrid> dataGridList;     // Grids
     public List<DataMark> dataMarkList;     // Data Marks
 
-    public bool boundsControl = true;
-    public float[] xyzOffset;
-    public int[] xyzTicks;                     
+    // Interactor
+    private VisInteractor visInteractor;
+
+    private const float axisMeshLength = 1.0f;
+    private Bounds containerBounds;            // Width, Height, Length of the Container
+    private bool boundsControl = true;
+    private float[] xyzOffset;
+    private int[] xyzTicks;                     
 
 
     #region CREATION OF ELEMENTS
@@ -39,7 +44,6 @@ public class VisContainer
         dataGridList = new List<DataGrid>();
         dataMarkList = new List<DataMark>();
 
-        //visContainer = new GameObject(visName);
         containerPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/DataVisContainer");
         visContainer = GameObject.Instantiate(containerPrefab, containerPrefab.transform.position, Quaternion.identity);
         visContainer.name = visName;
@@ -82,7 +86,9 @@ public class VisContainer
 
     public void CreateDataMark(GameObject markPrefab, DataMark.Channel channel)
     {
-        DataMark dataMark = new DataMark(markPrefab);
+        DataMark dataMark = new DataMark(dataMarkList.Count, markPrefab);
+        
+        dataMark.SetVisInteractor(visInteractor);
         dataMark.CreateDataMark(dataMarkContainer.transform, channel);
 
         dataMarkList.Add(dataMark);
@@ -135,6 +141,12 @@ public class VisContainer
     public void SetAxisTickNumber(int[] xyzTicks)
     {
         this.xyzTicks = xyzTicks;
+    }
+
+    // Sets the Interactor of the respective Vis
+    public void SetVisInteractor(VisInteractor interactor)
+    {
+        visInteractor = interactor;
     }
 
     public void SetContainerBounds(Bounds cBounds)
@@ -265,10 +277,39 @@ public class VisContainer
     {
         Vector3 min = containerBounds.min;
         Vector3 max = containerBounds.max;
-
-        Debug.Log("Min: " + min + " Max: " + max);
-
-        Debug.Log("Min Pos: " + (min[(int)axis] + xyzOffset[(int)axis]) + " Max Pos: " + (max[(int)axis] - xyzOffset[(int)axis]));
         return new[] { min[(int)axis] + xyzOffset[(int)axis], max[(int)axis] - xyzOffset[(int)axis] };
     }
+
+    private Scale CreateScale(Scale.DataScaleType dataScale, List<double> domain, List<double> range, List<string> names)
+    {
+        Scale scaleFunction;
+
+        switch (dataScale)
+        {
+            default:
+            case Scale.DataScaleType.Linear:
+                scaleFunction = new ScaleLinear(domain, range);
+                break;
+            case Scale.DataScaleType.Nominal:
+                scaleFunction = new ScaleNominal(domain, range, names);
+                break;
+
+        }
+
+        return scaleFunction;
+    }
+
+    /// <summary>
+    /// Create Range for an Axis based on the Tick Offset and the Axis Length
+    /// </summary>
+    /// <param name="axis"></param>
+    /// <returns></returns>
+    private List<double> GetAxisRange(Direction axis)
+    {
+        float[] axisOffsetCoord = GetAxisOffsetCoord(axis);
+        
+        return new List<double> { axisOffsetCoord[0], axisOffsetCoord[1]};
+    }
+
+
 }

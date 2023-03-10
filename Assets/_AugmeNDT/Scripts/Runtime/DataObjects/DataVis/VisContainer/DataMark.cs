@@ -1,12 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using Microsoft.MixedReality.Toolkit;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class DataMark
 {
-    private static int IDCounter = 0;
     private readonly int markID = 0;
     
     public struct Channel
@@ -19,23 +19,28 @@ public class DataMark
 
     }
 
+    public bool selected = false;
+
+    private Channel dataChannel;
+    
     [SerializeField]
     private GameObject dataMarkPrefab;
     private GameObject dataMarkInstance;
-
-    private Channel dataChannel;
     private MeshRenderer meshRenderer;
 
+
+    // Interactor
+    private VisInteractor visInteractor;
+    private DataMarkInteractable dataMarkInteractable;
     
-    public DataMark()
+    public DataMark(int iD)
     {
         if (this.dataMarkPrefab == null) this.dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Sphere");
-        
-        markID = IDCounter;
-        IDCounter++;
+
+        markID = iD;
     }
     
-    public DataMark(GameObject dataMarkPrefab)
+    public DataMark(int iD, GameObject dataMarkPrefab)
     {
         if (dataMarkPrefab == null)
         {
@@ -43,15 +48,36 @@ public class DataMark
         }
         else this.dataMarkPrefab = dataMarkPrefab;
 
-        markID = IDCounter;
-        IDCounter++;
+        markID = iD;
     }
 
+    public int GetDataMarkId()
+    {
+        return markID;
+    }
+
+    public void SetVisInteractor(VisInteractor interactor)
+    {
+        visInteractor = interactor;
+    }
+    
     public GameObject CreateDataMark(Transform visContainer, Channel channel)
     {
         dataMarkInstance = GameObject.Instantiate(dataMarkPrefab, channel.position, Quaternion.Euler(channel.rotation), visContainer);
         dataMarkInstance.name = dataMarkPrefab.name+ "_" + markID;
-        
+
+        //TODO: Add Interactable Component through Code?
+        // Interaction Component
+        dataMarkInteractable = dataMarkInstance.GetComponent<DataMarkInteractable>();
+        if (visInteractor != null)
+        {
+            dataMarkInteractable.Init(this, visInteractor);
+        }
+        else
+        {
+            dataMarkInteractable.DisableInteraction(); // Disable Interaction
+        }
+
         //Todo: Set Color
         meshRenderer = dataMarkInstance.GetComponent<MeshRenderer>();
         meshRenderer.material.SetColor("_Color", channel.color);
@@ -66,6 +92,11 @@ public class DataMark
         return dataMarkInstance;
     }
 
+    public GameObject GetDataMarkInstance()
+    {
+        return dataMarkInstance;
+    }
+    
     public void ChangeDataMark(Channel channel)
     {
         SetPos(channel.position);
@@ -129,5 +160,4 @@ public class DataMark
         meshRenderer.material.SetColor("_Color", color);
         //meshRenderer.sharedMaterial.color = color;
     }
-
 }

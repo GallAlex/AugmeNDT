@@ -12,15 +12,13 @@ public class MeshInteractions
     public static void TranslateMesh(Mesh mesh, int[] indexRange, Vector3 translation)
     {
         Vector3[] modifiedVertices = mesh.vertices;
-        for (int vertexID = 0; vertexID < mesh.vertexCount; vertexID++)
-        {
-            // Range is expected to be inclusive startIndex and endIndex (objectID * vertexCount -1)
-            if (vertexID >= indexRange[0] && vertexID <= indexRange[1])
-            {
-                modifiedVertices[vertexID] = modifiedVertices[vertexID] + translation;
-            }
 
+        // Range is expected to be inclusive startIndex and endIndex (objectID * vertexCount -1)
+        for (int vertexID = indexRange[0]; vertexID <= indexRange[1]; vertexID++)
+        {
+            modifiedVertices[vertexID] = modifiedVertices[vertexID] + translation;
         }
+        
         mesh.vertices = modifiedVertices;
     }
 
@@ -39,14 +37,11 @@ public class MeshInteractions
             Debug.LogError("Mesh has no or too few vertex colors");
             return;
         }
-        for (int vertexID = 0; vertexID < mesh.vertexCount; vertexID++)
+        
+        // Range is expected to be inclusive startIndex and endIndex (objectID * vertexCount -1)
+        for (int vertexID = indexRange[0]; vertexID <= indexRange[1]; vertexID++)
         {
-            //Todo: Start at min vertice and end at max vertice
-            // Range is expected to be inclusive startIndex and endIndex (objectID * vertexCount -1)
-            if (vertexID >= indexRange[0] && vertexID <= indexRange[1])
-            {
-                newColor[vertexID] = color[0];
-            }
+            newColor[vertexID] = color[0];
         }
 
         mesh.SetColors(newColor);

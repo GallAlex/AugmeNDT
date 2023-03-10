@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using System.Threading.Tasks;
+using UnityEngine.Profiling;
 
 /// <summary>
 /// Class stores the values of a raw dataset
@@ -124,6 +125,8 @@ public class VoxelDataset : ScriptableObject
 
     private async Task<Texture3D> CreateTextureInternal()
     {
+        Profiler.BeginSample("CreateTextureInternal");
+        
         TextureFormat texformat = SystemInfo.SupportsTextureFormat(TextureFormat.RHalf) ? TextureFormat.RHalf : TextureFormat.RFloat;
         Texture3D texture = new Texture3D(dimX, dimY, dimZ, texformat, false);
         texture.wrapMode = TextureWrapMode.Clamp;
@@ -139,13 +142,17 @@ public class VoxelDataset : ScriptableObject
             int sampleSize = isHalfFloat ? 2 : 4;
             Debug.Log("Used memory for texture: " + (dimX * dimY * dimZ * sampleSize) / 1024 / 1024 + "MB");
             byte[] bytes = new byte[data.Length * sampleSize]; // This can cause OutOfMemoryException
-            for (int iData = 0; iData < data.Length; iData++)
-            {
-                float pixelValue = (float)(data[iData] - minValue) / maxRange;
-                byte[] pixelBytes = isHalfFloat ? BitConverter.GetBytes(Mathf.FloatToHalf(pixelValue)) : BitConverter.GetBytes(pixelValue);
 
-                Array.Copy(pixelBytes, 0, bytes, iData * sampleSize, sampleSize);
-            }
+            await Task.Run(() => CreateByteArray(bytes, data.Length, isHalfFloat, minValue, maxRange, sampleSize));
+
+            //for (int iData = 0; iData < data.Length; iData++)
+            //{
+            //    //Todo: BitConverter.GetBytes and Array.Copy really slow
+            //    float pixelValue = (float)(data[iData] - minValue) / maxRange;
+            //    byte[] pixelBytes = isHalfFloat ? BitConverter.GetBytes(Mathf.FloatToHalf(pixelValue)) : BitConverter.GetBytes(pixelValue);
+
+            //    Array.Copy(pixelBytes, 0, bytes, iData * sampleSize, sampleSize);
+            //}
 
             texture.SetPixelData(bytes, 0);
         }
@@ -159,6 +166,8 @@ public class VoxelDataset : ScriptableObject
         }
 
         texture.Apply();
+        Profiler.EndSample();
+        
         return texture;
     }
 
@@ -239,5 +248,16 @@ public class VoxelDataset : ScriptableObject
     public int GetData(int x, int y, int z)
     {
         return data[x + y * dimX + z * (dimX * dimY)];
+    }
+
+    private void CreateByteArray(byte[] bytes, int lenght, bool isHalfFloat, int minValue, int maxRange, int sampleSize)
+    {
+        for (int iData = 0; iData < lenght; iData++)
+        {
+            float pixelValue = (float)(data[iData] - minValue) / maxRange;
+            byte[] pixelBytes = isHalfFloat ? BitConverter.GetBytes(Mathf.FloatToHalf(pixelValue)) : BitConverter.GetBytes(pixelValue);
+
+            Array.Copy(pixelBytes, 0, bytes, iData * sampleSize, sampleSize);
+        }
     }
 }

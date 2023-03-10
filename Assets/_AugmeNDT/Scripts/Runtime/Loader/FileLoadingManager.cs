@@ -1,7 +1,9 @@
-using SFB;
+using SimpleFileBrowser;
 using System;
+using System.Collections;
 using System.IO;
 using System.Threading.Tasks;
+using UnityEditor;
 using UnityEngine;
 
 #if !UNITY_EDITOR && UNITY_WSA_10_0
@@ -28,7 +30,8 @@ public class FileLoadingManager
 
     //List<FileLoader> entities = new List<FileLoader>(); // get with var mhdFileLoader = entities.OfType<MhdFileLoader>();
     private FileLoader loaderFactory;
-    private string filePath;
+
+    private string filePath = "";
     private DataVisGroup dataVisGroup;
 
     #region Getter/Setter
@@ -36,14 +39,14 @@ public class FileLoadingManager
     #endregion
 
 
-    public async Task loadDataset(string filePath)
+    public async Task LoadDataset()
     {
         try
         {
             if (filePath == "")
             {
                 filePath = "No Data";
-                Debug.LogError("Failed to import datset");
+                Debug.LogError("Failed to import dataset");
                 return;
             }
 
@@ -184,24 +187,26 @@ public class FileLoadingManager
 
     public async Task<String> StartPicker()
     {
-    #if !UNITY_EDITOR && UNITY_WSA_10_0
-            Debug.Log("HOLOLENS 2 PICKER");
-            await FilePicker_Hololens();
+#if !UNITY_EDITOR && UNITY_WSA_10_0
+        Debug.Log("HOLOLENS 2 PICKER");
+            return await FilePicker_Hololens();
 
-    #endif
+#endif
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
         Debug.Log("UNITY_STANDALONE PICKER");
-        await FilePicker_Win();
-    #endif
-        return filePath;
+        return await FilePicker_Win();
+#endif
+
     }
 
 
     #if !UNITY_EDITOR && UNITY_WSA_10_0
-    private async Task FilePicker_Hololens()
+    private async Task<String> FilePicker_Hololens()
     {
-
+        var completionSource = new TaskCompletionSource<String>();
+        
+        // Calls to UWP must be made on the UI thread.
         UnityEngine.WSA.Application.InvokeOnUIThread(async () =>
             {
                 var filepicker = new FileOpenPicker();
@@ -220,34 +225,43 @@ public class FileLoadingManager
 
                 var file = await filepicker.PickSingleFileAsync();
 
+                //TODO: Currently called after the file picker is closed.
+                // Pass back Infos - Calls to Unity must be made on the main thread.
                 UnityEngine.WSA.Application.InvokeOnAppThread(async () =>
                 {
-                    filePath = (file != null) ? file.Path : "Nothing selected";
+                    filePath = (file != null) ? file.Path : "";
                     Debug.Log("Hololens 2 Picker Path = " + filePath);
-                    //await loadDataset();
-                    await loadDataset(filePath);
+
+                    // sets the completion source task to finished
+                    completionSource.SetResult(filePath);
 
                 }, true);
-            }, false);
+
+            }, true);
+        
+        return await completionSource.Task;
     }
     #endif
 
 
     #if UNITY_EDITOR
-    private async Task FilePicker_Win()
+    private async Task<String> FilePicker_Win()
     {
 
-        var paths = StandaloneFileBrowser.OpenFilePanel("Open File", "", "", false);
-        filePath = paths[0];
+        string path = EditorUtility.OpenFilePanel("Open File...", "", "");
+        if (path.Length != 0)
+        {
+            filePath = path;
+        }
+
         Debug.Log("WIN Picker Path = " + filePath);
-        Task asyncTask = loadDataset(filePath);
 
-        //Task asyncTask = loadDataset();
-        //StartProgressIndicator(asyncTask);
-        await asyncTask;
-
+        //var fileBrowser = FileBrowser.ShowLoadDialog((path) => { filePath = path[0]; }, () => { filePath = ""; }, FileBrowser.PickMode.Files, false, null, null, "Open File", "Load");
         //StandaloneFileBrowser.OpenFilePanelAsync("Open File", "", "", false, (string[] paths) => { filePath = paths[0]; });
+
+        return filePath;
     }
+
     #endif
 
     #endregion

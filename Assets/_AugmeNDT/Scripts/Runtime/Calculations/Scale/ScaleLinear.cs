@@ -14,7 +14,7 @@ public class ScaleLinear : Scale
 
     public ScaleLinear(List<double> domain) : base(domain)
     {
-        dataScaleType = DataScale.Linear;
+        dataScaleType = DataScaleType.Linear;
         
         domainMin = domain[0];
         domainMax = domain[1];
@@ -25,7 +25,7 @@ public class ScaleLinear : Scale
 
     public ScaleLinear(List<double> domain, List<double> range) : base(domain, range)
     {
-        dataScaleType = DataScale.Linear;
+        dataScaleType = DataScaleType.Linear;
         
         domainMin = domain[0];
         domainMax = domain[1];

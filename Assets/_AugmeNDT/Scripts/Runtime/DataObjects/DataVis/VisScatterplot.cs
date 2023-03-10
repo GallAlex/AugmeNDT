@@ -19,10 +19,10 @@ public class VisScatterplot : Vis
         base.CreateVis(container);
 
         //Initialize dataScales
-        dataScaleTypes = new List<Scale.DataScale>();
+        dataScaleTypes = new List<Scale.DataScaleType>();
         for (int attrScale = 0; attrScale < dimensions; attrScale++)
         {
-            dataScaleTypes.Add(Scale.DataScale.Linear);
+            dataScaleTypes.Add(Scale.DataScaleType.Linear);
         }
 
         if (dimensions < axes) axes = dimensions;

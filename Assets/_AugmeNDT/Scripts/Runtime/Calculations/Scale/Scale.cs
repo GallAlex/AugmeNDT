@@ -10,13 +10,13 @@ public class Scale
     // --> Quantitative (supports arithmetic comparison)
     //     --> Discrete data
     //     --> Continuous data (Functions which can be interpolated)
-    public enum DataScale
+    public enum DataScaleType
     {
         Nominal,
         Linear,
     }
 
-    public DataScale dataScaleType;
+    public DataScaleType dataScaleType;
     public List<double> domain;  // Data Range
     public List<double> range;   // Existing Range
 

@@ -73,6 +73,13 @@ public class MhdFileType : FileType
     {
         FilePath = filePath;
         this.headerSize = headerSize;
+
+        //Initialize members
+        transformMatrix = new int[9];
+        offset = new int[3];
+        centerOfRotation = new int[3];
+        elementSpacing = new int[3];
+        dimSize = new int[3];
     }
 
     public override string ToString()

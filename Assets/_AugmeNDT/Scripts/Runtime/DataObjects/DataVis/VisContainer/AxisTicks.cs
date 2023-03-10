@@ -149,11 +149,11 @@ public class AxisTicks
         var label = tickObj.GetComponentInChildren<TextMesh>();
         tickObj.transform.localPosition = newPos;
 
-        if (scale.dataScaleType == Scale.DataScale.Linear)
+        if (scale.dataScaleType == Scale.DataScaleType.Linear)
         {
             label.text = domainValue.Round(decimalPoints).ToString();
         }
-        else if (scale.dataScaleType == Scale.DataScale.Nominal)
+        else if (scale.dataScaleType == Scale.DataScaleType.Nominal)
         {
             label.text = scale.GetDomainValueName(domainValue);
         }
@@ -176,11 +176,11 @@ public class AxisTicks
 
         TextMesh tickLabel = tickInstance.GetComponentInChildren<TextMesh>();
 
-        if (scale.dataScaleType == Scale.DataScale.Linear)
+        if (scale.dataScaleType == Scale.DataScaleType.Linear)
         {
             tickLabel.text = domainValue.Round(decimalPoints).ToString();
         }
-        else if (scale.dataScaleType == Scale.DataScale.Nominal)
+        else if (scale.dataScaleType == Scale.DataScaleType.Nominal)
         {
             tickLabel.text = scale.GetDomainValueName(domainValue);
         }

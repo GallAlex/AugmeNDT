@@ -2,6 +2,7 @@ using Microsoft.MixedReality.Toolkit.UI.BoundsControl;
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 
 public class VolumeRenderedObject
@@ -18,6 +19,8 @@ public class VolumeRenderedObject
     //Data
     private VoxelDataset voxelDataset;
 
+    // Reference to DataVisGroup
+    private DataVisGroup dataVisGroup;
 
     public VolumeRenderedObject()
     {
@@ -27,20 +30,42 @@ public class VolumeRenderedObject
         volumePrefab = (GameObject)Resources.Load("Prefabs/VolumeRenderCube");
     }
 
+    /// <summary>
+    /// Gives the VolumeRenderedObject acces to its DataVis group
+    /// </summary>
+    /// <param name="group"></param>
+    public void SetDataVisGroup(DataVisGroup group)
+    {
+        dataVisGroup = group;
+    }
+
+    /// <summary>
+    /// Returns the DataVisGroup of the VolumeRenderedObject
+    /// </summary>
+    /// <returns></returns>
+    public DataVisGroup GetDataVisGroup()
+    {
+        return dataVisGroup;
+    }
+
     public async Task CreateObject(GameObject container, VoxelDataset dataset)
     {
+        // Start loading texture
+        var textureTask = dataset.GetDataTexture();
         voxelDataset = dataset;
 
         volumeContainer = GameObject.Instantiate(containerPrefab);
         volumeContainer.name = dataset.datasetName;
         volumeContainer.transform.parent = container.transform;
 
+        var tex = await textureTask;
+
         volume = GameObject.Instantiate(volumePrefab, volumeContainer.transform);
         volume.name = "Volume";
 
         meshRenderer = volume.GetComponent<MeshRenderer>();
         meshRenderer.sharedMaterial = volumeMaterial;
-        meshRenderer.sharedMaterial.SetTexture("_MainTex", await dataset.GetDataTexture());
+        meshRenderer.sharedMaterial.SetTexture("_MainTex", tex);
 
         BoxCollider meshColl = volume.GetComponent<BoxCollider>() != null ? volume.GetComponent<BoxCollider>() : volume.AddComponent<BoxCollider>();
 
