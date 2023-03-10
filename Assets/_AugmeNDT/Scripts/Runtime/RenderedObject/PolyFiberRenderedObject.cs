@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Profiling;
 using UnityEngine.Rendering;
 using UnityEngine.XR.ARFoundation;
 
@@ -12,7 +14,9 @@ public class PolyFiberRenderedObject
     [SerializeField]
     private GameObject polyModel; // gameobject holding all meshes of the polygonal model
     private Material cylinderMaterial;
-    
+
+    // Reference to DataVisGroup
+    private DataVisGroup dataVisGroup;
 
     //Data
     private PolyFiberData polyFiberDataset;
@@ -27,6 +31,24 @@ public class PolyFiberRenderedObject
         containerPrefab = (GameObject)Resources.Load("Prefabs/PolyModelContainer");
     }
 
+    /// <summary>
+    /// Gives the PolyFiberRenderedObject acces to its DataVis group
+    /// </summary>
+    /// <param name="group"></param>
+    public void SetDataVisGroup(DataVisGroup group)
+    {
+        dataVisGroup = group;
+    }
+
+    /// <summary>
+    /// Returns the DataVisGroup of the PolyFiberRenderedObject
+    /// </summary>
+    /// <returns></returns>
+    public DataVisGroup GetDataVisGroup()
+    {
+        return dataVisGroup;
+    }
+    
     public async Task CreateObject(GameObject container, PolyFiberData dataset)
     {
         polyFiberDataset = dataset;
@@ -137,11 +159,11 @@ public class PolyFiberRenderedObject
     {
         Color defaultCol = cylinderMaterial.color;
 
-
         foreach (var fiberID in selectedFiberIDs)
         {
             MeshInteractions.ColorMesh(meshManager.GetCombinedMesh(meshManager.GetIndexOfCombinedMesh(fiberID)), meshManager.GetMeshVerticeIndices(fiberID), new Color[]{selectionColor, defaultCol});
         }
+
     }
 
     public void TranslateFibers(List<int> selectedFiberIDs, Vector3 translation)

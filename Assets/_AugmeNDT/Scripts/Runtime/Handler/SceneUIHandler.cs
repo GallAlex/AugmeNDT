@@ -71,10 +71,11 @@ public class SceneUIHandler : MonoBehaviour
     public async void OpenFile()
     {
         Debug.Log("Started loading file with ...");
+        
+        Task<string> asyncLoadingTask = sceneObjectHandler.LoadObject();
+
         textLabel.text = "Loading ...";
 
-        Task<string> asyncLoadingTask = sceneObjectHandler.loadObject();
-        
         //Progress Bar
         //indicator = indicatorObject.GetComponent<IProgressIndicator>();
         //StartProgressIndicator(asyncLoadingTask);
@@ -85,7 +86,8 @@ public class SceneUIHandler : MonoBehaviour
 
     public void CreateVisualization()
     {
-        sceneObjectHandler.HighlightPolyFibers(0, new List<int> {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, Color.red);
+        sceneObjectHandler.AddAbstractVisObject(0,VisType.BarChart);
+        sceneObjectHandler.AddAbstractVisObject(0, VisType.Scatterplot);
     }
 
     public void ChangeVisTicks()

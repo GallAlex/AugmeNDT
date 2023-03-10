@@ -1,7 +1,10 @@
+using Microsoft.MixedReality.Toolkit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Profiling;
+using static UnityEngine.Rendering.DebugUI;
 
 /// <summary>
 /// This class is used to create a multidimensional distribution Glyph chart visualization.
@@ -19,7 +22,9 @@ public class VisMDDGlyphs : Vis
 
     // If more than one dataset is loaded, should the z-Axis be for the other Datasets?
     private bool use4DData = false;
-    
+
+    private List<Scale> scale;
+
     public VisMDDGlyphs()
     {
         title = "MDD-Glyphs Chart";
@@ -35,6 +40,10 @@ public class VisMDDGlyphs : Vis
 
         dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Bar");
         tickMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Tick");
+
+        // Create Interactor
+        visInteractor = new VisMDDGlyphInteractor(this);
+
     }
 
     public override GameObject CreateVis(GameObject container)
@@ -53,7 +62,7 @@ public class VisMDDGlyphs : Vis
         Debug.Log("Create MDDGlyph");
 
         //## 01: Create Data Scales for Axes
-        List<Scale> scale = new List<Scale>(axes);
+        scale = new List<Scale>(axes);
 
         List<double> range = new List<double>(2)
         {
@@ -303,6 +312,28 @@ public class VisMDDGlyphs : Vis
 
         return finalColor;
 
+    }
+
+    public List<int> GetFiberIDsFromIQRRange(int attribute, int axis)
+    {
+        int datasetNumber = 0;
+        
+        var q1 = scale[axis].GetScaledValue(statisticDataSets[datasetNumber].ElementAt(attribute).Value.LowerQuartile);
+        var q2 = scale[axis].GetScaledValue(statisticDataSets[datasetNumber].ElementAt(attribute).Value.UpperQuartile);
+
+        // Go through every fiber and check if it is in the IQR Range (in the normalizedDataSets)
+        List<int> fiberIDs = new List<int>();
+        
+        for (int i = 0; i < normalizedDataSets[datasetNumber].ElementAt(attribute).Value.Length; i++)
+        {
+            var value = scale[axis].GetScaledValue(normalizedDataSets[datasetNumber].ElementAt(attribute).Value[i]);
+            if (value >= q1 && value <= q2)
+            {
+                fiberIDs.Add(i);
+            }
+        }
+
+        return fiberIDs;
     }
 }
 

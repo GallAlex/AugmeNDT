@@ -28,7 +28,7 @@ public class SceneObjectHandler : MonoBehaviour
 
     // When introducing multiple DataVisGroups rearrange first the singular Objects in each group
     private bool rearrangeObjects = true;
-    
+
     // Called only once during the lifetime of the script instance (loading of a scene)
     void Awake()
     {
@@ -42,9 +42,13 @@ public class SceneObjectHandler : MonoBehaviour
 
     void Update()
     {
-        foreach (DataVisGroup group in dataVisGroups)
+        //Move to individual vis Object(monobehaviour ?)
+        if (dataVisGroups.Count > 0)
         {
-            group.AlignGridPositions();
+            foreach (DataVisGroup group in dataVisGroups)
+            {
+                group.AlignGridPositions();
+            }
         }
     }
 
@@ -61,11 +65,19 @@ public class SceneObjectHandler : MonoBehaviour
     /// Loads a file based on the picked file path and renders all possible representations
     /// </summary>
     /// <returns></returns>
-    public async Task<string> loadObject()
+    public async Task<string> LoadObject()
     {
-        Task<string> startAsyncLoadingTask = fileLoadingManager.StartPicker();
-        string filePath = await startAsyncLoadingTask;
-
+        // Start async Loadings
+        string filePath = await fileLoadingManager.StartPicker();
+        // If file loading failed
+        if (filePath == "")
+        {
+            return null;
+        }
+        await fileLoadingManager.LoadDataset();
+        
+        //## Wait for Loadings to finish ##
+        
         // Add Group
         dataVisGroups.Add(fileLoadingManager.GetDataVisGroup());
         int lastIndex = dataVisGroups.Count - 1;
@@ -73,7 +85,8 @@ public class SceneObjectHandler : MonoBehaviour
         // Render all representations
         dataVisGroups[lastIndex].RenderVolumeObject();
         dataVisGroups[lastIndex].RenderPolyObject();
-        dataVisGroups[lastIndex].RenderAbstractVisObject();
+        //Todo: Add MDDGlyph as default
+        dataVisGroups[lastIndex].RenderAbstractVisObject(VisType.MDDGlyphs);
 
         dataVisGroups[lastIndex].ArrangeObjectsSpatially();
         
@@ -117,7 +130,7 @@ public class SceneObjectHandler : MonoBehaviour
         {
             gridColl = sceneObjectsContainer.AddComponent<GridObjectCollection>();
             //gridColl.SurfaceType = ObjectOrientationSurfaceType.Cylinder;
-            gridColl.CellWidth = 0.55f; //Todo: Use twice the biggest size of the individual grids in the groups
+            gridColl.CellWidth = 0.60f; //Todo: Use twice the biggest size of the individual grids in the groups
             gridColl.CellHeight = 0.3f; //Todo: Use twice the biggest size of the individual grids in the groups
             gridColl.SortType = CollationOrder.ChildOrder;
             gridColl.Layout = LayoutOrder.ColumnThenRow;
@@ -147,6 +160,18 @@ public class SceneObjectHandler : MonoBehaviour
     }
 
     //#####################     VIS CHART METHODS   #####################
+
+    /// <summary>
+    /// Adds a new abstract visualization object to the selected group and renders it
+    /// </summary>
+    /// <param name="selectedGroup"></param>
+    /// <param name="visType"></param>
+    public void AddAbstractVisObject(int selectedGroup, VisType visType)
+    {
+        dataVisGroups[selectedGroup].RenderAbstractVisObject(visType);
+        //Arrange Vis objects
+        dataVisGroups[selectedGroup].ArrangeObjectsSpatially();
+    }
 
     /// <summary>
     /// Renders a 4D abstract visualization object combining all csv files found in the groups

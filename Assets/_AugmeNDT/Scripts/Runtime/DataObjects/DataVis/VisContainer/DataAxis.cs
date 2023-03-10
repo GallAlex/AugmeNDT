@@ -1,12 +1,6 @@
-using System;
-using System.Collections;
 using Microsoft.MixedReality.Toolkit.UI;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.Timeline;
-using static Vis;
 
 public enum Direction
 {
@@ -113,11 +107,14 @@ public class DataAxis
                 axis.transform.Rotate(0, 0, 90);    //Rotate 90 degree in z
                 Transform yAxisTitle = axis.transform.Find("Title");
                 yAxisTitle.localPosition = new Vector3(yAxisTitle.localPosition.x, (-yAxisTitle.localPosition.y), yAxisTitle.localPosition.z);
-                
+
                 foreach (var tickObject in axisTicks.tickList)
                 {
                     Transform tickLabel = tickObject.transform.Find("TickLabel");
                     tickLabel.localPosition = new Vector3(tickLabel.localPosition.x, -tickLabel.localPosition.y, tickLabel.localPosition.z);
+
+                    TextMesh yTickLabelsTextMesh = tickObject.GetComponentInChildren(typeof(TextMesh)) as TextMesh;
+                    yTickLabelsTextMesh.anchor = TextAnchor.MiddleRight;
                 }
                 break;
 
