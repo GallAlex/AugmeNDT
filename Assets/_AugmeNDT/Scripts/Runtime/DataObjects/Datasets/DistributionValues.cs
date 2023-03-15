@@ -79,8 +79,17 @@ public class DistributionValues
         variance = DistributionCalc.GetVarianceValue(data);
         stdDev = DistributionCalc.GetStandardDeviationValue(data);
 
-        kurtosis = DistributionCalc.GetKurtosisValue(data);
-        skewness = DistributionCalc.GetSkewnessValue(data);
+        //Calculation of Dataset containing the same value would return NAN - Skip
+        if (largestElement == smallestElement && stdDev == 0)
+        {
+            kurtosis = 0;
+            skewness = 0;
+        }
+        else
+        {
+            kurtosis = DistributionCalc.GetKurtosisValue(data);
+            skewness = DistributionCalc.GetSkewnessValue(data);
+        }
 
         median = DistributionCalc.GetMedianValue(data);
         iqr = DistributionCalc.GetIQRValue(data);
