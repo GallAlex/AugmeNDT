@@ -1,10 +1,7 @@
-using Microsoft.MixedReality.Toolkit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Profiling;
-using static UnityEngine.Rendering.DebugUI;
 
 /// <summary>
 /// This class is used to create a multidimensional distribution Glyph chart visualization.
