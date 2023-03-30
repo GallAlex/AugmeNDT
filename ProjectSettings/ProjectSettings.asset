@@ -825,7 +825,7 @@ PlayerSettings:
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
   metroPackageName: AugmeNDT
-  metroPackageVersion: 1.0.158.0
+  metroPackageVersion: 1.0.160.0
   metroCertificatePath: Assets\WSATestCertificate.pfx
   metroCertificatePassword: 
   metroCertificateSubject: DefaultCompany
