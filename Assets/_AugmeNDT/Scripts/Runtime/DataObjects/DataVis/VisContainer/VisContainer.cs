@@ -86,6 +86,7 @@ public class VisContainer
 
     public void CreateDataMark(GameObject markPrefab, DataMark.Channel channel)
     {
+		//TODO: Performance of adding prefab every time?
         DataMark dataMark = new DataMark(dataMarkList.Count, markPrefab);
         
         dataMark.SetVisInteractor(visInteractor);
