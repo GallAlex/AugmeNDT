@@ -14,6 +14,9 @@ public class CsvLoader : FileLoader
     private Encoding encoding;
     private char splitChar = ',';
     private int skipRows = 4;
+    private bool hasSpatialValues = true;
+
+    private bool automaticDetection = true; //Detects if the file has spatial values or not and how many rows to skip
 
     public CsvLoader()
     {
@@ -21,7 +24,25 @@ public class CsvLoader : FileLoader
         polyFiberDataset = ScriptableObject.CreateInstance<PolyFiberData>();
     }
 
+    public CsvLoader(bool hasSpatialValues, int skipRows)
+    {
+        //Has to happen on main thread
+        polyFiberDataset = ScriptableObject.CreateInstance<PolyFiberData>();
+
+        automaticDetection = false;
+        this.skipRows = skipRows;
+        this.hasSpatialValues = hasSpatialValues;
+    }
+
     public override async Task LoadData(string filePath)
+    {
+        await ReadCsv(filePath);
+
+        polyFiberDataset.FillPolyFiberData(csvValues);
+
+    }
+
+    private async Task ReadCsv(string filePath)
     {
         Task<StreamReader> streamReaderTask = GetStreamReader(filePath);
         using var reader = await streamReaderTask;
@@ -38,6 +59,12 @@ public class CsvLoader : FileLoader
         string[] headerNames = headerLine.Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
 
 
+        if (headerNames == null || headerNames.Length < 1)
+        {
+            Debug.LogError("CSV File Header row is empty");
+        }
+
+        // Get header names from first row
         foreach (var name in headerNames)
         {
             var trimmedName = name.Trim(' '); //Remove leading and trailing spaces
@@ -45,11 +72,16 @@ public class CsvLoader : FileLoader
         }
 
 
-
+        // Get next rows and assign value to specific column (header)
         while (!reader.EndOfStream)
         {
             string line = await reader.ReadLineAsync();
             string[] values = line.Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
+
+            if (values == null || values.Length < 1)
+            {
+                Debug.LogError("CSV File has no value row");
+            }
 
             for (int feature = 0; feature < csvValues.Count; feature++)
             {
@@ -61,10 +93,6 @@ public class CsvLoader : FileLoader
         Debug.Log("CSV File loaded");
         csvFile = new CsvFileType(csvValues);
         //PrintCsv();
-
-        polyFiberDataset.FillPolyFiberData(csvValues);
-
-        //voxelDataset = ScriptableObject.CreateInstance<VoxelDataset>(); // Useless
     }
 
     /// <summary>

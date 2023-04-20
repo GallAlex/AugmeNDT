@@ -13,8 +13,8 @@ public class DataMark
     {
         public Vector3 position;
         public Vector3 rotation;
-        public Vector3 facing;
         public Vector3 size; // width, height, depth;
+        public Vector3 facing;
         public Vector4 color;
 
     }
@@ -38,6 +38,7 @@ public class DataMark
         if (this.dataMarkPrefab == null) this.dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Sphere");
 
         markID = iD;
+        dataChannel = DefaultDataChannel();
     }
     
     public DataMark(int iD, GameObject dataMarkPrefab)
@@ -49,61 +50,12 @@ public class DataMark
         else this.dataMarkPrefab = dataMarkPrefab;
 
         markID = iD;
+        dataChannel = DefaultDataChannel();
     }
 
     public int GetDataMarkId()
     {
         return markID;
-    }
-
-    public void SetVisInteractor(VisInteractor interactor)
-    {
-        visInteractor = interactor;
-    }
-    
-    public GameObject CreateDataMark(Transform visContainer, Channel channel)
-    {
-        dataMarkInstance = GameObject.Instantiate(dataMarkPrefab, channel.position, Quaternion.Euler(channel.rotation), visContainer);
-        dataMarkInstance.name = dataMarkPrefab.name+ "_" + markID;
-
-        //TODO: Add Interactable Component through Code?
-        // Interaction Component
-        dataMarkInteractable = dataMarkInstance.GetComponent<DataMarkInteractable>();
-        if (visInteractor != null)
-        {
-            dataMarkInteractable.Init(this, visInteractor);
-        }
-        else
-        {
-            dataMarkInteractable.DisableInteraction(); // Disable Interaction
-        }
-
-        //Todo: Set Color
-        meshRenderer = dataMarkInstance.GetComponent<MeshRenderer>();
-        meshRenderer.material.SetColor("_Color", channel.color);
-
-        // Get initial data of object
-        this.dataChannel = channel;
-        meshRenderer.sharedMaterial.color = channel.color;
-
-        SetSize(dataChannel.size);
-        SetRot(dataChannel.rotation);
-
-        return dataMarkInstance;
-    }
-
-    public GameObject GetDataMarkInstance()
-    {
-        return dataMarkInstance;
-    }
-    
-    public void ChangeDataMark(Channel channel)
-    {
-        SetPos(channel.position);
-        SetSize(channel.size);
-        //SetFacing(channel.facing);
-        SetRot(channel.rotation);
-        SetColor(channel.color);
     }
 
     /// <summary>
@@ -123,6 +75,53 @@ public class DataMark
         };
 
         return channel;
+    }
+
+    public void SetVisInteractor(VisInteractor interactor)
+    {
+        visInteractor = interactor;
+    }
+    
+    public GameObject CreateDataMark(Transform visContainer, Channel channel)
+    {
+        dataMarkInstance = GameObject.Instantiate(dataMarkPrefab, channel.position, Quaternion.Euler(channel.rotation), visContainer);
+        dataMarkInstance.name = dataMarkPrefab.name+ "_" + markID;
+        meshRenderer = dataMarkInstance.GetComponent<MeshRenderer>();
+
+        //TODO: Add Interactable Component through Code?
+        // Interaction Component
+        dataMarkInteractable = dataMarkInstance.GetComponent<DataMarkInteractable>();
+
+        this.dataChannel = channel;
+
+        if (visInteractor != null)
+        {
+            dataMarkInteractable.Init(this, visInteractor);
+        }
+        else
+        {
+            dataMarkInteractable.DisableInteraction(); // Disable Interaction
+        }
+
+        SetColor(dataChannel.color);
+        SetSize(dataChannel.size);
+        SetRot(dataChannel.rotation);
+
+        return dataMarkInstance;
+    }
+
+    public GameObject GetDataMarkInstance()
+    {
+        return dataMarkInstance;
+    }
+    
+    public void ChangeDataMark(Channel channel)
+    {
+        SetPos(channel.position);
+        SetSize(channel.size);
+        //SetFacing(channel.facing);
+        SetRot(channel.rotation);
+        SetColor(channel.color);
     }
 
     public void SetPos(Vector3 position)

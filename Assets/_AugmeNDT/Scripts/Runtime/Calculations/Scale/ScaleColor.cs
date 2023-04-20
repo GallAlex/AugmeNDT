@@ -57,6 +57,5 @@ public class ScaleColor
         return selectedColor;
     }
 
-
-
+    
 }

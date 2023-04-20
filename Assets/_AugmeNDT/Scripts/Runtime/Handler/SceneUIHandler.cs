@@ -185,60 +185,6 @@ public class SceneUIHandler : MonoBehaviour
         await indicator.CloseAsync();
     }
 
-    private Dictionary<string, double[]> Generate3DSinData()
-    {
-        Dictionary<string, double[]> data = new Dictionary<string, double[]>();
- 
-        List<double> xValues = new List<double>();
-        List<double> yValues = new List<double>();
-        List<double> zValues = new List<double>();
-
-        for (double x = 0; x <= 1; x += 0.01f)
-        {
-            for (double z = 0; z <= 1; z += 0.01f)
-            {
-                const double pi = 3.14f;
-                //2D: y = 0.5 * (1 + Math.Sin(2 * pi * x))
-                xValues.Add(x);
-                yValues.Add(1 + Math.Sin(4 * pi * x));
-                //yValues.Add(Math.Sin(Math.Sqrt(x + z)));
-                zValues.Add(z);
-
-            }
-
-        }
-
-        data.Add("X", xValues.ToArray());
-        data.Add("Y", yValues.ToArray());
-        data.Add("Z", zValues.ToArray());
-
-        Debug.Log("Number of DataMarks: " + xValues.Count);
-
-        return data;
-    }
-
-    private Dictionary<string, double[]> Generate2DSinData()
-    {
-        Dictionary<string, double[]> data = new Dictionary<string, double[]>();
-
-        List<double> xValues = new List<double>();
-        List<double> yValues = new List<double>();
-
-        for (double x = 0; x <= 1; x += 0.001f)
-        {
-            const double pi = 3.14f;
-            //2D: y = 0.5 * (1 + Math.Sin(2 * pi * x))
-            xValues.Add(x);
-            yValues.Add(0.5 * (1 + Math.Sin(4 * pi * x)));
-        }
-
-        data.Add("X", xValues.ToArray());
-        data.Add("Y", yValues.ToArray());
-
-        Debug.Log("Number of DataMarks: " + xValues.Count);
-
-        return data;
-    }
 
 }
 

@@ -11,15 +11,6 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 #endif
 
-public enum DatasetType
-{
-    Raw,
-    Mhd,
-    Csv,
-    DICOM,
-    Unknown
-}
-
 /// <summary>
 /// Concrete class for loading a file based on its extension and selects the appropriate loader (factory) for it.
 /// Loader depends on System (Hololens2, Windows,...)
