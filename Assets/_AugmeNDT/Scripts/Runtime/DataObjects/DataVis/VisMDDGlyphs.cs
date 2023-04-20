@@ -11,7 +11,7 @@ public class VisMDDGlyphs : Vis
     // Stores the Normalized Values of each dataset
     public List<Dictionary<string, double[]>> normalizedDataSets;
 
-    // Stores the calculated statistic data of each dataset
+    // Stores the calculated statistic data of each normalized dataset
     public List<Dictionary<string, DistributionValues>> statisticDataSets;
 
     // Stores the minimum and maximum for each statistic value based on all dataset
@@ -20,20 +20,10 @@ public class VisMDDGlyphs : Vis
     // If more than one dataset is loaded, should the z-Axis be for the other Datasets?
     private bool use4DData = false;
 
-    private List<Scale> scale;
-
     public VisMDDGlyphs()
     {
         title = "MDD-Glyphs Chart";
         axes = 3;
-
-        //Initialize dataScales
-        //dataScaleTypes = new List<Scale.DataScale>()
-        //{
-        //    Scale.DataScale.Nominal,   // X
-        //    Scale.DataScale.Linear,    // Y
-        //    Scale.DataScale.Linear,   // Z
-        //};
 
         dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Bar");
         tickMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Tick");
@@ -42,6 +32,7 @@ public class VisMDDGlyphs : Vis
         visInteractor = new VisMDDGlyphInteractor(this);
 
     }
+    
 
     public override GameObject CreateVis(GameObject container)
     {
@@ -58,149 +49,116 @@ public class VisMDDGlyphs : Vis
 
         Debug.Log("Create MDDGlyph");
 
-        //## 01: Create Data Scales for Axes
-        scale = new List<Scale>(axes);
 
-        List<double> range = new List<double>(2)
-        {
-            0.0d + xyzOffset[0],
-            1.0d - xyzOffset[0]
-        };
 
-        List<double> specialYRange = new List<double>(2)
+        double[] datasets = new double[dataSets.Count];
+        string[] datasetNames = new string[dataSets.Count];
+        for (int i = 0; i < dataSets.Count; i++)
         {
-            0.0d + xyzOffset[2],
-            1.0d - xyzOffset[2]
-        };
-
-        // X Axis
-        List<double> domain = new List<double>(2)
-        {
-            0,
-            dataSets[0].Keys.Count-1
-        };
-        scale.Add(new ScaleNominal(domain, range, dataSets[0].Keys.ToList()));
-
-        // Y Axis
-        domain = new List<double>(2)
-        {
-            minMaxStatisticValues[0].SmallestElement,
-            minMaxStatisticValues[1].LargestElement
-        };
-        scale.Add(new ScaleLinear(domain, specialYRange));
-
-        if (!use4DData)
-        {
-            // Z Axis
-            domain = new List<double>(2)
-            {
-                minMaxStatisticValues[0].Modality,
-                minMaxStatisticValues[1].Modality
-            };
-            scale.Add(new ScaleLinear(domain, range));
+            datasets[i] = i;
+            datasetNames[i] = "Dataset_" + i;
         }
-        else
-        {
-            // Z Axis
-            domain = new List<double>(2)
-            {
-                0,
-                dataSets.Count-1
-            };
-
-            //TODO: Use real dataset names
-            List<string> names = new List<string>(dataSets.Count - 1);
-            for (int i = 0; i < dataSets.Count; i++)
-            {
-                names.Add("Dataset " + i);
-            }
-            scale.Add(new ScaleNominal(domain, range, names));
-        }
+        Debug.Log("datasets: " + datasets.Length);
 
         //## 02: Create Axes and Grids
 
         // X Axis
         encodedAttribute.Add(-1);
-        visContainer.CreateAxis("Attributes", (Direction)0, scale[0]);
+        visContainer.CreateAxis("Attributes", dataSets[0].Keys.ToArray(), (Direction)0);
         visContainer.CreateGrid((Direction)0, (Direction)1);
 
         // Y Axis
         encodedAttribute.Add(1);
-        visContainer.CreateAxis("Attributes Value", (Direction)1, scale[1]);
+        visContainer.CreateAxis("Attributes Value", new []{minMaxStatisticValues[0].SmallestElement, minMaxStatisticValues[1].LargestElement}, (Direction)1);
         visContainer.CreateGrid((Direction)1, (Direction)2);
 
         if (!use4DData)
         {
             // Z Axis
             encodedAttribute.Add(2);
-            visContainer.CreateAxis("Modality", (Direction)2, scale[2]);
+            visContainer.CreateAxis("Modality", new[] { minMaxStatisticValues[0].Modality, minMaxStatisticValues[1].Modality }, (Direction)2);
             visContainer.CreateGrid((Direction)2, (Direction)0); 
         }
         else
         {
             // Z Axis
             encodedAttribute.Add(2);
-            visContainer.CreateAxis("Timestep", (Direction)2, scale[2]);
+            visContainer.CreateAxis("Timestep", datasetNames, (Direction)2); 
             visContainer.CreateGrid((Direction)2, (Direction)0);
         }
 
-        //## 03: Create Data Points
+
+        //## 03: Calculate Channels
+        int numberOfFeatures = dataSets[0].Keys.Count;
+        int numberOfDatasets = statisticDataSets.Count;
         int currentDataSet = 0;
+
+
+        double[] xPos = new double[numberOfFeatures * numberOfDatasets];
+        double[] zPos = new double[numberOfFeatures * numberOfDatasets];
+        double[] barHeight = new double[numberOfFeatures * numberOfDatasets];
+        double[] q1 = new double[numberOfFeatures * numberOfDatasets];
+        double[] q2 = new double[numberOfFeatures * numberOfDatasets];
+        double[] modality = new double[numberOfFeatures * numberOfDatasets];
+        Color[] c = new Color[numberOfFeatures * numberOfDatasets];
+
+        Debug.Log("Number of DataValues: " + numberOfFeatures * numberOfDatasets);
+
         // For every Attribute one Data Mark
         //Loop through every dataset statisticValues[] and create a Data Mark for every Attribute in every dataset
-        foreach (var statisticValue in statisticDataSets)
+        foreach (var dataSet in statisticDataSets)
         {
-            for (int value = 0; value < statisticValue.Count; value++)
+            // Calculate and combine statistical data
+            for (int feature = 0; feature < numberOfFeatures; feature++)
             {
-                //Debug.Log("Attribute Nr" + value + ": " + statisticValues.ElementAt(value).Key);
+                //Add values of second dataset afterwards 
+                int featureIndex = feature + (numberOfFeatures * currentDataSet);
 
-                //Default:
-                DataMark.Channel channel = DataMark.DefaultDataChannel();
-
-                //X Axis (Attributes)
-                var xCoordinate = scale[0].GetScaledValue(value);
-                channel.position[0] = (float)xCoordinate;
-                
-                //Debug.Log("xPos Nr" + value + ": " + xCoordinate);
-
+                xPos[featureIndex] = feature;
+                zPos[featureIndex] = currentDataSet;
                 //Size - Distance between lower and upper quartiles
-                var q1 = scale[1].GetScaledValue(statisticValue.ElementAt(value).Value.LowerQuartile);
-                var q2 = scale[1].GetScaledValue(statisticValue.ElementAt(value).Value.UpperQuartile);
-
-                var barHeight = q2 - q1;
-                channel.size[1] = (float)barHeight;
-
-                //Y Axis (Mean)
-                var yCoordinate = q1;
-                channel.position[1] = (float)yCoordinate;
-
-                if (!use4DData)
-                {
-                    //Z Axis (Modality)
-                    var zCoordinate = scale[2].GetScaledValue(statisticValue.ElementAt(value).Value.Modality);
-                    channel.position[2] = (float)zCoordinate;
-                }
-                else
-                {
-                    //Z Axis (Timesteps)
-                    var zCoordinate = scale[2].GetScaledValue(currentDataSet);
-                    channel.position[2] = (float)zCoordinate;
-                }
-
-
-                //Color (Skewness + Kurtosis)
-                Color c = GetShapeColor(statisticValue.ElementAt(value).Value.Skewness, statisticValue.ElementAt(value).Value.Kurtosis);
-
-                channel.color = c;
-
-
-                visContainer.CreateDataMark(dataMarkPrefab, channel);
+                q1[featureIndex] = dataSet.ElementAt(feature).Value.LowerQuartile;
+                q2[featureIndex] = dataSet.ElementAt(feature).Value.UpperQuartile;
+                barHeight[featureIndex] = q2[feature] - q1[feature];
+                modality[featureIndex] = dataSet.ElementAt(feature).Value.Modality;
+                c[featureIndex] = GetShapeColor(dataSet.ElementAt(feature).Value.Skewness, dataSet.ElementAt(feature).Value.Kurtosis); 
             }
 
             currentDataSet++;
         }
 
-        //## 04: Rescale
+        //X Axis (Attributes)
+        visContainer.SetChannel(VisChannel.XPos, xPos);
+        Debug.Log("Filled in X Values: " + xPos.Length);
+
+        //Y Axis (Mean)
+        visContainer.SetChannel(VisChannel.YPos, q1);
+        Debug.Log("Filled in Y Values: " + q1.Length);
+
+        // Y Size (IQR)
+        visContainer.SetChannel(VisChannel.YSize, barHeight);
+
+        if (!use4DData)
+        {
+            //Z Axis (Modality)
+            visContainer.SetChannel(VisChannel.ZPos, modality);
+            Debug.Log("Filled in Z Values: " + modality.Length);
+        }
+        else
+        {
+            //Z Axis (Timesteps)
+            visContainer.SetChannel(VisChannel.ZPos, zPos);
+            Debug.Log("Filled in Z Values: " + zPos.Length);
+        }
+
+        //Color (Skewness + Kurtosis)
+        visContainer.SetChannel(VisChannel.Color, zPos);
+        visContainer.SetSpecificColor(c);
+
+        //## 04: Create Data Marks
+        visContainer.CreateDataMarks(dataMarkPrefab);
+
+        //## 05: Rescale
         visContainerObject.transform.localScale = new Vector3(width, height, depth);
 
         return visContainerObject;
@@ -259,14 +217,14 @@ public class VisMDDGlyphs : Vis
             aggregatedStatisticValues.AddRange(statisticValues.Values.ToList());
 
             //#### PRINT STATISTIC VALUES ####
-            //string statisticValuesString = ">> DataSet [" + currentDataSet + "]: ";
-            //// Output statisticValues for Debug Purposes
-            //foreach (var statisticValue in statisticValues)
-            //{
-            //    statisticValuesString += statisticValue.Key + ": \n" + statisticValue.Value.PrintDistributionValues();
-            //    statisticValuesString += "\n";
-            //}
-            //Debug.Log(statisticValuesString);
+            string statisticValuesString = ">> DataSet [" + currentDataSet + "]: ";
+            // Output statisticValues for Debug Purposes
+            foreach (var statisticValue in statisticValues)
+            {
+                statisticValuesString += statisticValue.Key + ": \n" + statisticValue.Value.PrintDistributionValues();
+                statisticValuesString += "\n";
+            }
+            Debug.Log(statisticValuesString);
             //#### END PRINT STATISTIC VALUES ####
 
             currentDataSet++;
@@ -311,19 +269,21 @@ public class VisMDDGlyphs : Vis
 
     }
 
+    
+
     public List<int> GetFiberIDsFromIQRRange(int attribute, int axis)
     {
         int datasetNumber = 0;
         
-        var q1 = scale[axis].GetScaledValue(statisticDataSets[datasetNumber].ElementAt(attribute).Value.LowerQuartile);
-        var q2 = scale[axis].GetScaledValue(statisticDataSets[datasetNumber].ElementAt(attribute).Value.UpperQuartile);
+        var q1 = statisticDataSets[datasetNumber].ElementAt(attribute).Value.LowerQuartile;
+        var q2 = statisticDataSets[datasetNumber].ElementAt(attribute).Value.UpperQuartile;
 
         // Go through every fiber and check if it is in the IQR Range (in the normalizedDataSets)
         List<int> fiberIDs = new List<int>();
         
         for (int i = 0; i < normalizedDataSets[datasetNumber].ElementAt(attribute).Value.Length; i++)
         {
-            var value = scale[axis].GetScaledValue(normalizedDataSets[datasetNumber].ElementAt(attribute).Value[i]);
+            var value = normalizedDataSets[datasetNumber].ElementAt(attribute).Value[i];
             if (value >= q1 && value <= q2)
             {
                 fiberIDs.Add(i);
@@ -332,5 +292,6 @@ public class VisMDDGlyphs : Vis
 
         return fiberIDs;
     }
+
 }
 

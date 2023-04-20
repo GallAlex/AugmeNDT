@@ -18,15 +18,19 @@ public enum VisType
 /// <summary>
 /// Possible Visulization Channels
 /// </summary>
-public enum VisChannels
+public enum VisChannel
 {
-    XAxis,
-    YAxis,
-    ZAxis,
+    XPos,
+    YPos,
+    ZPos,
+    XSize,
+    YSize,
+    ZSize,
+    XRotation,
+    YRotation,
+    ZRotation,
     Color,
-    Size,
-    Orientation,
-    NumberOfChannels,
+    NumberOfVisChannels
 }
 
 /// <summary>
@@ -58,9 +62,10 @@ public class Vis
     public float depth = 0.25f;                                 // Vis container depth in centimeters.
     public float[] xyzOffset = new[]{0.1f, 0.1f, 0.1f};         // Offset from origin (0,0) and End (1,0) for the Axes (x,y,z).
     public int[] xyzTicks = { 10, 10, 10 };                     // Amount of Ticks between min/max tick for Axes (x,y,z).
+    public Color[] colorScheme = { Color.cyan, Color.magenta }; // Defines Color Scheme for Color Channel
 
     // Interactions
-    public VisInteractor visInteractor;                        // Interactor for the Vis    
+    public VisInteractor visInteractor;                         // Interactor for the Vis    
     private DataVisGroup dataVisGroup;                          // Reference to DataVisGroup
 
     
@@ -106,6 +111,7 @@ public class Vis
 
         visContainer.SetAxisOffsets(xyzOffset);
         visContainer.SetAxisTickNumber(xyzTicks);
+        visContainer.SetColorScheme(colorScheme);
         visContainer.SetVisInteractor(visInteractor);
 
         if (dimensions < axes) axes = dimensions;
@@ -185,25 +191,7 @@ public class Vis
 
     }
 
-    public Scale CreateScale(Scale.DataScaleType dataScale, List<double> domain, List<double> range)
-    {
-        Scale scaleFunction;
 
-        switch (dataScale)
-        {
-            default:
-            case Scale.DataScaleType.Linear:
-                scaleFunction = new ScaleLinear(domain, range);
-                break;
-            case Scale.DataScaleType.Nominal:
-                //scaleFunction = new ScaleNominal(domain, range, new List<string>(dataValues.Keys));
-                throw new NotImplementedException("Nominal Scale is currently not implemented");
-                break;
-
-        }
-
-        return scaleFunction;
-    }
 
     public virtual void UpdateVis()
     {

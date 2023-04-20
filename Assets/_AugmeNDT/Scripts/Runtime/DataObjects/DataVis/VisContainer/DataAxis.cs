@@ -36,7 +36,7 @@ public class DataAxis
         this.tickOffset = tickOffset;
     }
 
-    public GameObject CreateAxis(Transform visContainer, string axisTitle, Direction direction, Scale dataScale, int numberOfTicks)
+    public GameObject CreateAxis(Transform visContainer, string axisTitle, Scale dataScale, Direction direction, int numberOfTicks)
     {
         axisLinePrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Axis2");
 

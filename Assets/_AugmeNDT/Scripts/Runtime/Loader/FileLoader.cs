@@ -8,6 +8,15 @@ using System.Threading.Tasks;
 using Windows.Storage;
 #endif
 
+public enum DatasetType
+{
+    Raw,
+    Mhd,
+    Csv,
+    DICOM,
+    Unknown
+}
+
 /// <summary>
 /// Abstract class for loader of various files
 /// </summary>
