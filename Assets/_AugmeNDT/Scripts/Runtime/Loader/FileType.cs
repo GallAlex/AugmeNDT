@@ -4,7 +4,7 @@
 /// </summary>
 public abstract class FileType
 {
-    public DatasetType datasetType = DatasetType.Unknown;
+    public FileExtension extensionType = FileExtension.Unknown;
     private string filePath = "";
 
     #region Getter/Setter
@@ -13,7 +13,7 @@ public abstract class FileType
 
     public override string ToString()
     {
-        string values = "Dataset [" + datasetType.ToString() + "] at path: " + FilePath + "\n";
+        string values = "Dataset [" + extensionType.ToString() + "] at path: " + FilePath + "\n";
 
         return base.ToString() + ": \n" + values;
     }

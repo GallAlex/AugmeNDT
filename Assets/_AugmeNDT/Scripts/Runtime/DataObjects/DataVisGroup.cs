@@ -121,9 +121,8 @@ public class DataVisGroup
     public void SetPolyData(PolyFiberData data)
     {
         polyData = data;
-        hasPolygonalDataset = true;
-        //Todo: Currently alos acts as abstract dataset
         hasAbstractDataset = true;
+        hasPolygonalDataset = true;
     }
 
     /// <summary>
@@ -169,6 +168,8 @@ public class DataVisGroup
         return ID == other.ID;
     }
 
+    #region Rendering
+
     /// <summary>
     /// Renders Volume Objects from Voxel datasets
     /// </summary>
@@ -176,6 +177,7 @@ public class DataVisGroup
     {
         if (!hasVolumeDataset || voxelData == null)
         {
+            Debug.LogError("Error with volume vis data");
             return;
         }
 
@@ -196,6 +198,7 @@ public class DataVisGroup
     {
         if (!hasPolygonalDataset || polyData == null)
         {
+            Debug.LogError("Error with spatial vis data");
             return;
         }
 
@@ -211,8 +214,9 @@ public class DataVisGroup
     /// </summary>
     public void RenderAbstractVisObject(VisType visType)
     {
-        if (!hasAbstractDataset || (polyData == null && csvAbstractData == null))
+        if (!hasAbstractDataset || csvAbstractData == null)
         {
+            Debug.LogError("Error with abstract vis data");
             return;
         }
 
@@ -221,11 +225,24 @@ public class DataVisGroup
         Vis vis = Vis.GetSpecificVisType(visType);
         visualizations.Add(vis);
 
-        //Todo: Currently uses poly data and not csvAbstractData
-        vis.AppendData(polyData.ExportForDataVis());
+        vis.AppendData(csvAbstractData);
         vis.SetDataVisGroup(this);
         vis.CreateVis(dataVisGroupContainer);
     }
+
+    /// <summary>
+    /// Render all representations of the group, for which data is available.
+    /// </summary>
+    /// <param name="visType"></param>
+    public void RenderAll(VisType visType)
+    {
+        if (hasVolumeDataset) RenderVolumeObject();
+        if (hasPolygonalDataset) RenderPolyObject();
+        if (hasAbstractDataset) RenderAbstractVisObject(visType);
+    }
+
+    #endregion
+
 
     /// <summary>
     /// Arranges all representations of the group in a [2 by n] grid and moves it to the best initial start position
