@@ -3,18 +3,20 @@ using System;
 using System.Text;
 using UnityEngine;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 #if !UNITY_EDITOR && UNITY_WSA_10_0
 using Windows.Storage;
 #endif
 
-public enum DatasetType
+public enum FileExtension
 {
     Raw,
     Mhd,
     Csv,
     DICOM,
-    Unknown
+    Unknown,
+    NumberOfFileExtensions
 }
 
 /// <summary>
@@ -22,11 +24,21 @@ public enum DatasetType
 /// </summary>
 public abstract class FileLoader
 {
+    // Defines which type of dataset will be created based on the loaded file
+    public FileLoadingManager.DatasetType datasetType = FileLoadingManager.DatasetType.Unknown;
+
+    // Defines which subtype type the secondary dataset has
+    public ISecondaryData.SecondaryDataType secondaryDataType = ISecondaryData.SecondaryDataType.Unknown;
+
     /*Voxel data*/
     public VoxelDataset voxelDataset;
 
-    /*3D model data*/
+    /*spatial csv data*/
     public PolyFiberData polyFiberDataset;
+
+    /*abstract csv data*/
+    public Dictionary<string, double[]> abstractDataset;
+
 
     public abstract Task LoadData(string filePath);
 

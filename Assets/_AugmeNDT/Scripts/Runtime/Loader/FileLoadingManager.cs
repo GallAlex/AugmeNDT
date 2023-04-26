@@ -17,12 +17,20 @@ using Windows.Storage.Pickers;
 /// </summary>
 public class FileLoadingManager
 {
+    public enum DatasetType
+    {
+        Primary,
+        Secondary,
+        Unknown
+    }
+
     private bool loadingSucceded = false;
 
     //List<FileLoader> entities = new List<FileLoader>(); // get with var mhdFileLoader = entities.OfType<MhdFileLoader>();
     private FileLoader loaderFactory;
 
     private string filePath = "";
+
     private DataVisGroup dataVisGroup;
 
     #region Getter/Setter
@@ -42,25 +50,25 @@ public class FileLoadingManager
             }
 
             //fileName = Path.GetFileNameWithoutExtension(filePath);
-            DatasetType fileTyp = GetDatasetType(filePath);
+            FileExtension fileTyp = GetDatasetType(filePath);
 
             //Choose Loader here
             switch (fileTyp)
             {
-                case DatasetType.Raw:
+                case FileExtension.Raw:
                     loadingSucceded = await CreateRawLoader(filePath);
                     break;
-                case DatasetType.Mhd:
+                case FileExtension.Mhd:
                     loaderFactory = new MhdFileLoader(filePath);
                     loadingSucceded = true;
                     break;
-                case DatasetType.Csv:
+                case FileExtension.Csv:
                     loaderFactory = new CsvLoader();
                     loadingSucceded = true;
                     break;
-                case DatasetType.DICOM:
+                case FileExtension.DICOM:
                     throw new NotImplementedException(fileTyp.ToString() + " extension is currently not supported");
-                case DatasetType.Unknown:
+                case FileExtension.Unknown:
                     throw new NotImplementedException(fileTyp.ToString() + " extension is currently not supported");
                 default:
                     return;
@@ -74,7 +82,9 @@ public class FileLoadingManager
             // Create new group for the loading action
             dataVisGroup = new DataVisGroup();
 
-            StoreDataVisGroup(fileTyp);
+            StoreDataVisGroup();
+
+            //TODO: Create and return one single Dataset class for primary and secondary data?
 
         }
         catch (Exception ex)
@@ -89,9 +99,9 @@ public class FileLoadingManager
     /// </summary>
     /// <param name="filePath"></param>
     /// <returns></returns>
-    public static DatasetType GetDatasetType(string filePath)
+    public static FileExtension GetDatasetType(string filePath)
     {
-        DatasetType datasetType;
+        FileExtension datasetType;
 
         // Get .* extension
         string extension = Path.GetExtension(filePath);
@@ -99,20 +109,20 @@ public class FileLoadingManager
         switch (extension)
         {
             case ".raw":
-                datasetType = DatasetType.Raw;
+                datasetType = FileExtension.Raw;
                 break;
             case ".mhd":
-                datasetType = DatasetType.Mhd;
+                datasetType = FileExtension.Mhd;
                 break;
             case ".csv":
-                datasetType = DatasetType.Csv;
+                datasetType = FileExtension.Csv;
                 break;
             case ".dicom":
             case ".dcm":
-                datasetType = DatasetType.DICOM;
+                datasetType = FileExtension.DICOM;
                 break;
             default:
-                datasetType = DatasetType.Unknown;
+                datasetType = FileExtension.Unknown;
                 throw new NotImplementedException("Data extension format [" + extension + "] not supported");
         }
 
@@ -143,23 +153,34 @@ public class FileLoadingManager
     /// <summary>
     /// Methods stores the currently loaded datasets in a DataVisGroup
     /// </summary>
-    private void StoreDataVisGroup(DatasetType type)
+    private void StoreDataVisGroup()
     {
+        // Primary Datasets
+        if ((loaderFactory.datasetType == DatasetType.Primary))
+        {
+            if (loaderFactory.voxelDataset != null) dataVisGroup.SetVoxelData(loaderFactory.voxelDataset);
+        }
+        // Secondary Datasets
+        else if ((loaderFactory.datasetType == DatasetType.Secondary))
+        {
 
-        if ((type == DatasetType.Raw || type == DatasetType.Mhd) && loaderFactory.voxelDataset != null)
-        {
-            dataVisGroup.SetVoxelData(loaderFactory.voxelDataset);
+            if (loaderFactory.secondaryDataType == ISecondaryData.SecondaryDataType.Abstract)
+            {
+                if (loaderFactory.abstractDataset != null) dataVisGroup.SetAbstractCsvData(loaderFactory.abstractDataset);
+            }
+            if (loaderFactory.secondaryDataType == ISecondaryData.SecondaryDataType.Spatial)
+            {
+                if (loaderFactory.polyFiberDataset != null)
+                {
+                    dataVisGroup.SetPolyData(loaderFactory.polyFiberDataset);
+                    dataVisGroup.SetAbstractCsvData(loaderFactory.polyFiberDataset.ExportForDataVis());
+                }
+            }
         }
-        if (type == DatasetType.Csv && loaderFactory.polyFiberDataset != null)
+        // Unknown
+        else
         {
-            // derived from spatial csv
-            dataVisGroup.SetPolyData(loaderFactory.polyFiberDataset);
-        }
-        if (type == DatasetType.Csv && loaderFactory.polyFiberDataset != null)
-        {
-            // Todo: Add Enum for spatial csv and abstract csv
-            // pure abstract csv
-            //dataVisGroup.SetAbstractCsvData(loaderFactory.polyFiberDataset);
+            Debug.LogError("No Primary or Secondary Data detected");
         }
 
     }

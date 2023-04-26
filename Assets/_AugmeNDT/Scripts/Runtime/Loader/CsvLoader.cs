@@ -13,10 +13,10 @@ public class CsvLoader : FileLoader
 
     private Encoding encoding;
     private char splitChar = ',';
-    private int skipRows = 4;
-    private bool hasSpatialValues = true;
+    private int skipRows = IAbstractData.SkipRows;
+    private bool hasSpatialValues = false;
 
-    private bool automaticDetection = true; //Detects if the file has spatial values or not and how many rows to skip
+    private bool automaticDetectionSuccesful = false; // File type could be detected automatically
 
     public CsvLoader()
     {
@@ -24,12 +24,16 @@ public class CsvLoader : FileLoader
         polyFiberDataset = ScriptableObject.CreateInstance<PolyFiberData>();
     }
 
+    /// <summary>
+    /// Constructor with rows to skip at the beginning of the file
+    /// </summary>
+    /// <param name="hasSpatialValues"></param>
+    /// <param name="skipRows"></param>
     public CsvLoader(bool hasSpatialValues, int skipRows)
     {
         //Has to happen on main thread
         polyFiberDataset = ScriptableObject.CreateInstance<PolyFiberData>();
 
-        automaticDetection = false;
         this.skipRows = skipRows;
         this.hasSpatialValues = hasSpatialValues;
     }
@@ -38,7 +42,19 @@ public class CsvLoader : FileLoader
     {
         await ReadCsv(filePath);
 
-        polyFiberDataset.FillPolyFiberData(csvValues);
+        datasetType = FileLoadingManager.DatasetType.Secondary;
+
+        if (hasSpatialValues)
+        {
+            secondaryDataType = ISecondaryData.SecondaryDataType.Spatial;
+            polyFiberDataset.FillPolyFiberData(csvValues);
+        }
+        else
+        {
+            secondaryDataType = ISecondaryData.SecondaryDataType.Abstract;
+            abstractDataset = csvFile.GetDataSet();
+        }
+        
 
     }
 
@@ -47,6 +63,12 @@ public class CsvLoader : FileLoader
         Task<StreamReader> streamReaderTask = GetStreamReader(filePath);
         using var reader = await streamReaderTask;
         encoding = reader.CurrentEncoding;
+
+        //Get Meta Infos in first line
+        string metaLine = await reader.ReadLineAsync();
+        string[] metaInfo = metaLine.Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
+        ProcessMetaInfos(metaInfo);
+        //TODO: If no meta info is provided then header might be alredy read!! No additonal ReadLineAsync needed and skipRow could be -1!
 
         csvValues = new List<List<string>>();
 
@@ -93,6 +115,39 @@ public class CsvLoader : FileLoader
         Debug.Log("CSV File loaded");
         csvFile = new CsvFileType(csvValues);
         //PrintCsv();
+    }
+
+    /// <summary>
+    /// Checks if the file has abstract or spatial values and sets how many rows to skip
+    /// </summary>
+    /// <param name="metaInfo"></param>
+    private void ProcessMetaInfos(string[] metaInfo)
+    {
+        if (metaInfo.Length < 1)
+        {
+            Debug.LogError("First line is empty");
+            return;
+        }
+        switch (metaInfo[0])
+        {
+            case ISecondaryData.AbstractDataIdentifier:
+                automaticDetectionSuccesful = true;
+                hasSpatialValues = false;
+                skipRows = IAbstractData.SkipRows;
+                Debug.Log("Abstract Dataset detected");
+                break;
+            case ISecondaryData.SpatialDataIdentifier:
+                automaticDetectionSuccesful = true;
+                hasSpatialValues = true;
+                skipRows = ISpatialData.SkipRows;
+                //TODO: Check Type of spatial data
+                Debug.Log("Spatial Dataset ["+ metaInfo[1] + "] detected");
+                break;
+            default:
+                automaticDetectionSuccesful = false;
+                Debug.LogError("CSV File has no valid meta information. Use abstract dataset as default");
+                break;
+        }
     }
 
     /// <summary>

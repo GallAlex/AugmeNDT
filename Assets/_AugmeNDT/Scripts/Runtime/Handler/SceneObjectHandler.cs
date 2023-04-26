@@ -82,11 +82,9 @@ public class SceneObjectHandler : MonoBehaviour
         dataVisGroups.Add(fileLoadingManager.GetDataVisGroup());
         int lastIndex = dataVisGroups.Count - 1;
 
-        // Render all representations
-        dataVisGroups[lastIndex].RenderVolumeObject();
-        dataVisGroups[lastIndex].RenderPolyObject();
-        //Todo: Add MDDGlyph as default
-        dataVisGroups[lastIndex].RenderAbstractVisObject(VisType.BarChart);
+        // Render all representations (whose data is available)
+        dataVisGroups[lastIndex].RenderAll(VisType.MDDGlyphs);
+
 
         dataVisGroups[lastIndex].ArrangeObjectsSpatially();
         

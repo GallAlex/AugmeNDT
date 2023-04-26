@@ -31,6 +31,7 @@ public class RawFileLoader : FileLoader
     {
         await ReadBinaryInfo(filePath);
 
+        datasetType = FileLoadingManager.DatasetType.Primary;
         Debug.Log(rawFile.ToString());
 
         // Check 3D texture max size
