@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MathNet.Numerics;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
 
 /// <summary>
 /// This class is used to create a multidimensional distribution Glyph chart visualization.
@@ -38,7 +40,7 @@ public class VisMDDGlyphs : Vis
     {
         if (dataSets.Count > 1) use4DData = true;
         
-        if(!use4DData) xyzTicks = new int[] { dataSets[0].Keys.Count, 10, 10 };
+        if(!use4DData) xyzTicks = new int[] { dataSets[0].Keys.Count, 13, 7 };
         else xyzTicks = new int[] { dataSets[0].Keys.Count, 10, dataSets.Count };
 
         xyzOffset = new float[] { 0.05f, 0.05f, 0.05f };
@@ -102,8 +104,6 @@ public class VisMDDGlyphs : Vis
         double[] modality = new double[numberOfFeatures * numberOfDatasets];
         Color[] c = new Color[numberOfFeatures * numberOfDatasets];
 
-        Debug.Log("Number of DataValues: " + numberOfFeatures * numberOfDatasets);
-
         // For every Attribute one Data Mark
         //Loop through every dataset statisticValues[] and create a Data Mark for every Attribute in every dataset
         foreach (var dataSet in statisticDataSets)
@@ -129,11 +129,9 @@ public class VisMDDGlyphs : Vis
 
         //X Axis (Attributes)
         visContainer.SetChannel(VisChannel.XPos, xPos);
-        Debug.Log("Filled in X Values: " + xPos.Length);
 
         //Y Axis (Mean)
         visContainer.SetChannel(VisChannel.YPos, q1);
-        Debug.Log("Filled in Y Values: " + q1.Length);
 
         // Y Size (IQR)
         visContainer.SetChannel(VisChannel.YSize, barHeight);
@@ -142,13 +140,11 @@ public class VisMDDGlyphs : Vis
         {
             //Z Axis (Modality)
             visContainer.SetChannel(VisChannel.ZPos, modality);
-            Debug.Log("Filled in Z Values: " + modality.Length);
         }
         else
         {
             //Z Axis (Timesteps)
             visContainer.SetChannel(VisChannel.ZPos, zPos);
-            Debug.Log("Filled in Z Values: " + zPos.Length);
         }
 
         //Color (Skewness + Kurtosis)
@@ -156,10 +152,17 @@ public class VisMDDGlyphs : Vis
         visContainer.SetSpecificColor(c);
 
         //## 04: Create Data Marks
-        visContainer.CreateDataMarks(dataMarkPrefab);
+        visContainer.CreateDataMarks(dataMarkPrefab, new []{0, 1, 0});
 
-        //## 05: Rescale
+        //## 05: Create Color Scalar Bar
+        CreateMDDColorBar();
+
+        //## 06: Rescale
         visContainerObject.transform.localScale = new Vector3(width, height, depth);
+        //colorBar.transform.localScale = new Vector3(width, height, depth);
+
+        visContainer.GatherDataMarkValueInformation(0);
+        visContainer.GatherDataMarkValueInformation(1);
 
         return visContainerObject;
     }
@@ -236,34 +239,59 @@ public class VisMDDGlyphs : Vis
 
 
 
-    // Method Calculates the resulting Color based on Skewness and Kurtosis
+    /// <summary>
+    /// Method Calculates the resulting Color based on Skewness and Kurtosis
+    /// Kurtosis:
+    /// The excess kurtosis is defined as kurtosis minus 3
+    /// excess kurtosis = 0: symmetric, Normal distribution
+    /// excess kurtosis > 0: more prominent peaks, fatter tails - more outliers
+    /// excess kurtosis < 0: more flat peaks, thinner tails - fewer outliers
+    /// Skewness:
+    /// skewness = 0: symmetric
+    /// skewness > 0: right skewed, more Values that are smaller than the mean,
+    /// skewness < 0: left skewed, more Values that are bigger than the mean,
+    /// </summary>
+    /// <param name="skewness"></param>
+    /// <param name="kurtosis"></param>
+    /// <returns></returns>
     private Color GetShapeColor(double skewness, double kurtosis)
     {
-        // Base Colors go from blue to gray to red
         int baseColors = 3;
 
-        //Decide base color by checking Skewness Value
-        double ratio = (skewness - minMaxStatisticValues[0].Skewness) / (minMaxStatisticValues[1].Skewness - minMaxStatisticValues[0].Skewness);
-        int colorIndex = Convert.ToInt32(ratio * (baseColors - 1));
+        ////Decide base color by checking Skewness Value
+        //double ratio = (skewness - minMaxStatisticValues[0].Skewness) / (minMaxStatisticValues[1].Skewness - minMaxStatisticValues[0].Skewness);
+        
+        //if (double.IsNaN(ratio))
+        //{
+        //    Debug.LogError("Calculation yielded NaN: Check Results");
+        //    ratio = 0;
+        //}
 
-        // clamp the color index to ensure it's within range
-        colorIndex = Math.Min(Math.Max(colorIndex, 0), baseColors - 1);
+        //int colorIndex = Convert.ToInt32(ratio * (baseColors - 1));
+
+        //// clamp the color index to ensure it's within range
+        //colorIndex = Math.Min(Math.Max(colorIndex, 0), baseColors - 1);
 
         // Define final color by checking kurtosis Value (Error Value Green)
         Color finalColor = new Color(0, 1.0f, 0);
 
-        switch (colorIndex)
-        {
-            case 0:
-                finalColor = ScaleColor.GetCategoricalColor(kurtosis, minMaxStatisticValues[0].Kurtosis, minMaxStatisticValues[1].Kurtosis, ColorHelper.blueHueValues);
-                break;
-            case 1:
-                finalColor = ScaleColor.GetCategoricalColor(kurtosis, minMaxStatisticValues[0].Kurtosis, minMaxStatisticValues[1].Kurtosis, ColorHelper.yellowHueValues);
-                break;
-            case 2:
-                finalColor = ScaleColor.GetCategoricalColor(kurtosis, minMaxStatisticValues[0].Kurtosis, minMaxStatisticValues[1].Kurtosis, ColorHelper.orangeHueValues);
-                break;
-        }
+        //BreakPoints from https://brownmath.com/stat/shape.htm#Skewness
+
+        // Kurtosis
+        double kurtosisVal = 0;
+
+        if (kurtosis >= 1) kurtosisVal = 1;
+        else if (kurtosis < 1 && kurtosis > -1) kurtosisVal = 0;
+        else if (kurtosis <= -1) kurtosisVal = -1;
+
+        // Skewness
+        if (skewness >= 1)
+            finalColor = ScaleColor.GetCategoricalColor(kurtosisVal, 0, 1, ColorHelper.viridisPurpleHue);
+        else if (skewness < 1 && skewness > -1)
+            finalColor = ScaleColor.GetCategoricalColor(kurtosisVal, 0, 1, ColorHelper.viridisGreenHue);
+        else if (skewness <= -1)
+            finalColor = ScaleColor.GetCategoricalColor(kurtosisVal, 0, 1, ColorHelper.viridisYellowHue);
+
 
         return finalColor;
 
@@ -291,6 +319,46 @@ public class VisMDDGlyphs : Vis
         }
 
         return fiberIDs;
+    }
+
+    private GameObject CreateMDDColorBar()
+    {
+        GameObject colorScalarBarContainer = new GameObject("Color Scale");
+        colorScalarBarContainer.transform.parent = visContainerObject.transform;
+
+        Vector3 positions = new Vector3(1 + (width * 0.7f), 0.5f, 0.5f);
+        List<Color[]> colorSchemeList = new List<Color[]>(){ ColorHelper.viridisPurpleHue , ColorHelper.viridisGreenHue, ColorHelper.viridisYellowHue };
+
+        MDDGlyphColorLegend legend = new MDDGlyphColorLegend();
+        GameObject colorLegend = legend.CreateColorLegend(positions, colorSchemeList);
+        colorLegend.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+        colorLegend.transform.parent = colorScalarBarContainer.transform;
+
+
+        //ColorScalarBar colorScalarBar = new ColorScalarBar();
+        //Vector3[] positions = new Vector3[3];
+
+        //for (int i = 0; i < positions.Length; i++)
+        //{
+        //    positions[i] = visContainerObject.transform.position;
+        //    positions[i].x += 1 + (width * 0.4f + i * 0.25f);
+        //    positions[i].y += 0.5f;
+        //    positions[i].z += 0.5f;
+        //}
+
+        //double[] colorBarValues = new double[2] { minMaxStatisticValues[0].Kurtosis, minMaxStatisticValues[1].Kurtosis};
+        //double centerSkewness = 0.5 * (minMaxStatisticValues[1].Skewness - minMaxStatisticValues[0].Skewness) + minMaxStatisticValues[0].Skewness;
+
+        //GameObject colorBar01 = colorScalarBar.CreateColorScalarBar(positions[0], "[" + minMaxStatisticValues[0].Skewness.Round(3) + "]", colorBarValues, 1, ColorHelper.viridisPurpleHue);
+        //colorBar01.transform.parent = colorScalarBarContainer.transform;
+
+        //GameObject colorBar02 = colorScalarBar.CreateColorScalarBar(positions[1], "Skewness \n [" + centerSkewness.Round(3) + "]", colorBarValues, 1, ColorHelper.viridisGreenHue);
+        //colorBar02.transform.parent = colorScalarBarContainer.transform;
+
+        //GameObject colorBar03 = colorScalarBar.CreateColorScalarBar(positions[2], "[" + minMaxStatisticValues[1].Skewness.Round(3) + "]", colorBarValues, 1, ColorHelper.viridisYellowHue);
+        //colorBar03.transform.parent = colorScalarBarContainer.transform;
+
+        return colorScalarBarContainer;
     }
 
 }

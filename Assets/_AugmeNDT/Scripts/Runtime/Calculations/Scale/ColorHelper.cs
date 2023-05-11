@@ -12,6 +12,11 @@ public class ColorHelper
     // singleRedHue Range goes from light red to dark red
     public static Color[] singleRedHue = new[] { ReturnColorFromHex("#fee0d2"), ReturnColorFromHex("#fc9272"), ReturnColorFromHex("#de2d26") };
 
+    // Extended Virvidis going from darker to brighter
+    public static Color[] viridisYellowHue = new[] { ReturnColorFromHex("#cac16e"), ReturnColorFromHex("#e4d54f"), ReturnColorFromHex("#fde725") };
+    public static Color[] viridisGreenHue = new[] { ReturnColorFromHex("#3b5e5c"), ReturnColorFromHex("#337875"), ReturnColorFromHex("#21918c") };
+    public static Color[] viridisPurpleHue = new[] { ReturnColorFromHex("#440154"), ReturnColorFromHex("#5d176e"), ReturnColorFromHex("#773887") };
+
     public static Color[] blueHueValues = new[] { ReturnColorFromHex("#7BBCFF"), ReturnColorFromHex("#1387FF"), ReturnColorFromHex("#00458D") };
     public static Color[] yellowHueValues = new[] { ReturnColorFromHex("#FFDE70"), ReturnColorFromHex("#FFC500"), ReturnColorFromHex("#D9A700") };
     public static Color[] orangeHueValues = new[] { ReturnColorFromHex("#FFA070"), ReturnColorFromHex("#FF5600"), ReturnColorFromHex("#D94900") };
