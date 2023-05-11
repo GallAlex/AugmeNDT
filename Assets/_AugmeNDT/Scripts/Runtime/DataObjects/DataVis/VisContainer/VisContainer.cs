@@ -114,11 +114,9 @@ public class VisContainer
         dataGridList.Add(grid);
     }
 
-    public void CreateDataMarks(GameObject markPrefab)
+    public void CreateDataMarks(GameObject markPrefab, int[] pivotInCenter)
     {
         int numberOfMarks = channelValues.ElementAt(1).Value.Length;
-
-        Debug.Log("Number of Marks: " + numberOfMarks);
 
         for (int mark = 0; mark < numberOfMarks; mark++)
         {
@@ -128,12 +126,17 @@ public class VisContainer
 
             //Create Values
             DataMark.Channel channel = DataMark.DefaultDataChannel();
+            channel.pivotPointCenter = pivotInCenter;
             channel = GetDataMarkChannelValues(channel, mark);
 
             dataMark.CreateDataMark(dataMarkContainer.transform, channel);
             dataMarkList.Add(dataMark);
         }
     }
+
+    #endregion
+
+    #region Channels
 
     public void SetChannel(VisChannel visChannel, double[] dataValues)
     {
@@ -152,15 +155,16 @@ public class VisContainer
                 channelValues.Add(visChannel, dataValues);
                 break;
             case VisChannel.XSize:
-                channelScale.Add(visChannel, CreateSizeScale(dataValues, xyzOffset[(int)Direction.X]));
+                //channelScale.Add(visChannel, CreateSizeScale(dataValuesAxis, NEUE RANGE));
+                channelScale.Add(visChannel, CreateSizeScale(GetAxisScale(Direction.X).domain.ToArray(), xyzOffset[(int)Direction.X]));
                 channelValues.Add(visChannel, dataValues);
                 break;
             case VisChannel.YSize:
-                channelScale.Add(visChannel, CreateSizeScale(dataValues, xyzOffset[(int)Direction.Y]));
+                channelScale.Add(visChannel, CreateSizeScale(GetAxisScale(Direction.Y).domain.ToArray(), xyzOffset[(int)Direction.Y]));
                 channelValues.Add(visChannel, dataValues);
                 break;
             case VisChannel.ZSize:
-                channelScale.Add(visChannel, CreateSizeScale(dataValues, xyzOffset[(int)Direction.Z]));
+                channelScale.Add(visChannel, CreateSizeScale(GetAxisScale(Direction.Z).domain.ToArray(), xyzOffset[(int)Direction.Z]));
                 channelValues.Add(visChannel, dataValues);
                 break;
             case VisChannel.XRotation:
@@ -197,6 +201,7 @@ public class VisContainer
                     break;
                 case VisChannel.YPos:
                     channel.position.y = (float)channelScale[setChannel.Key].GetScaledValue(setChannel.Value[valueIndex]);
+                    Debug.Log("YPos: " + setChannel.Value[valueIndex] + ", drawn at: " + channel.position.y);
                     break;
                 case VisChannel.ZPos:
                     channel.position.z = (float)channelScale[setChannel.Key].GetScaledValue(setChannel.Value[valueIndex]);
@@ -220,7 +225,7 @@ public class VisContainer
                     channel.rotation.z = (float)channelScale[setChannel.Key].GetScaledValue(setChannel.Value[valueIndex]);
                     break;
                 case VisChannel.Color:
-                    if(specificColorsSet) channel.color = specificColorChannel[valueIndex];
+                    if (specificColorsSet) channel.color = specificColorChannel[valueIndex];
                     else channel.color = ScaleColor.GetInterpolatedColor(setChannel.Value[valueIndex], setChannel.Value.Min(), setChannel.Value.Max(), colorScheme);
                     break;
                 default:
@@ -231,7 +236,27 @@ public class VisContainer
         return channel;
     }
 
+    /// <summary>
+    /// The Method gathers information about all values set for the DataMarks and return their equivalent value sin the Dataset
+    /// </summary>
+    public void GatherDataMarkValueInformation(int dataMarkId)
+    {
+        string info = "DataMark " + dataMarkId + ":\n";
+
+        //Gather all set Channels
+        foreach (var setChannel in channelValues)
+        {
+            if(setChannel.Key == VisChannel.Color) break;
+            //string value = channelScale[setChannel.Key].GetDomainValueName(setChannel.Value[dataMarkId]);
+            double value = setChannel.Value[dataMarkId];
+            info += setChannel.Key + ": " + value + "\n";
+        }
+
+        Debug.Log(info);
+    }
+
     #endregion
+
 
     #region CHANGE OF ELEMENTS
 
@@ -518,8 +543,11 @@ public class VisContainer
 
         List<double> domain = new List<double>(2)
         {
+            // NOT DATAVALUES USE MIN/MAX Domain OF AXIS
             dataValues.Min(),
             dataValues.Max()
+            //0,
+            //1
         };
 
         Scale scaleFunction = new ScaleLinear(domain, range);

@@ -23,6 +23,12 @@ public class ScaleColor
 
         double ratio = (value - minValue) / (maxValue - minValue);
 
+        if (double.IsNaN(ratio))
+        {
+            Debug.LogError("Calculation yielded NaN: Check Results");
+            ratio = 0;
+        }
+
         if (range.Length > 2)
         {
             int colorIndex = Convert.ToInt32(ratio * (range.Length - 1));
@@ -47,6 +53,11 @@ public class ScaleColor
     {
 
         double ratio = (value - minValue) / (maxValue - minValue);
+        if (double.IsNaN(ratio))
+        {
+            Debug.LogError("Calculation yielded NaN: Check Results");
+            ratio = 0;
+        }
         int colorIndex = Convert.ToInt32(ratio * (range.Length - 1));
 
         // clamp the color index to ensure it's within range

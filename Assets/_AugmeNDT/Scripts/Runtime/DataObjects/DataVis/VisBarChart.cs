@@ -2,6 +2,7 @@ using Microsoft.MixedReality.Toolkit.UI.BoundsControl;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using MathNet.Numerics;
 using Microsoft.MixedReality.Toolkit;
 using UnityEngine;
 using static UnityEngine.Rendering.DebugUI;
@@ -37,12 +38,24 @@ public class VisBarChart : Vis
         visContainer.SetChannel(VisChannel.XPos, dataSets[0].ElementAt(0).Value);
         visContainer.SetChannel(VisChannel.YSize, dataSets[0].ElementAt(1).Value);
         if (axes == 3) visContainer.SetChannel(VisChannel.ZPos, dataSets[0].ElementAt(2).Value);
+
         visContainer.SetChannel(VisChannel.Color, dataSets[0].ElementAt(3).Value);
 
         //## 03: Draw all Data Points with the provided Channels 
-        visContainer.CreateDataMarks(dataMarkPrefab);
+        visContainer.CreateDataMarks(dataMarkPrefab, new[] { 0, 1, 0 });
 
-        //## 04: Rescale Chart
+        //## 04: Create Color Scalar Bar
+        GameObject colorScalarBarContainer = new GameObject("Color Scale");
+        colorScalarBarContainer.transform.parent = visContainerObject.transform;
+
+        ColorScalarBar colorScalarBar = new ColorScalarBar();
+
+        double[] minMaxColorVal = new[]
+            { dataSets[0].ElementAt(3).Value.Min().Round(3), dataSets[0].ElementAt(3).Value.Max().Round(3) };
+        GameObject colorBar01 = colorScalarBar.CreateColorScalarBar(visContainerObject.transform.position, dataSets[0].ElementAt(3).Key, minMaxColorVal, 1, colorScheme);
+        colorBar01.transform.parent = colorScalarBarContainer.transform;
+
+        //## 05: Rescale Chart
         visContainerObject.transform.localScale = new Vector3(width, height, depth);
 
         return visContainerObject;

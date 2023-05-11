@@ -11,9 +11,10 @@ public class DataMark
     
     public struct Channel
     {
+        public int[] pivotPointCenter;   // Is the x,y,z center of the object the pivot point?
         public Vector3 position;
         public Vector3 rotation;
-        public Vector3 size; // width, height, depth;
+        public Vector3 size;            // width, height, depth;
         public Vector3 facing;
         public Vector4 color;
 
@@ -66,12 +67,12 @@ public class DataMark
     {
         DataMark.Channel channel = new DataMark.Channel
         {
+            pivotPointCenter = new int[]{1, 1, 1},
             position = new Vector3(0, 0, 0),
             rotation = new Vector3(0, 0, 0),
+            size = new Vector3(0.03f, 0.03f, 0.03f),
             facing = new Vector3(0, 0, -1),
-            color = new Vector4(1, 0, 0, 1),
-            //Todo: Size?
-            size = new Vector3(0.03f, 0.03f, 0.03f)
+            color = new Vector4(1, 0, 0, 1)
         };
 
         return channel;
@@ -147,10 +148,17 @@ public class DataMark
         dataChannel.size = size;
         dataMarkInstance.transform.localScale = dataChannel.size;
 
-        //Pivot is in Center of Object
-        float adjustedHeight = dataChannel.size.y / 2.0f;
-        //dataMarkInstance.transform.Translate(0, adjustedHeight, 0); // Somehow doubles the translation value
-        dataMarkInstance.transform.localPosition = new Vector3(dataChannel.position.x, dataChannel.position.y + adjustedHeight, dataChannel.position.z);
+        //If Pivot is not in Center of Object but at left front bottom corner
+        Vector3 newPos = size;
+
+        if (dataChannel.pivotPointCenter[0] == 1)
+            newPos = new Vector3(dataChannel.position.x + dataChannel.size.x / 2.0f, dataChannel.position.y, dataChannel.position.z);
+        if (dataChannel.pivotPointCenter[1] == 1)
+            newPos = new Vector3(dataChannel.position.x, dataChannel.position.y + dataChannel.size.y / 2.0f, dataChannel.position.z);
+        if (dataChannel.pivotPointCenter[2] == 1)
+            newPos = new Vector3(dataChannel.position.x, dataChannel.position.y, dataChannel.position.z + dataChannel.size.z / 2.0f);
+
+        dataMarkInstance.transform.localPosition = newPos;
     }
 
     public void SetColor(Vector4 color)

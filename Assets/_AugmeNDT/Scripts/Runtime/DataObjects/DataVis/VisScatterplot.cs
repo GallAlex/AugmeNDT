@@ -39,10 +39,13 @@ public class VisScatterplot : Vis
         visContainer.SetChannel(VisChannel.Color, dataSets[0].ElementAt(3).Value);
 
         //## 03: Draw all Data Points with the provided Channels 
-        visContainer.CreateDataMarks(dataMarkPrefab);
+        visContainer.CreateDataMarks(dataMarkPrefab, new []{0,0,0});
 
         //## 04: Rescale Chart
         visContainerObject.transform.localScale = new Vector3(width, height, depth);
+
+        visContainer.GatherDataMarkValueInformation(0);
+        visContainer.GatherDataMarkValueInformation(1);
 
         return visContainerObject;
     }
