@@ -4,6 +4,7 @@ using System.Text;
 using UnityEngine;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using AugmeNDT;
 
 #if !UNITY_EDITOR && UNITY_WSA_10_0
 using Windows.Storage;
@@ -37,7 +38,7 @@ public abstract class FileLoader
     public PolyFiberData polyFiberDataset;
 
     /*abstract csv data*/
-    public Dictionary<string, double[]> abstractDataset;
+    public AbstractDataset abstractDataset;
 
 
     public abstract Task LoadData(string filePath);

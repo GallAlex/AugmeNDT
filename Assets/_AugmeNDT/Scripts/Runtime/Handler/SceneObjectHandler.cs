@@ -42,6 +42,7 @@ public class SceneObjectHandler : MonoBehaviour
 
     void Update()
     {
+        
         //Move to individual vis Object(monobehaviour ?)
         if (dataVisGroups.Count > 0)
         {
@@ -50,6 +51,7 @@ public class SceneObjectHandler : MonoBehaviour
                 group.AlignGridPositions();
             }
         }
+        
     }
 
     /// <summary>
@@ -69,15 +71,23 @@ public class SceneObjectHandler : MonoBehaviour
     {
         // Start async Loadings
         string filePath = await fileLoadingManager.StartPicker();
+        
         // If file loading failed
         if (filePath == "")
         {
             return null;
         }
-        await fileLoadingManager.LoadDataset();
-        
+
+        Debug.Log("Filepath found is: " + filePath);
+
+        bool loadingSucceded = await fileLoadingManager.LoadDataset();
+
         //## Wait for Loadings to finish ##
-        
+        if (!loadingSucceded)
+        {
+            Debug.LogError("Loading aborted!");
+        }
+
         // Add Group
         dataVisGroups.Add(fileLoadingManager.GetDataVisGroup());
         int lastIndex = dataVisGroups.Count - 1;
@@ -160,6 +170,17 @@ public class SceneObjectHandler : MonoBehaviour
     //#####################     VIS CHART METHODS   #####################
 
     /// <summary>
+    /// Returns the amount of attributes the Abstract of the selected group
+    /// </summary>
+    /// <param name="selectedGroup"></param>
+    /// <returns></returns>
+    public int GetAttributeCount(int selectedGroup)
+    {
+        //Todo:
+        return 0;
+    }
+
+    /// <summary>
     /// Adds a new abstract visualization object to the selected group and renders it
     /// </summary>
     /// <param name="selectedGroup"></param>
@@ -167,6 +188,18 @@ public class SceneObjectHandler : MonoBehaviour
     public void AddAbstractVisObject(int selectedGroup, VisType visType)
     {
         dataVisGroups[selectedGroup].RenderAbstractVisObject(visType);
+        //Arrange Vis objects
+        dataVisGroups[selectedGroup].ArrangeObjectsSpatially();
+    }
+
+    /// <summary>
+    /// Adds a new abstract visualization object to the selected group and renders it
+    /// </summary>
+    /// <param name="selectedGroup"></param>
+    /// <param name="visType"></param>
+    public void AddAbstractVisObject(int selectedGroup, VisType visType, int[] visualizedAttributes)
+    {
+        dataVisGroups[selectedGroup].RenderAbstractVisObject(visType, visualizedAttributes);
         //Arrange Vis objects
         dataVisGroups[selectedGroup].ArrangeObjectsSpatially();
     }
@@ -182,7 +215,8 @@ public class SceneObjectHandler : MonoBehaviour
 
         foreach (var group in multiGroups)
         {
-            vis.AppendData(group.Value.GetPolyData().ExportForDataVis());
+            //vis.AppendData(group.Value.GetPolyData().ExportForDataVis());
+            vis.AppendData(group.Value.GetAbstractCsvData());
         }
 
         vis.CreateVis(new GameObject("MultiGroupVis"));

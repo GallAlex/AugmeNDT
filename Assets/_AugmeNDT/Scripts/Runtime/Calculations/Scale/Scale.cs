@@ -36,6 +36,11 @@ public class Scale
 
         this.domain = domain;
         this.range = range;
+
+        if ((this.domain[1] - this.domain[0]) == 0.0d || (this.range[1] - this.range[0]) == 0.0d)
+        {
+            Debug.LogWarning("Min/Max of domain or range are equal!");
+        }
     }
 
     /// <summary>
@@ -53,6 +58,11 @@ public class Scale
 
         this.domain = domain;
         this.range = new List<double> { 0.0f, 1.0f };
+
+        if ((this.domain[1] - this.domain[0]) == 0.0d || (this.range[1] - this.range[0]) == 0.0d)
+        {
+            Debug.LogWarning("Min/Max of domain or range are equal!");
+        }
     }
 
     /// <summary>

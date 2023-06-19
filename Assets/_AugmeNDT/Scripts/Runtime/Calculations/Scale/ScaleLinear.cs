@@ -41,7 +41,7 @@ public class ScaleLinear : Scale
 
         if (domainRange == 0.0d || newRange == 0.0d)
         {
-            Debug.LogWarning("Min/Max of domain or range are equal!");
+            //Debug.LogWarning("Min/Max of domain or range are equal!");
             return 0.0d;
         }
 
@@ -55,7 +55,7 @@ public class ScaleLinear : Scale
 
         if (scaledRange == 0.0d || newDomain == 0.0d)
         {
-            Debug.LogWarning("Min/Max of domain or range are equal!");
+            //Debug.LogWarning("Min/Max of domain or range are equal!");
             return 0.0d;
         }
 

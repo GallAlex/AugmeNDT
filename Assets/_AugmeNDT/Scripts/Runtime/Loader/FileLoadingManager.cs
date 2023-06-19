@@ -38,7 +38,7 @@ public class FileLoadingManager
     #endregion
 
 
-    public async Task LoadDataset()
+    public async Task<bool> LoadDataset()
     {
         try
         {
@@ -46,7 +46,7 @@ public class FileLoadingManager
             {
                 filePath = "No Data";
                 Debug.LogError("Failed to import dataset");
-                return;
+                return false;
             }
 
             //fileName = Path.GetFileNameWithoutExtension(filePath);
@@ -67,14 +67,16 @@ public class FileLoadingManager
                     loadingSucceded = true;
                     break;
                 case FileExtension.DICOM:
+                    loadingSucceded = false;
                     throw new NotImplementedException(fileTyp.ToString() + " extension is currently not supported");
                 case FileExtension.Unknown:
+                    loadingSucceded = false;
                     throw new NotImplementedException(fileTyp.ToString() + " extension is currently not supported");
                 default:
-                    return;
+                    return false;
             }
 
-            if (!loadingSucceded) return;
+            if (!loadingSucceded) return false;
 
             Debug.Log("LoadData...");
             await Task.Run(() => loaderFactory.LoadData(filePath));
@@ -92,6 +94,7 @@ public class FileLoadingManager
             Debug.LogError(ex);
         }
 
+        return loadingSucceded;
     }
 
     /// <summary>

@@ -1,7 +1,7 @@
-using Microsoft.MixedReality.Toolkit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AugmeNDT;
 using UnityEngine;
 
 /// <summary>
@@ -10,7 +10,9 @@ using UnityEngine;
 public enum VisType
 {
     BarChart,
+    Histogram,
     Scatterplot,
+    TimeScatter,
     MDDGlyphs,
     NumberOfVisTypes,
 }
@@ -46,15 +48,14 @@ public class Vis
     public GameObject tickMarkPrefab;
 
     // Data
-    public List<Dictionary<string, double[]>> dataSets;         // List of Datasets as Dictionaries with all data attributes with their <name,values>. Dictionaries should all have the same attributes
-    public int dimensions = 0;                                  // Number of attributes retrieved from the dataValues.
+    public List<AbstractDataset> dataSets;                      // List of Datasets as Dictionaries with all data attributes with their <name,values>. Dictionaries should all have the same attributes
+    public int attributeCount = 0;                              // Number of attributes retrieved from the dataValues.
     public List<int> numberOfValues;                            // Number of values for each attribut from the dataValues.
 
     // Visualization Properties:
     public string title = "Basic Euclidean Vis";                // Title of vis.
     public int axes = 3;                                        // Amount of Axes for Vis container
-    public List<int> encodedAttribute;                          // Cross-reference which encoding (Axes, Color,..) uses which attribute of the data
-    //TODO: Enum whith possible encoding needed
+    public Dictionary<VisChannel, double[]> channelEncoding;         // Cross-reference which encoding (Axes, Color,..) uses which attribute (id) of the data
 
     public List<Scale.DataScaleType> dataScaleTypes;            // Applied scaling for dataValues domain of respective encoding
     public float width = 0.25f;                                 // Vis container width in centimeters.
@@ -68,7 +69,10 @@ public class Vis
     public VisInteractor visInteractor;                         // Interactor for the Vis    
     private DataVisGroup dataVisGroup;                          // Reference to DataVisGroup
 
-    
+    //TODO: visualizedAttributes should be encodedAttribute and uses ChannelValues
+    public int[] visualizedAttributes = new[]{0, 1, 2};// Each index represents the attribute which is visualized on the respective axis (if possible)
+
+
     public virtual void InitVisParams(string visTitle, int numberOfAxes, List<Scale.DataScaleType> dataScales, float width, float height, float depth, float[] xyzOffset)
     {
         title = visTitle;
@@ -98,33 +102,56 @@ public class Vis
         return dataVisGroup;
     }
 
+    /// <summary>
+    /// Sets a specific attribute from the dataset to a specific channel
+    /// </summary>
+    /// <param name="visChannel"></param>
+    /// <param name="attributeId"></param>
+    public void SetChannelEncoding(VisChannel visChannel, int attributeId)
+    {
+        channelEncoding.Add(visChannel, dataSets[0].GetValues(attributeId));
+    }
+
+    public void SetChannelEncoding(VisChannel visChannel, double[] data)
+    {
+        channelEncoding.Add(visChannel, data);
+    }
+
     public virtual GameObject CreateVis(GameObject container)
     {
         //TODO: Move into Constructor?
-
         visContainer = new VisContainer();
-        
         visContainerObject = visContainer.CreateVisContainer(title);
         visContainerObject.transform.SetParent(container.transform);
-
-        encodedAttribute = new List<int>();
 
         visContainer.SetAxisOffsets(xyzOffset);
         visContainer.SetAxisTickNumber(xyzTicks);
         visContainer.SetColorScheme(colorScheme);
         visContainer.SetVisInteractor(visInteractor);
 
-        if (dimensions < axes) axes = dimensions;
+        //Set Default Index
+        if (channelEncoding== null || channelEncoding.Count == 0)
+        {
+            channelEncoding = new Dictionary<VisChannel, double[]>();
+
+            SetChannelEncoding(VisChannel.XPos, 0);
+            SetChannelEncoding(VisChannel.YPos, 1);
+            SetChannelEncoding(VisChannel.ZPos, 2);
+        }
+
+        if (attributeCount < axes) axes = attributeCount;
 
         return visContainerObject;
     }
 
-    public virtual void AppendData(Dictionary<string, double[]> values)
+    public virtual void AppendData(AbstractDataset abstractDataset)
     {
+        var values = abstractDataset.GetNumericDic();
+
         //Todo: Move initialize?
         if (dataSets == null)
         {
-            dataSets = new List<Dictionary<string, double[]>>();
+            dataSets = new List<AbstractDataset>();
             numberOfValues = new List<int>();
         }
 
@@ -134,23 +161,23 @@ public class Vis
             Debug.LogError("Appended Data is incorrect (insufficient dimensions, missing values, ...)");
             return;
         }
-        dimensions = values.Count;
+        attributeCount = values.Count;
 
         //Check other data sets if they have the same amount of attributes
         if (dataSets.Count > 0)
         {
-            if (values.Count != dimensions)
+            if (values.Count != attributeCount)
             {
                 Debug.LogError("Number of data attributes do not match with other loaded datasets (Missing Attributes!)");
                 return;
             }
         }
 
-        dataSets.Add(values);
+        dataSets.Add(abstractDataset);
         numberOfValues.Add(values.ElementAt(0).Value.Length);
 
         // Test if every attribute has the same amount of values
-        for (int dim = 0; dim < dimensions; dim++)
+        for (int dim = 0; dim < attributeCount; dim++)
         {
             var currentValueCount = values.ElementAt(dim).Value.Length;
 
@@ -166,14 +193,15 @@ public class Vis
 
     }
 
-    public virtual List<Dictionary<string, double[]>> GetAppendedData()
+    public virtual List<AbstractDataset> GetAppendedData()
     {
         return dataSets;
     }
 
-    public virtual void CreateDataScales()
+    public virtual void CreateColorLegend(GameObject legend)
     {
-
+        if (legend == null) Debug.LogError("No Legend GameObject created!");
+        else visContainer.CreateColorLegend(legend);
     }
 
     public virtual void ChangeAxisAttribute(int axisId, int selectedDimension, int numberOfTicks)
@@ -213,8 +241,12 @@ public class Vis
             default:
             case VisType.BarChart:
                 return new VisBarChart();
+            case VisType.Histogram:
+                return new VisHistogram();
             case VisType.Scatterplot:
                 return new VisScatterplot();
+            case VisType.TimeScatter:              
+                return new VisTimeScatter();
             case VisType.MDDGlyphs:
                 return new VisMDDGlyphs();
         }

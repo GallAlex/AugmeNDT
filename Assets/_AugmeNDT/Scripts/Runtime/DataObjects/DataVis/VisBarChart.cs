@@ -28,21 +28,21 @@ public class VisBarChart : Vis
 
         for (int currAxis = 0; currAxis < axes; currAxis++)
         {
-            encodedAttribute.Add(currAxis);
+            //encodedAttribute.Add(currAxis);
             int nextDim = (currAxis + 1) % axes;
-            visContainer.CreateAxis(dataSets[0].ElementAt(currAxis).Key, dataSets[0].ElementAt(currAxis).Value, (Direction)currAxis);
+            visContainer.CreateAxis(dataSets[0].GetAttributeName(currAxis), dataSets[0].GetValues(currAxis), (Direction)currAxis);
             visContainer.CreateGrid((Direction)currAxis, (Direction)nextDim);
         }
 
         //## 02: Set Remaining Vis Channels (Color,...)
-        visContainer.SetChannel(VisChannel.XPos, dataSets[0].ElementAt(0).Value);
-        visContainer.SetChannel(VisChannel.YSize, dataSets[0].ElementAt(1).Value);
-        if (axes == 3) visContainer.SetChannel(VisChannel.ZPos, dataSets[0].ElementAt(2).Value);
+        visContainer.SetChannel(VisChannel.XPos, dataSets[0].GetValues(0));
+        visContainer.SetChannel(VisChannel.YSize, dataSets[0].GetValues(1));
+        if (axes == 3) visContainer.SetChannel(VisChannel.ZPos, dataSets[0].GetValues(2));
 
-        visContainer.SetChannel(VisChannel.Color, dataSets[0].ElementAt(3).Value);
+        visContainer.SetChannel(VisChannel.Color, dataSets[0].GetValues(3));
 
         //## 03: Draw all Data Points with the provided Channels 
-        visContainer.CreateDataMarks(dataMarkPrefab, new[] { 0, 1, 0 });
+        visContainer.CreateDataMarks(dataMarkPrefab, new[] { 1, 0, 1 });
 
         //## 04: Create Color Scalar Bar
         GameObject colorScalarBarContainer = new GameObject("Color Scale");
@@ -51,8 +51,8 @@ public class VisBarChart : Vis
         ColorScalarBar colorScalarBar = new ColorScalarBar();
 
         double[] minMaxColorVal = new[]
-            { dataSets[0].ElementAt(3).Value.Min().Round(3), dataSets[0].ElementAt(3).Value.Max().Round(3) };
-        GameObject colorBar01 = colorScalarBar.CreateColorScalarBar(visContainerObject.transform.position, dataSets[0].ElementAt(3).Key, minMaxColorVal, 1, colorScheme);
+            { dataSets[0].GetValues(3).Min().Round(3), dataSets[0].GetValues(3).Max().Round(3) };
+        GameObject colorBar01 = colorScalarBar.CreateColorScalarBar(visContainerObject.transform.position, dataSets[0].GetAttributeName(3), minMaxColorVal, 1, colorScheme);
         colorBar01.transform.parent = colorScalarBarContainer.transform;
 
         //## 05: Rescale Chart

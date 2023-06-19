@@ -1,6 +1,7 @@
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System;
 using System.Collections.Generic;
+using AugmeNDT;
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -27,7 +28,7 @@ public class DataVisGroup
     // Dataset for spatial Polygons consiting of Fibers (derived from csv files)
     private PolyFiberData polyData;
 
-    private Dictionary<string, double[]> csvAbstractData;
+    private AbstractDataset csvAbstractData;
 
     #endregion
 
@@ -121,6 +122,7 @@ public class DataVisGroup
     public void SetPolyData(PolyFiberData data)
     {
         polyData = data;
+        csvAbstractData = data.ExportForDataVis();
         hasAbstractDataset = true;
         hasPolygonalDataset = true;
     }
@@ -142,7 +144,7 @@ public class DataVisGroup
     /// Stores the csv data used in abstract visualizations
     /// </summary>
     /// <param name="data"></param>
-    public void SetAbstractCsvData(Dictionary<string, double[]> data)
+    public void SetAbstractCsvData(AbstractDataset data)
     {
         csvAbstractData = data;
         hasAbstractDataset = true;
@@ -151,7 +153,7 @@ public class DataVisGroup
     /// <summary>
     /// Gets the stored csv data used in abstract visualizations
     /// </summary>
-    public Dictionary<string, double[]> GetAbstractCsvData()
+    public AbstractDataset GetAbstractCsvData()
     {
         if (hasAbstractDataset && csvAbstractData != null)
         {
@@ -210,7 +212,7 @@ public class DataVisGroup
     }
 
     /// <summary>
-    /// Renders Abstract Visualization Objects from csv files
+    /// Renders Abstract Visualization Objects from csv files with default values
     /// </summary>
     public void RenderAbstractVisObject(VisType visType)
     {
@@ -226,6 +228,28 @@ public class DataVisGroup
         visualizations.Add(vis);
 
         vis.AppendData(csvAbstractData);
+        vis.SetDataVisGroup(this);
+        vis.CreateVis(dataVisGroupContainer);
+    }
+
+    /// <summary>
+    /// Renders Abstract Visualization Objects from csv files with selected attributes
+    /// </summary>
+    public void RenderAbstractVisObject(VisType visType, int[] visualizedAttributes)
+    {
+        if (!hasAbstractDataset || csvAbstractData == null)
+        {
+            Debug.LogError("Error with abstract vis data");
+            return;
+        }
+
+        Debug.Log("Render Abstract Vis Object");
+
+        Vis vis = Vis.GetSpecificVisType(visType);
+        visualizations.Add(vis);
+
+        vis.AppendData(csvAbstractData);
+        
         vis.SetDataVisGroup(this);
         vis.CreateVis(dataVisGroupContainer);
     }
@@ -279,6 +303,11 @@ public class DataVisGroup
     }
 
     //#####################     VIS CHART METHODS   #####################
+
+    public void SetVisualizedAttribute(int selectedGroup, int[] visualizedAttribute)
+    {
+        
+    }
 
     public void ChangeAxis(int selectedVis, int axisID, int selectedDimension, int numberOfTicks)
     {

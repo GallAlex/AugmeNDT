@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using AugmeNDT;
 using UnityEngine;
 
 public class CsvFileType : FileType
@@ -10,6 +12,8 @@ public class CsvFileType : FileType
 
     //Stores for every dimension (i.e., attributes or header names) an array of its values
     private Dictionary<string, double[]> dataSet;
+
+    private AbstractDataset abstractDataset;
 
     private int dimensions = 0;
 
@@ -40,17 +44,18 @@ public class CsvFileType : FileType
         this.csvValues = csvValues;
     }
 
-    public Dictionary<string, double[]> GetDataSet()
+    public AbstractDataset GetDataSet()
     {
-        if (dataSet != null)
+        if (abstractDataset != null)
         {
-            return dataSet;
-        }
-        else
-        {
-            return ParseCsvFileAsDouble();
+            return abstractDataset;
         }
 
+        // Parse File
+        var parsedFile = ParseCsvFileAsDouble();
+
+        // Build Abstract Dataset
+        return new AbstractDataset(parsedFile.Keys.ToList(), parsedFile);
     }
 
     /// <summary>
