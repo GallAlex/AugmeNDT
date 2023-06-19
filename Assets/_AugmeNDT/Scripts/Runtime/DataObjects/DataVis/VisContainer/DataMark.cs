@@ -21,14 +21,15 @@ public class DataMark
     }
 
     public bool selected = false;
+    public Channel dataChannel;
 
-    private Channel dataChannel;
-    
+    private const float minSize = 0.0000001f; // Minimum size of the data mark for drawing
+
     [SerializeField]
     private GameObject dataMarkPrefab;
     private GameObject dataMarkInstance;
     private MeshRenderer meshRenderer;
-
+    
 
     // Interactor
     private VisInteractor visInteractor;
@@ -104,6 +105,8 @@ public class DataMark
             dataMarkInteractable.DisableInteraction(); // Disable Interaction
         }
 
+        SetPivotPointCenter(dataChannel.pivotPointCenter);
+        SetPos(dataChannel.position);
         SetColor(dataChannel.color);
         SetSize(dataChannel.size);
         SetRot(dataChannel.rotation);
@@ -123,6 +126,11 @@ public class DataMark
         //SetFacing(channel.facing);
         SetRot(channel.rotation);
         SetColor(channel.color);
+    }
+
+    public void SetPivotPointCenter(int[] pivotPointCenter)
+    {
+        dataChannel.pivotPointCenter = pivotPointCenter;
     }
 
     public void SetPos(Vector3 position)
@@ -146,17 +154,30 @@ public class DataMark
     public void SetSize(Vector3 size)
     {
         dataChannel.size = size;
-        dataMarkInstance.transform.localScale = dataChannel.size;
+
+        // We change the size of the object to a minimum size if it is smaller than the minimum drawable size but keep the dataChannel.size to it original value
+        Vector3 newSize = size;
+        // Based on the Pivot Point we have to change the position of the object (based on its size)
+        Vector3 newPos = dataChannel.position;
+
+        //For each size check if bigger or equal to min size
+        if (newSize.x < minSize) newSize.x = minSize;
+        if (newSize.y < minSize) newSize.y = minSize;
+        if (newSize.z < minSize) newSize.z = minSize;
+
+        // Draw with min size scaling
+        dataMarkInstance.transform.localScale = newSize;
+
 
         //If Pivot is not in Center of Object but at left front bottom corner
-        Vector3 newPos = size;
-
-        if (dataChannel.pivotPointCenter[0] == 1)
-            newPos = new Vector3(dataChannel.position.x + dataChannel.size.x / 2.0f, dataChannel.position.y, dataChannel.position.z);
-        if (dataChannel.pivotPointCenter[1] == 1)
-            newPos = new Vector3(dataChannel.position.x, dataChannel.position.y + dataChannel.size.y / 2.0f, dataChannel.position.z);
-        if (dataChannel.pivotPointCenter[2] == 1)
-            newPos = new Vector3(dataChannel.position.x, dataChannel.position.y, dataChannel.position.z + dataChannel.size.z / 2.0f);
+        if (dataChannel.pivotPointCenter[0] == 0)
+            newPos = new Vector3(newPos.x + newSize.x / 2.0f, newPos.y, newPos.z);
+        if (dataChannel.pivotPointCenter[1] == 0)
+        {
+            newPos = new Vector3(newPos.x, newPos.y + newSize.y / 2.0f, newPos.z);
+        }
+        if (dataChannel.pivotPointCenter[2] == 0)
+            newPos = new Vector3(newPos.x, newPos.y, newPos.z + newSize.z / 2.0f);
 
         dataMarkInstance.transform.localPosition = newPos;
     }

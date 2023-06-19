@@ -86,8 +86,14 @@ public class SceneUIHandler : MonoBehaviour
 
     public void CreateVisualization()
     {
-        sceneObjectHandler.AddAbstractVisObject(0,VisType.BarChart);
-        sceneObjectHandler.AddAbstractVisObject(0, VisType.Scatterplot);
+        sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, new[] { 0 });
+        sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, new[] { 1 });
+        sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, new[] { 2 });
+        sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, new[] { 3 });
+        sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, new[] { 4 });
+        sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, new[] { 5 });
+        sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, new[] { 6 });
+        sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, new[] { 7 });
     }
 
     public void ChangeVisTicks()

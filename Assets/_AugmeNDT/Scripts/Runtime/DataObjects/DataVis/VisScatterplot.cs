@@ -21,31 +21,34 @@ public class VisScatterplot : Vis
         //## 01:  Create Axes and Grids
 
         // X Axis
-        visContainer.CreateAxis(dataSets[0].ElementAt(0).Key, dataSets[0].ElementAt(0).Value, Direction.X);
+        visContainer.CreateAxis(dataSets[0].GetAttributeName(0), dataSets[0].GetValues(0), Direction.X);
         visContainer.CreateGrid(Direction.X, Direction.Y);
 
         // Y Axis
-        visContainer.CreateAxis(dataSets[0].ElementAt(1).Key, dataSets[0].ElementAt(1).Value, Direction.Y);
+        visContainer.CreateAxis(dataSets[0].GetAttributeName(1), dataSets[0].GetValues(1), Direction.Y);
 
         // Z Axis
-        visContainer.CreateAxis(dataSets[0].ElementAt(2).Key, dataSets[0].ElementAt(2).Value, Direction.Z);
-        visContainer.CreateGrid(Direction.Y, Direction.Z);
-        visContainer.CreateGrid(Direction.Z, Direction.X);
+        if (axes == 3)
+        {
+            visContainer.CreateAxis(dataSets[0].GetAttributeName(2), dataSets[0].GetValues(2), Direction.Z);
+            visContainer.CreateGrid(Direction.Y, Direction.Z);
+            visContainer.CreateGrid(Direction.Z, Direction.X);
+        }
 
         //## 02: Set Remaining Vis Channels (Color,...)
-        visContainer.SetChannel(VisChannel.XPos, dataSets[0].ElementAt(0).Value);
-        visContainer.SetChannel(VisChannel.YPos, dataSets[0].ElementAt(1).Value);
-        visContainer.SetChannel(VisChannel.ZPos, dataSets[0].ElementAt(2).Value);
-        visContainer.SetChannel(VisChannel.Color, dataSets[0].ElementAt(3).Value);
+        visContainer.SetChannel(VisChannel.XPos, dataSets[0].GetValues(0));
+        visContainer.SetChannel(VisChannel.YPos, dataSets[0].GetValues(1));
+        if (axes == 3) visContainer.SetChannel(VisChannel.ZPos, dataSets[0].GetValues(2));
+        visContainer.SetChannel(VisChannel.Color, dataSets[0].GetValues(3));
 
         //## 03: Draw all Data Points with the provided Channels 
-        visContainer.CreateDataMarks(dataMarkPrefab, new []{0,0,0});
+        visContainer.CreateDataMarks(dataMarkPrefab, new []{1,1,1});
 
         //## 04: Rescale Chart
         visContainerObject.transform.localScale = new Vector3(width, height, depth);
 
-        visContainer.GatherDataMarkValueInformation(0);
-        visContainer.GatherDataMarkValueInformation(1);
+        //visContainer.GatherDataMarkValueInformation(0);
+        //visContainer.GatherDataMarkValueInformation(1);
 
         return visContainerObject;
     }

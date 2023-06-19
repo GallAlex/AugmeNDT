@@ -7,17 +7,20 @@ using UnityEngine;
 /// </summary>
 public class VisContainer
 {
-    public GameObject containerPrefab;
+    public GameObject anchoredContainerPrefab;
+    public GameObject anchoredContainer;
     public GameObject visContainer;
     public GameObject axisContainer;
     public GameObject gridContainer;
     public GameObject dataMarkContainer;
+    public GameObject colorLegendContainer;
+    public GameObject dataMarkAxisLineContainer;
 
-    
     // Main Container Elements
-    public List<DataAxis> dataAxisList;     // Axes with Ticks
-    public List<DataGrid> dataGridList;     // Grids
-    public List<DataMark> dataMarkList;     // Data Marks
+    public List<DataAxis> dataAxisList;         // Axes with Ticks
+    public List<DataGrid> dataGridList;         // Grids
+    public List<DataMark> dataMarkList;         // Data Marks
+    public List<DataMarkAxisLine> dataMarkAxisLineList; // Lines between Data Mark and Axis
 
     // DataValues
     public Dictionary<VisChannel, double[]> channelValues;  // Data Values for each Channel
@@ -28,9 +31,7 @@ public class VisContainer
     // Interactor
     private VisInteractor visInteractor;
 
-    private const float axisMeshLength = 1.0f;
     private Bounds containerBounds;            // Width, Height, Length of the Container
-    private bool boundsControl = true;
     private float[] xyzOffset;
     private int[] xyzTicks;
     private Color[] colorScheme;
@@ -39,30 +40,51 @@ public class VisContainer
 
     public GameObject CreateVisContainer(string visName)
     {
+        // Define Container Bounds
+        containerBounds.center = new Vector3(0.5f, 0.5f, 0.5f);
+        containerBounds.size = new Vector3(1f, 1f, 1f);
+
+        // Initialize Lists
         dataAxisList = new List<DataAxis>();
         dataGridList = new List<DataGrid>();
         dataMarkList = new List<DataMark>();
+        dataMarkAxisLineList = new List<DataMarkAxisLine>();
 
         channelValues = new Dictionary<VisChannel, double[]>();
         channelScale = new Dictionary<VisChannel, Scale>();
 
-        containerPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/DataVisContainer");
-        visContainer = GameObject.Instantiate(containerPrefab, containerPrefab.transform.position, Quaternion.identity);
-        visContainer.name = visName;
+        anchoredContainerPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/AnchoredContainer");
+        anchoredContainer = GameObject.Instantiate(anchoredContainerPrefab, anchoredContainerPrefab.transform.position, Quaternion.identity);
+        anchoredContainer.name = visName;
+
+        //Create Hierarchy (Empty GameObjects)
+        visContainer = new GameObject("VisContainer");
+        colorLegendContainer = new GameObject("Color Legend");
 
         axisContainer = new GameObject("Axes");
         gridContainer = new GameObject("Grids");
         dataMarkContainer = new GameObject("Data Marks");
+        dataMarkAxisLineContainer = new GameObject("Data Marks Axis Line");
 
         //Add Childs
+        visContainer.transform.parent = anchoredContainer.transform;
+        colorLegendContainer.transform.parent = anchoredContainer.transform;
+
         axisContainer.transform.parent = visContainer.transform;
         gridContainer.transform.parent = visContainer.transform;
         dataMarkContainer.transform.parent = visContainer.transform;
+        dataMarkAxisLineContainer.transform.parent = visContainer.transform;
 
-        //Set the basic container size by using the visContainer
-        containerBounds = visContainer.GetComponent<BoxCollider>().bounds;
-  
-        return visContainer;
+        return anchoredContainer;
+    }
+
+    /// <summary>
+    /// Removes the Handle of the Anchored Container
+    /// </summary>
+    public void RemoveContainerHandle()
+    {
+        GameObject handle = anchoredContainer.transform.Find("Handle").gameObject;
+        GameObject.Destroy(handle);
     }
 
     /// <summary>
@@ -134,6 +156,29 @@ public class VisContainer
         }
     }
 
+    /// <summary>
+    /// Adds the given color legend as gameobject to the colorLegendContainer.
+    /// </summary>
+    /// <param name="legend"></param>
+    public virtual void CreateColorLegend(GameObject legend)
+    {
+        legend.transform.parent = colorLegendContainer.transform;
+
+        //TODO: Set specific docking positions for elements (legend,...)?
+        //Move the legend to the right edge of the container (+ half of the width of the legend)
+        colorLegendContainer.transform.localPosition = new Vector3(containerBounds.size.x + legend.transform.localScale.x / 2.0f, containerBounds.size.y / 2.0f, containerBounds.size.z / 2.0f);
+        colorLegendContainer.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+    }
+
+    public void CreateDataMarkAxisLine(int dataMarkId)
+    {
+        DataMarkAxisLine markLine = new DataMarkAxisLine();
+
+        markLine.DrawAxisLine(dataMarkAxisLineContainer.transform, containerBounds, dataMarkList[dataMarkId]);
+
+        dataMarkAxisLineList.Add(markLine);
+    }
+
     #endregion
 
     #region Channels
@@ -201,7 +246,6 @@ public class VisContainer
                     break;
                 case VisChannel.YPos:
                     channel.position.y = (float)channelScale[setChannel.Key].GetScaledValue(setChannel.Value[valueIndex]);
-                    Debug.Log("YPos: " + setChannel.Value[valueIndex] + ", drawn at: " + channel.position.y);
                     break;
                 case VisChannel.ZPos:
                     channel.position.z = (float)channelScale[setChannel.Key].GetScaledValue(setChannel.Value[valueIndex]);
@@ -272,6 +316,24 @@ public class VisContainer
 
     }
 
+    public void ChangeDataMarks()
+    {
+        if (dataMarkList.Count <= 0)
+        {
+            Debug.LogError("No data mark present");
+            return;
+        }
+
+        for (var markID = 0; markID < dataMarkList.Count; markID++)
+        {
+            DataMark.Channel channel = DataMark.DefaultDataChannel();
+            var dataMark = dataMarkList[markID];
+
+            channel = GetDataMarkChannelValues(channel, markID);
+            dataMark.ChangeDataMark(channel);
+        }
+    }
+
     public void ChangeDataMark(int dataMarkID, DataMark.Channel channel)
     {
         if (dataMarkID < 0 || dataMarkID > dataMarkList.Count)
@@ -281,6 +343,11 @@ public class VisContainer
         }
 
         dataMarkList[dataMarkID].ChangeDataMark(channel);
+
+    }
+
+    public void HideColorLegend(GameObject legend)
+    {
 
     }
 
@@ -332,21 +399,10 @@ public class VisContainer
         containerBounds = cBounds;
     }
 
-    public void EnableBoundingBox(bool enable)
-    {
-        boundsControl = enable;
-        BoundingBoxVisibility();
-    }
-
     private Vector3 GetCenterOfVisContainer()
     {
-        Vector3 center = visContainer.transform.position + visContainer.transform.localScale / 2f; ;
+        Vector3 center = visContainer.transform.position + visContainer.transform.lossyScale / 2f;
         return center;
-    }
-
-    public void BoundingBoxVisibility()
-    {
-        //TODO
     }
 
     /// <summary>
@@ -580,9 +636,11 @@ public class VisContainer
 
         return scaleFunction;
     }
+
     public void SetColorScheme(Color[] colorScheme)
     {
         this.colorScheme = colorScheme;
     }
+
 
 }

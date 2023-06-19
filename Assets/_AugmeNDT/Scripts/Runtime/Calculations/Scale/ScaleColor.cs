@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
 
 public class ScaleColor
 {
@@ -32,9 +33,10 @@ public class ScaleColor
         if (range.Length > 2)
         {
             int colorIndex = Convert.ToInt32(ratio * (range.Length - 1));
+            colorIndex = Math.Abs(colorIndex);
 
             // clamp the color index to ensure it's within range
-            colorIndex = Math.Min(Math.Max(colorIndex, 0), range.Length - 1);
+            //colorIndex = Math.Min(Math.Max(colorIndex, 0), range.Length - 1);
 
             //Check that StartColor is not EndColor
             if(colorIndex == range.Length - 1) colorIndex = range.Length - 2;
@@ -59,14 +61,30 @@ public class ScaleColor
             ratio = 0;
         }
         int colorIndex = Convert.ToInt32(ratio * (range.Length - 1));
+        colorIndex = Math.Abs(colorIndex);
 
         // clamp the color index to ensure it's within range
-        colorIndex = Math.Min(Math.Max(colorIndex, 0), range.Length - 1);
+        //colorIndex = Math.Min(Math.Max(colorIndex, 0), range.Length - 1);
+
+        Debug.Log("colorIndex: " + colorIndex + " | ratio: " + ratio+ " | value: " + value + " | minValue: " + minValue + " | maxValue: " + maxValue);
+
 
         Color selectedColor = range[colorIndex];
 
         return selectedColor;
     }
 
-    
+    public static int GetCategoricalColorIndex(double value, double minValue, double maxValue, int colors)
+    {
+        double ratio = (value - minValue) / (maxValue - minValue);
+        if (double.IsNaN(ratio))
+        {
+            Debug.LogError("Calculation yielded NaN: Check Results");
+            ratio = 0;
+        }
+        int colorIndex = Convert.ToInt32(ratio * (colors - 1));
+        colorIndex = Math.Abs(colorIndex);
+
+        return colorIndex;
+    }
 }

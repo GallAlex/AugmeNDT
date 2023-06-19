@@ -79,7 +79,7 @@ public class DataGrid
 
         mesh = new Mesh();
 
-        meshRenderer.material = new Material(Shader.Find("Mixed Reality Toolkit/Standard"));
+        meshRenderer.material = new Material((Material)Resources.Load("Materials/GridMaterial", typeof(Material)));
         //meshRenderer.material.color = Color.white;
 
         if (extendGrid) BuildFromOrigin();

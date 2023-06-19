@@ -72,7 +72,7 @@ public static class DistributionCalc
     /// <returns>Estimated number of modes</returns>
     public static double GetModalityValue(double[] data)
     {
-        int numberOfBins = GetNumberOfBins(data);
+        int numberOfBins = GetNumberOfBins(data.Length);
         double mValue = CalculateModalityValue(data, numberOfBins);
 
         return mValue / 2.0d;
@@ -88,7 +88,7 @@ public static class DistributionCalc
     /// <returns>Estimated number of modes</returns>
     public static double GetModalityValueIncremental(double[] data)
     {
-        int numberOfBins = GetNumberOfBins(data) * 4;
+        int numberOfBins = GetNumberOfBins(data.Length) * 4;
         int remainingBins = numberOfBins;
         double max_mValue = 0.0d;
 
@@ -235,8 +235,8 @@ public static class DistributionCalc
     /// </summary>
     /// <param name="data"></param>
     /// <returns></returns>
-    public static int GetNumberOfBins(double[] data)
+    public static int GetNumberOfBins(int observations)
     {
-        return (int)Math.Ceiling(1 + 3.322 * Math.Log10(data.Length));
+        return (int)Math.Ceiling(1 + 3.322 * Math.Log10(observations));
     }
 }

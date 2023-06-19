@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using AugmeNDT;
 using UnityEngine;
 
 /// <summary>
@@ -219,9 +221,9 @@ public class PolyFiberData : ScriptableObject, IPolygonDataset
         return (float)diameter[fiberId] / 2.0f;
     }
 
-    public Dictionary<string, double[]> ExportForDataVis()
+    public AbstractDataset ExportForDataVis()
     {
-        return data;
+        return new AbstractDataset(data.Keys.ToList(), data);
     }
 
     public override string ToString()
