@@ -1,69 +1,64 @@
-using Microsoft.MixedReality.Toolkit.UI.BoundsControl;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using MathNet.Numerics;
-using Microsoft.MixedReality.Toolkit;
 using UnityEngine;
-using static UnityEngine.Rendering.DebugUI;
 
-public class VisBarChart : Vis
-{
-
-    public VisBarChart()
+namespace AugmeNDT{
+    public class VisBarChart : Vis
     {
-        title = "Basic Bar Chart";                                  
-        axes = 3;
 
-        dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Bar");
-        tickMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Tick");
-    }
+        public VisBarChart()
+        {
+            title = "Basic Bar Chart";                                  
+            axes = 3;
+
+            dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Bar");
+            tickMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Tick");
+        }
     
 
-    public override GameObject CreateVis(GameObject container)
-    {
-        base.CreateVis(container);
-
-        //## 01: Create Axes and Grids
-
-        for (int currAxis = 0; currAxis < axes; currAxis++)
+        public override GameObject CreateVis(GameObject container)
         {
-            //encodedAttribute.Add(currAxis);
-            int nextDim = (currAxis + 1) % axes;
-            visContainer.CreateAxis(dataSets[0].GetAttributeName(currAxis), dataSets[0].GetValues(currAxis), (Direction)currAxis);
-            visContainer.CreateGrid((Direction)currAxis, (Direction)nextDim);
+            base.CreateVis(container);
+
+            SetVisParams();
+
+            //## 01: Create Axes and Grids
+
+            for (int currAxis = 0; currAxis < axes; currAxis++)
+            {
+                //encodedAttribute.Add(currAxis);
+                int nextDim = (currAxis + 1) % axes;
+                CreateAxis(channelEncoding[(VisChannel) currAxis], false, (Direction)currAxis);
+                visContainer.CreateGrid((Direction)currAxis, (Direction)nextDim);
+            }
+
+            //## 02: Set Remaining Vis Channels (Color,...)
+            SetChannel(VisChannel.XPos, channelEncoding[VisChannel.XPos], false);
+            SetChannel(VisChannel.YSize, channelEncoding[VisChannel.YPos], false);
+            if (axes == 3) SetChannel(VisChannel.ZPos, channelEncoding[VisChannel.ZPos], false);
+
+            visContainer.SetChannel(VisChannel.Color, channelEncoding[VisChannel.Color].GetNumericalVal());
+
+            //## 03: Draw all Data Points with the provided Channels 
+            visContainer.CreateDataMarks(dataMarkPrefab, new[] { 1, 0, 1 });
+
+            //## 04: Create Color Scalar Bar
+            GameObject colorScalarBarContainer = new GameObject("Color Scale");
+            colorScalarBarContainer.transform.parent = visContainerObject.transform;
+
+            ColorScalarBar colorScalarBar = new ColorScalarBar();
+
+            GameObject colorBar01 = colorScalarBar.CreateColorScalarBar(visContainerObject.transform.position, channelEncoding[VisChannel.Color].GetName(), channelEncoding[VisChannel.Color].GetMinMaxVal(), 1, colorScheme);
+            //colorBar01.transform.parent = colorScalarBarContainer.transform;
+            CreateColorLegend(colorBar01);
+
+            //## 05: Rescale Chart
+            visContainerObject.transform.localScale = new Vector3(width, height, depth);
+
+            return visContainerObject;
         }
 
-        //## 02: Set Remaining Vis Channels (Color,...)
-        visContainer.SetChannel(VisChannel.XPos, dataSets[0].GetValues(0));
-        visContainer.SetChannel(VisChannel.YSize, dataSets[0].GetValues(1));
-        if (axes == 3) visContainer.SetChannel(VisChannel.ZPos, dataSets[0].GetValues(2));
-
-        visContainer.SetChannel(VisChannel.Color, dataSets[0].GetValues(3));
-
-        //## 03: Draw all Data Points with the provided Channels 
-        visContainer.CreateDataMarks(dataMarkPrefab, new[] { 1, 0, 1 });
-
-        //## 04: Create Color Scalar Bar
-        GameObject colorScalarBarContainer = new GameObject("Color Scale");
-        colorScalarBarContainer.transform.parent = visContainerObject.transform;
-
-        ColorScalarBar colorScalarBar = new ColorScalarBar();
-
-        double[] minMaxColorVal = new[]
-            { dataSets[0].GetValues(3).Min().Round(3), dataSets[0].GetValues(3).Max().Round(3) };
-        GameObject colorBar01 = colorScalarBar.CreateColorScalarBar(visContainerObject.transform.position, dataSets[0].GetAttributeName(3), minMaxColorVal, 1, colorScheme);
-        colorBar01.transform.parent = colorScalarBarContainer.transform;
-
-        //## 05: Rescale Chart
-        visContainerObject.transform.localScale = new Vector3(width, height, depth);
-
-        return visContainerObject;
-    }
-
-    public override void ChangeAxisAttribute(int axisId, int selectedDimension, int numberOfTicks)
-    {
-        /*
+        public override void ChangeAxisAttribute(int axisId, int selectedDimension, int numberOfTicks)
+        {
+            /*
         // Record new selected attribute
         encodedAttribute[axisId] = selectedDimension;
 
@@ -82,11 +77,11 @@ public class VisBarChart : Vis
         //Change Data Marks
         ChangeDataMarks();
         */
-    }
+        }
 
-    public override void ChangeDataMarks()
-    {
-        /*
+        public override void ChangeDataMarks()
+        {
+            /*
         for (int value = 0; value < numberOfValues[0]; value++)
         {
             //Default:
@@ -110,6 +105,7 @@ public class VisBarChart : Vis
             visContainer.ChangeDataMark(value, channel);
         }
         */
-    }
+        }
 
+    }
 }
