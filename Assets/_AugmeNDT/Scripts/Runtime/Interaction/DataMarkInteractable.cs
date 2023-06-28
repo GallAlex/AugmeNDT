@@ -1,37 +1,38 @@
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.UI;
-using Unity.VisualScripting;
 using UnityEngine;
 
-public class DataMarkInteractable : MonoBehaviour
-{
-    public DataMark dataMark;
-    public VisInteractor visInteractor;
-    public Interactable interactable;
-
-    public string dataMarkID = "DataMark_";
-
-    public void Init(DataMark mark, VisInteractor interactor)
+namespace AugmeNDT{
+    public class DataMarkInteractable : MonoBehaviour
     {
-        dataMark = mark;
-        visInteractor = interactor;
-        dataMarkID += dataMark.GetDataMarkId();
-    }
+        public DataMark dataMark;
+        public VisInteractor visInteractor;
+        public Interactable interactable;
 
-    void Start()
-    {
-        var onTouchReceiver = interactable.AddReceiver<InteractableOnTouchReceiver>();
-        onTouchReceiver.OnTouchStart.AddListener(() => visInteractor.OnTouch(dataMarkID)); ;
-    }
+        public string dataMarkID = "DataMark_";
 
-    public void DisableInteraction()
-    {
-        //Disable Collider, interactable,...
-        GetComponent<Collider>().enabled = false;
-        GetComponent<NearInteractionTouchable>().enabled = false;
-        interactable.enabled = false;
+        public void Init(DataMark mark, VisInteractor interactor)
+        {
+            dataMark = mark;
+            visInteractor = interactor;
+            dataMarkID += dataMark.GetDataMarkId();
+        }
 
-        //Disable Script
-        this.enabled = false;
+        void Start()
+        {
+            var onTouchReceiver = interactable.AddReceiver<InteractableOnTouchReceiver>();
+            onTouchReceiver.OnTouchStart.AddListener(() => visInteractor.OnTouch(dataMarkID)); ;
+        }
+
+        public void DisableInteraction()
+        {
+            //Disable Collider, interactable,...
+            GetComponent<Collider>().enabled = false;
+            GetComponent<NearInteractionTouchable>().enabled = false;
+            interactable.enabled = false;
+
+            //Disable Script
+            this.enabled = false;
+        }
     }
 }

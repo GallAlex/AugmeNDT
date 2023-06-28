@@ -1,21 +1,21 @@
-using System;
-
-public interface ISpatialData : ISecondaryData
-{
-    public enum SpatialDatasetType
+namespace AugmeNDT{
+    public interface ISpatialData : ISecondaryData
     {
-        Fiber,
-        Pore,
-        NumberOfSpatialDatasetTypes
+        public enum SpatialDatasetType
+        {
+            Fiber,
+            Pore,
+            NumberOfSpatialDatasetTypes
+        }
+
+        // Defines how many rows to skip at the beginning of the csv file
+        public const int SkipRows = 4;
+
+        // String identifier for fiber data which is placed after the SpatialDataIdentifier with an comma
+        public const string FiberIdentifier = "Fiber";
+
+        // String identifier for pore data which is placed after the SpatialDataIdentifier with an comma
+        public const string PoreIdentifier = "Pore";
+
     }
-
-    // Defines how many rows to skip at the beginning of the csv file
-    public const int SkipRows = 4;
-
-    // String identifier for fiber data which is placed after the SpatialDataIdentifier with an comma
-    public const string FiberIdentifier = "Fiber";
-
-    // String identifier for pore data which is placed after the SpatialDataIdentifier with an comma
-    public const string PoreIdentifier = "Pore";
-
 }

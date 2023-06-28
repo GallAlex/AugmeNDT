@@ -1,10 +1,7 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-namespace AugmeNDT
-{
+namespace AugmeNDT{
     public class MDDTransition : MonoBehaviour
     {
         VisMDDGlyphs mddVis;

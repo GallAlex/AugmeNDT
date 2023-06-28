@@ -1,120 +1,116 @@
-using System;
-using Microsoft.MixedReality.Toolkit.UI;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.MixedReality.Toolkit.Input;
-using Microsoft.MixedReality.Toolkit.Utilities;
+using Microsoft.MixedReality.Toolkit.UI;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
-/// <summary>
-/// Class handels the interactions with global GUI elements inside the scene (Windows, Buttons,...)
-/// </summary>
-public class SceneUIHandler : MonoBehaviour
-{
-    [SerializeField]
-    private GameObject indicatorObject;
-    private IProgressIndicator indicator;
-
-    [SerializeField]
-    public TMP_Text textLabel;
-
-    public ScrollGridUtility scrollGridUtility;
-
-    public List<Shader> listOfShaders;
-
-    public Camera mainCamera;
-
-
-    private SceneObjectHandler sceneObjectHandler;
-
-    private const int AmountShadertypes = 3;
-    private int shaderType = 0;
-    private int ticks = -1;
-    private int attribute = 0;
-
-    private void Update()
-    {
-        
-        //if (Physics.Raycast(mainCamera.transform.position, transform.forward, out var hit, Mathf.Infinity))
-        //{
-        //    var obj = hit.collider.gameObject;
-
-        //    Debug.Log($"looking at {obj.name}", this);
-        //}
-    }
-
+namespace AugmeNDT{
     /// <summary>
-    /// Sets a reference to the sceneVisHandler
+    /// Class handels the interactions with global GUI elements inside the scene (Windows, Buttons,...)
     /// </summary>
-    /// <param name="sceneVisHandler"></param>
-    public void SetSceneObjectHandler(SceneObjectHandler handler)
+    public class SceneUIHandler : MonoBehaviour
     {
-        sceneObjectHandler = handler;
-    }
+        [SerializeField]
+        private GameObject indicatorObject;
+        private IProgressIndicator indicator;
 
-    /// <summary>
-    /// Toggles the visibility of the given object
-    /// </summary>
-    /// <param name="volumeObject"></param>
-    public void ToggleObjectVisibility(GameObject volumeObject)
-    {
-        volumeObject.SetActive(!volumeObject.activeSelf);
-    }
+        [SerializeField]
+        public TMP_Text textLabel;
 
-    /// <summary>
-    /// Starts the Loading of Files on the specific device
-    /// </summary>
-    public async void OpenFile()
-    {
-        Debug.Log("Started loading file with ...");
-        
-        Task<string> asyncLoadingTask = sceneObjectHandler.LoadObject();
+        public ScrollGridUtility scrollGridUtility;
 
-        textLabel.text = "Loading ...";
+        public List<Shader> listOfShaders;
 
-        //Progress Bar
-        //indicator = indicatorObject.GetComponent<IProgressIndicator>();
-        //StartProgressIndicator(asyncLoadingTask);
+        public Camera mainCamera;
 
-        string path = await asyncLoadingTask;
-        textLabel.text = path;
-    }
 
-    public void CreateVisualization()
-    {
-        sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, new[] { 0 });
-        sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, new[] { 1 });
-        sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, new[] { 2 });
-        sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, new[] { 3 });
-        sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, new[] { 4 });
-        sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, new[] { 5 });
-        sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, new[] { 6 });
-        sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, new[] { 7 });
-    }
+        private SceneObjectHandler sceneObjectHandler;
 
-    public void ChangeVisTicks()
-    {
+        private const int AmountShadertypes = 3;
+        private int shaderType = 0;
+        private int ticks = -1;
+        private int attribute = 0;
 
-        List<int> selectedGroups = new List<int>();
-        //Currently add every loaded group into the selection and create a multigroup
-        for (int groupID = 0; groupID < sceneObjectHandler.GetAmountOfDataVisGroups(); groupID++)
+        private void Update()
         {
-            selectedGroups.Add(groupID);
+        
+            //if (Physics.Raycast(mainCamera.transform.position, transform.forward, out var hit, Mathf.Infinity))
+            //{
+            //    var obj = hit.collider.gameObject;
+
+            //    Debug.Log($"looking at {obj.name}", this);
+            //}
         }
 
-        //Creates a MultiGroup
-        sceneObjectHandler.CreateMultiGroup(selectedGroups);
-        sceneObjectHandler.RenderAbstractVisObjectForMultiGroup();
-        
-    }
+        /// <summary>
+        /// Sets a reference to the sceneVisHandler
+        /// </summary>
+        /// <param name="sceneVisHandler"></param>
+        public void SetSceneObjectHandler(SceneObjectHandler handler)
+        {
+            sceneObjectHandler = handler;
+        }
 
-    public void FillGridObject()
-    {
-        /*
+        /// <summary>
+        /// Toggles the visibility of the given object
+        /// </summary>
+        /// <param name="volumeObject"></param>
+        public void ToggleObjectVisibility(GameObject volumeObject)
+        {
+            volumeObject.SetActive(!volumeObject.activeSelf);
+        }
+
+        /// <summary>
+        /// Starts the Loading of Files on the specific device
+        /// </summary>
+        public async void OpenFile()
+        {
+            Debug.Log("Started loading file with ...");
+        
+            Task<string> asyncLoadingTask = sceneObjectHandler.LoadObject();
+
+            textLabel.text = "Loading ...";
+
+            //Progress Bar
+            //indicator = indicatorObject.GetComponent<IProgressIndicator>();
+            //StartProgressIndicator(asyncLoadingTask);
+
+            string path = await asyncLoadingTask;
+            textLabel.text = path;
+        }
+
+        public void CreateVisualization()
+        {
+            AbstractDataset abstractDataset = sceneObjectHandler.GetAbstractDataset(0);
+
+            for (int i = 1; i < abstractDataset.attributesCount; i++)
+            {
+                Dictionary<VisChannel, Attribute> setChannels = new Dictionary<VisChannel, Attribute>();
+                setChannels.Add(VisChannel.XPos, abstractDataset.GetAttribute(i));
+                sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, setChannels);
+            }
+        }
+
+        public void ChangeVisTicks()
+        {
+
+            List<int> selectedGroups = new List<int>();
+            //Currently add every loaded group into the selection and create a multigroup
+            for (int groupID = 0; groupID < sceneObjectHandler.GetAmountOfDataVisGroups(); groupID++)
+            {
+                selectedGroups.Add(groupID);
+            }
+
+            //Creates a MultiGroup
+            sceneObjectHandler.CreateMultiGroup(selectedGroups);
+            sceneObjectHandler.RenderAbstractVisObjectForMultiGroup();
+        
+        }
+
+        public void FillGridObject()
+        {
+            /*
     
         Dictionary<string, double[]> dataVal = sceneObjectHandler.visObjectList[0].dataValues;
         scrollGridUtility.FillScrollGrid(dataVal.Keys.ToList());
@@ -146,51 +142,52 @@ public class SceneUIHandler : MonoBehaviour
         //scrollingObjectColl.UpdateContent();
         
         */
-    }
+        }
 
-    public void ChangeShader()
-    {
-        shaderType = (shaderType + 1) % AmountShadertypes;
-        sceneObjectHandler.ChangeVolumeShader(0, listOfShaders[shaderType]);
-    }
-
-    private void ShowDrivesAndFolders()
-    {
-        Debug.Log("\nDrives:");
-
-        //### List Drives/Folders ###//
-        string[] drives = Directory.GetLogicalDrives();
-
-        foreach (string drive in drives)
+        public void ChangeShader()
         {
-            Debug.Log(drive);
+            shaderType = (shaderType + 1) % AmountShadertypes;
+            sceneObjectHandler.ChangeVolumeShader(0, listOfShaders[shaderType]);
+        }
 
-            Debug.Log("\nFolder:");
-            string[] myDirs = Directory.GetDirectories(drive);
+        private void ShowDrivesAndFolders()
+        {
+            Debug.Log("\nDrives:");
 
-            foreach (var myDir in myDirs)
+            //### List Drives/Folders ###//
+            string[] drives = Directory.GetLogicalDrives();
+
+            foreach (string drive in drives)
             {
-                Debug.Log(myDir);
+                Debug.Log(drive);
+
+                Debug.Log("\nFolder:");
+                string[] myDirs = Directory.GetDirectories(drive);
+
+                foreach (var myDir in myDirs)
+                {
+                    Debug.Log(myDir);
+                }
             }
+            //### List Drives/Folders ###//
         }
-        //### List Drives/Folders ###//
-    }
 
-    private async void StartProgressIndicator(Task trackedTask)
-    {
-        indicator.Message = "Opening File...";
-        await indicator.OpenAsync();
-
-        indicator.Message = "Waiting for loading to complete...";
-        while (!trackedTask.IsCompleted)
+        private async void StartProgressIndicator(Task trackedTask)
         {
-            await Task.Yield();
+            indicator.Message = "Opening File...";
+            await indicator.OpenAsync();
+
+            indicator.Message = "Waiting for loading to complete...";
+            while (!trackedTask.IsCompleted)
+            {
+                await Task.Yield();
+            }
+
+            indicator.Message = "Loading File completed!";
+            await indicator.CloseAsync();
         }
 
-        indicator.Message = "Loading File completed!";
-        await indicator.CloseAsync();
+
     }
-
-
 }
 

@@ -1,37 +1,36 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
-/// <summary>
-/// Helper class to preprocess abstract datasets (i.e., csv files).
-/// Class calculates the minimal and maximal values for each attribute, normalizes a datasets and
-/// calculates the statistic Values of a dataset.
-/// </summary>
-public class DataPreparation
-{
-
+namespace AugmeNDT{
     /// <summary>
-    /// Methods returns the min and max value for each attribute in the provided dataset
-    /// Returns a Dictionary<AttributeName, [0]min value, [1] max value>.
+    /// Helper class to preprocess abstract datasets (i.e., csv files).
+    /// Class calculates the minimal and maximal values for each attribute, normalizes a datasets and
+    /// calculates the statistic Values of a dataset.
     /// </summary>
-    /// <param name="dataValues"></param>
-    /// <returns>Dataset with only min max value</returns>
-    public Dictionary<string, double[]> GetMinMaxValueDataset(Dictionary<string, double[]> dataValues)
+    public class DataPreparation
     {
-        Dictionary<string, double[]> minMaxDataValues = new Dictionary<string, double[]>(dataValues.Keys.Count);
 
-        //Calculate Min Max for every Attribute
-        foreach (var dataValue in dataValues)
+        /// <summary>
+        /// Methods returns the min and max value for each attribute in the provided dataset
+        /// Returns a Dictionary<AttributeName, [0]min value, [1] max value>.
+        /// </summary>
+        /// <param name="dataValues"></param>
+        /// <returns>Dataset with only min max value</returns>
+        public Dictionary<string, double[]> GetMinMaxValueDataset(Dictionary<string, double[]> dataValues)
         {
-            double[] minMax = new[] { dataValue.Value.Min(), dataValue.Value.Max() };
-            minMaxDataValues.Add(dataValue.Key, minMax);
+            Dictionary<string, double[]> minMaxDataValues = new Dictionary<string, double[]>(dataValues.Keys.Count);
+
+            //Calculate Min Max for every Attribute
+            foreach (var dataValue in dataValues)
+            {
+                double[] minMax = new[] { dataValue.Value.Min(), dataValue.Value.Max() };
+                minMaxDataValues.Add(dataValue.Key, minMax);
+            }
+
+            return minMaxDataValues;
         }
 
-        return minMaxDataValues;
-    }
-
-    /*
+        /*
     /// <summary>
     /// Methods returns the min and max value for each value in the provided statistic dataset
     /// Returns a List<DistributionValues>[0] min values and List<DistributionValues>[1] max values.
@@ -168,4 +167,5 @@ public class DataPreparation
         }
     }
     */
+    }
 }

@@ -1,108 +1,135 @@
-using MathNet.Numerics.Statistics;
 using System;
-using UnityEngine;
+using MathNet.Numerics.Statistics;
 
-public class HistogramValues
-{
-    private Histogram hist;
-
-
-    public HistogramValues(double[] data)
+namespace AugmeNDT{
+    public class HistogramValues
     {
-        hist = new Histogram(data, DistributionCalc.GetNumberOfBins(data.Length));
-    }
+        private Histogram hist;
 
-    public int GetBinCount()
-    {
-        return hist.BucketCount;
-    }
 
-    public double GetBinWidth()
-    {
-        return hist[0].Width;
-    }
-
-    public double[] GetMinMaxFrequency()
-    {
-        double min = Double.MaxValue;
-        double max = Double.MinValue;
-        for (int i = 0; i < hist.BucketCount; i++)
+        public HistogramValues(double[] data)
         {
-            double frequency = GetBinFrequency(i);
-            if (frequency < min)
+            hist = new Histogram(data, DistributionCalc.GetNumberOfBins(data.Length));
+        }
+
+        public int GetBinCount()
+        {
+            return hist.BucketCount;
+        }
+
+        public double GetBinWidth()
+        {
+            return hist[0].Width;
+        }
+
+        public double[] GetMinMaxFrequency()
+        {
+            double min = Double.MaxValue;
+            double max = Double.MinValue;
+            for (int i = 0; i < hist.BucketCount; i++)
             {
-                min = frequency;
+                double frequency = GetBinFrequency(i);
+                if (frequency < min)
+                {
+                    min = frequency;
+                }
+                if (frequency > max)
+                {
+                    max = frequency;
+                }
             }
-            if (frequency > max)
+            return new[] { min, max };
+        }
+
+        public double[] GetBinFrequencies()
+        {
+            double[] binCounts = new double[hist.BucketCount];
+
+            for (int i = 0; i < hist.BucketCount; i++)
             {
-                max = frequency;
+                binCounts[i] = GetBinFrequency(i);
             }
+
+            return binCounts;
         }
-        return new[] { min, max };
-    }
 
-    public int[] GetBinFrequencies()
-    {
-        int[] binCounts = new int[hist.BucketCount];
-
-        for (int i = 0; i < hist.BucketCount; i++)
+        public double GetBinFrequency(int bin)
         {
-            binCounts[i] = (int)GetBinFrequency(i);
+            return hist[bin].Count;
         }
 
-        return binCounts;
-    }
-
-    public double GetBinFrequency(int bin)
-    {
-        return hist[bin].Count;
-    }
-
-    public double[] GetLowerUpperBoundValue()
-    {
-        return new[] { GetLowerBound(), GetUpperBound() };
-    }
-    public double[] GetAllLowerBoundValues()
-    {
-        double[] lowerBound = new double[hist.BucketCount];
-
-        for (int i = 0; i < hist.BucketCount; i++)
+        public double[] GetLowerUpperBoundValue()
         {
-            lowerBound[i] = GetLowerBinBound(i);
+            return new[] { GetLowerBound(), GetUpperBound() };
         }
-
-        return lowerBound;
-    }
-
-    public double[] GetAllUpperBoundValues()
-    {
-        double[] lowerBound = new double[hist.BucketCount];
-
-        for (int i = 0; i < hist.BucketCount; i++)
+        public double[] GetAllLowerBoundValues()
         {
-            lowerBound[i] = GetUpperBinBound(i);
+            double[] lowerBound = new double[hist.BucketCount];
+
+            for (int i = 0; i < hist.BucketCount; i++)
+            {
+                lowerBound[i] = GetLowerBinBound(i);
+            }
+
+            return lowerBound;
         }
 
-        return lowerBound;
-    }
+        public double[] GetAllUpperBoundValues()
+        {
+            double[] lowerBound = new double[hist.BucketCount];
 
-    public double GetLowerBound()
-    {
-        return hist.LowerBound;
-    }
+            for (int i = 0; i < hist.BucketCount; i++)
+            {
+                lowerBound[i] = GetUpperBinBound(i);
+            }
 
-    public double GetLowerBinBound(int bin)
-    {
-        return hist[bin].LowerBound;
-    }
+            return lowerBound;
+        }
 
-    public double GetUpperBound()
-    {
-        return hist.UpperBound;
-    }
+        public double GetLowerBound()
+        {
+            return hist.LowerBound;
+        }
 
-    public double GetUpperBinBound(int bin)
-    {
-        return hist[bin].UpperBound;
+        public double GetLowerBinBound(int bin)
+        {
+            return hist[bin].LowerBound;
+        }
+
+        public double GetUpperBound()
+        {
+            return hist.UpperBound;
+        }
+
+        public double GetUpperBinBound(int bin)
+        {
+            return hist[bin].UpperBound;
+        }
+
+        /// <summary>
+        /// Run through all bins and create a string array with the lower (exclusive) and upper bound (inclusive) of each bin
+        /// </summary>
+        /// <returns></returns>
+        public string[] GetBinIntervals()
+        {
+            int binCount = GetBinCount();
+            string[] binBoundIntervals = new string[binCount];
+            int[] binNumbers = new int[binCount];                 // Array numbering all bins from 0 to n
+
+            for (int i = 0; i < binCount; i++)
+            {
+                if (i == 0)
+                {
+                    binBoundIntervals[i] = GetLowerBinBound(i).ToString("[ 0.00") + " - " + GetUpperBinBound(i).ToString("0.00 ]");
+                }
+                else
+                {
+                    binBoundIntervals[i] = GetLowerBinBound(i).ToString("] 0.00") + " - " + GetUpperBinBound(i).ToString("0.00 ]");
+                }
+                binNumbers[i] = i;
+            }
+
+            return binBoundIntervals;
+        }
     }
 }

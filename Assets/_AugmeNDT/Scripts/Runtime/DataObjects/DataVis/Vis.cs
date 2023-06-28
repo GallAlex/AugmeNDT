@@ -1,255 +1,330 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using AugmeNDT;
 using UnityEngine;
 
-/// <summary>
-/// Possible Visulization Types to choose from
-/// </summary>
-public enum VisType
+namespace AugmeNDT
 {
-    BarChart,
-    Histogram,
-    Scatterplot,
-    TimeScatter,
-    MDDGlyphs,
-    NumberOfVisTypes,
-}
-
-/// <summary>
-/// Possible Visulization Channels
-/// </summary>
-public enum VisChannel
-{
-    XPos,
-    YPos,
-    ZPos,
-    XSize,
-    YSize,
-    ZSize,
-    XRotation,
-    YRotation,
-    ZRotation,
-    Color,
-    NumberOfVisChannels
-}
-
-/// <summary>
-/// Base class to create different data visualizations charts
-/// </summary>
-[Serializable]
-public class Vis
-{
-    // Vis container and used Prefabs
-    public VisContainer visContainer;
-    public GameObject visContainerObject;
-    public GameObject dataMarkPrefab;
-    public GameObject tickMarkPrefab;
-
-    // Data
-    public List<AbstractDataset> dataSets;                      // List of Datasets as Dictionaries with all data attributes with their <name,values>. Dictionaries should all have the same attributes
-    public int attributeCount = 0;                              // Number of attributes retrieved from the dataValues.
-    public List<int> numberOfValues;                            // Number of values for each attribut from the dataValues.
-
-    // Visualization Properties:
-    public string title = "Basic Euclidean Vis";                // Title of vis.
-    public int axes = 3;                                        // Amount of Axes for Vis container
-    public Dictionary<VisChannel, double[]> channelEncoding;         // Cross-reference which encoding (Axes, Color,..) uses which attribute (id) of the data
-
-    public List<Scale.DataScaleType> dataScaleTypes;            // Applied scaling for dataValues domain of respective encoding
-    public float width = 0.25f;                                 // Vis container width in centimeters.
-    public float height = 0.25f;                                // Vis container height in centimeters.
-    public float depth = 0.25f;                                 // Vis container depth in centimeters.
-    public float[] xyzOffset = new[]{0.1f, 0.1f, 0.1f};         // Offset from origin (0,0) and End (1,0) for the Axes (x,y,z).
-    public int[] xyzTicks = { 10, 10, 10 };                     // Amount of Ticks between min/max tick for Axes (x,y,z).
-    public Color[] colorScheme = { Color.cyan, Color.magenta }; // Defines Color Scheme for Color Channel
-
-    // Interactions
-    public VisInteractor visInteractor;                         // Interactor for the Vis    
-    private DataVisGroup dataVisGroup;                          // Reference to DataVisGroup
-
-    //TODO: visualizedAttributes should be encodedAttribute and uses ChannelValues
-    public int[] visualizedAttributes = new[]{0, 1, 2};// Each index represents the attribute which is visualized on the respective axis (if possible)
-
-
-    public virtual void InitVisParams(string visTitle, int numberOfAxes, List<Scale.DataScaleType> dataScales, float width, float height, float depth, float[] xyzOffset)
+    /// <summary>
+    /// Possible Visulization Types to choose from
+    /// </summary>
+    public enum VisType
     {
-        title = visTitle;
-        this.axes = numberOfAxes;
-        this.dataScaleTypes = dataScales;
-        this.width = width;
-        this.height = height;
-        this.depth = depth;
-        this.xyzOffset = xyzOffset;
+        BarChart,
+        Histogram,
+        Scatterplot,
+        TimeScatter,
+        MDDGlyphs,
+        NumberOfVisTypes,
     }
 
     /// <summary>
-    /// Gives the Vis acces to its DataVis group
+    /// Possible Visulization Channels
     /// </summary>
-    /// <param name="group"></param>
-    public void SetDataVisGroup(DataVisGroup group)
+    public enum VisChannel
     {
-        dataVisGroup = group;
+        XPos,
+        YPos,
+        ZPos,
+        XSize,
+        YSize,
+        ZSize,
+        XRotation,
+        YRotation,
+        ZRotation,
+        Color,
+        NumberOfVisChannels
     }
 
     /// <summary>
-    /// Returns the DataVisGroup of the Vis
+    /// Base class to create different data visualizations charts
     /// </summary>
-    /// <returns></returns>
-    public DataVisGroup GetDataVisGroup()
+    [Serializable]
+    public class Vis
     {
-        return dataVisGroup;
-    }
+        // Vis container and used Prefabs
+        public VisContainer visContainer;
+        public GameObject visContainerObject;
+        public GameObject dataMarkPrefab;
+        public GameObject tickMarkPrefab;
 
-    /// <summary>
-    /// Sets a specific attribute from the dataset to a specific channel
-    /// </summary>
-    /// <param name="visChannel"></param>
-    /// <param name="attributeId"></param>
-    public void SetChannelEncoding(VisChannel visChannel, int attributeId)
-    {
-        channelEncoding.Add(visChannel, dataSets[0].GetValues(attributeId));
-    }
+        // Data
+        public List<AbstractDataset> dataSets;                          // List of Datasets as Dictionaries with all data attributes with their <name,values>. Dictionaries should all have the same attributes
+        public int attributeCount = 0;                                  // Number of attributes retrieved from the dataValues.
+        public List<int> numberOfValues;                                // Number of values for each attribut from the dataValues.
 
-    public void SetChannelEncoding(VisChannel visChannel, double[] data)
-    {
-        channelEncoding.Add(visChannel, data);
-    }
+        // Visualization Properties:
+        public string title = "Basic Euclidean Vis";                    // Title of vis.
+        public int axes = 3;                                            // Amount of Axes for Vis container
+        public Dictionary<VisChannel, Attribute> channelEncoding;       // Cross-reference which encoding (Axes, Color,..) uses which attribute of the data
+        private Dictionary<VisChannel, int[]> definedChannelEncoding;   // Internal reference between channel and attribute id (gets linked after appending the data)
 
-    public virtual GameObject CreateVis(GameObject container)
-    {
-        //TODO: Move into Constructor?
-        visContainer = new VisContainer();
-        visContainerObject = visContainer.CreateVisContainer(title);
-        visContainerObject.transform.SetParent(container.transform);
+        public float width = 0.25f;                                     // Vis container width in centimeters.
+        public float height = 0.25f;                                    // Vis container height in centimeters.
+        public float depth = 0.25f;                                     // Vis container depth in centimeters.
+        public float[] xyzOffset = new[]{0.1f, 0.1f, 0.1f};             // Offset from origin (0,0) and End (1,0) for the Axes (x,y,z).
+        public int[] xyzTicks = { 11, 11, 11 };                         // Amount of Ticks between min/max tick for Axes (x,y,z).
+        public Color[] colorScheme = { Color.cyan, Color.magenta };     // Defines Color Scheme for Color Channel
 
-        visContainer.SetAxisOffsets(xyzOffset);
-        visContainer.SetAxisTickNumber(xyzTicks);
-        visContainer.SetColorScheme(colorScheme);
-        visContainer.SetVisInteractor(visInteractor);
+        // Interactions
+        public VisInteractor visInteractor;                             // Interactor for the Vis    
+        private DataVisGroup dataVisGroup;                              // Reference to DataVisGroup
 
-        //Set Default Index
-        if (channelEncoding== null || channelEncoding.Count == 0)
+        
+
+        public Vis()
         {
-            channelEncoding = new Dictionary<VisChannel, double[]>();
+            visContainer = new VisContainer();
+            visContainerObject = visContainer.CreateVisContainer(title);
 
-            SetChannelEncoding(VisChannel.XPos, 0);
-            SetChannelEncoding(VisChannel.YPos, 1);
-            SetChannelEncoding(VisChannel.ZPos, 2);
+            definedChannelEncoding = new Dictionary<VisChannel, int[]>();
+            channelEncoding = new Dictionary<VisChannel, Attribute>();
+
+            //Set default channel encodings
+            DefineChannelToData(VisChannel.XPos, 1);
+            DefineChannelToData(VisChannel.YPos, 2);
+            DefineChannelToData(VisChannel.ZPos, 3);
+            DefineChannelToData(VisChannel.Color, 3);
         }
 
-        if (attributeCount < axes) axes = attributeCount;
-
-        return visContainerObject;
-    }
-
-    public virtual void AppendData(AbstractDataset abstractDataset)
-    {
-        var values = abstractDataset.GetNumericDic();
-
-        //Todo: Move initialize?
-        if (dataSets == null)
+        public virtual void DeleteVis()
         {
-            dataSets = new List<AbstractDataset>();
-            numberOfValues = new List<int>();
+            visContainer.DeleteVisContainer();
+            visContainer = null;
         }
 
-        // Preprocess Data
-        if (values == null || values.Count < 1)
+        public virtual void SetVisParams()
         {
-            Debug.LogError("Appended Data is incorrect (insufficient dimensions, missing values, ...)");
-            return;
+            visContainer.SetTitle(title);
+            visContainer.SetAxisOffsets(xyzOffset);
+            visContainer.SetAxisTickNumber(xyzTicks);
+            visContainer.SetColorScheme(colorScheme);
+            visContainer.SetVisInteractor(visInteractor);
         }
-        attributeCount = values.Count;
 
-        //Check other data sets if they have the same amount of attributes
-        if (dataSets.Count > 0)
+        /// <summary>
+        /// Gives the Vis acces to its DataVis group
+        /// </summary>
+        /// <param name="group"></param>
+        public void SetDataVisGroup(DataVisGroup group)
         {
-            if (values.Count != attributeCount)
+            dataVisGroup = group;
+        }
+
+        /// <summary>
+        /// Returns the DataVisGroup of the Vis
+        /// </summary>
+        /// <returns></returns>
+        public DataVisGroup GetDataVisGroup()
+        {
+            return dataVisGroup;
+        }
+
+        /// <summary>
+        /// Defines a specific attribute id to a specific vis channel
+        /// Data gets linked to the vis channel after appending data
+        /// </summary>
+        /// <param name="visChannel"></param>
+        /// <param name="attributeId"></param>
+        public void DefineChannelToData(VisChannel visChannel, int attributeId)
+        {
+            definedChannelEncoding[visChannel] = new int[] { attributeId, -1 };
+        }
+
+        /// <summary>
+        /// Defines a specific derived attribute id to a specific vis channel
+        /// Data gets linked to the vis channel after appending data
+        /// </summary>
+        /// <param name="visChannel"></param>
+        /// <param name="derivedAttrId"></param>
+        public void DefineChannelToData(VisChannel visChannel, AbstractDataset.DerivedAttributes derivedAttrId)
+        {
+            definedChannelEncoding[visChannel] = new int[] {-1, (int)derivedAttrId };
+        }
+
+        /// <summary>
+        /// Sets a specific attribute to a specific channel
+        /// Replaces the previous attribute if already set
+        /// </summary>
+        /// <param name="visChannel"></param>
+        /// <param name="attributeId"></param>
+        public void SetChannelEncoding(VisChannel visChannel, Attribute attribute)
+        {
+            channelEncoding[visChannel] = attribute;
+        }
+
+        /// <summary>
+        /// Sets a specific attribute from the dataset to a specific channel
+        /// Replaces the previous attribute if already set
+        /// </summary>
+        /// <param name="visChannel"></param>
+        /// <param name="attributeId"></param>
+        private void SetChannelEncoding(VisChannel visChannel, int attributeId)
+        {
+            channelEncoding[visChannel] = dataSets[0].GetAttribute(attributeId);
+        }
+
+        /// <summary>
+        /// Sets a specific derived attribute from one attribute from the dataset to a specific channel
+        /// Replaces the previous attribute if already set
+        /// </summary>
+        /// <param name="visChannel"></param>
+        /// <param name="attributeId"></param>
+        private void SetChannelEncoding(VisChannel visChannel, AbstractDataset.DerivedAttributes derivedAttrId)
+        {
+            channelEncoding[visChannel] = dataSets[0].GetDerivedAttribute(derivedAttrId);
+        }
+
+        /// <summary>
+        /// Links the defined channels to the data. Has to be called after appending the data!
+        /// </summary>
+        public void LinkChannelToData()
+        {
+            if (dataSets == null || dataSets.Count <= 0)
             {
-                Debug.LogError("Number of data attributes do not match with other loaded datasets (Missing Attributes!)");
+                Debug.LogError("No Dataset defined for Visualization!");
                 return;
+            }
+
+            foreach (var definedChannel in definedChannelEncoding)
+            {
+                // Attribute id [0] is not defined - derived attribute [1] used
+                if (definedChannel.Value[0] == -1)
+                {
+                    SetChannelEncoding(definedChannel.Key, (AbstractDataset.DerivedAttributes)definedChannel.Value[1]);
+                }
+                // Attribute id [0] is defined - attribute used
+                else
+                {
+                    SetChannelEncoding(definedChannel.Key, definedChannel.Value[0]);
+                }
+            } 
+            
+        }
+
+        public virtual GameObject CreateVis(GameObject container)
+        {
+            if (dataSets == null)
+            {
+                DeleteVis();
+                return null;
+            }
+            
+            visContainerObject.transform.SetParent(container.transform);
+            visContainer.SetHandleText(dataSets[0].datasetName);
+
+            //Set default channel encodings
+            //SetChannelEncoding(VisChannel.XPos, dataSets[0].GetHeader());
+            //SetChannelEncoding(VisChannel.YPos, new Attribute("Attribute Values", new[] { 0.0, 1.0 }));
+            //SetChannelEncoding(VisChannel.ZPos, dataSets[0].GetAttribute(3));
+            //SetChannelEncoding(VisChannel.Color, dataSets[0].GetAttribute(1));
+
+            if (attributeCount < axes) axes = attributeCount;
+
+            return visContainerObject;
+        }
+
+        public virtual void AppendData(AbstractDataset abstractDataset)
+        {
+            if (dataSets == null)
+            {
+                dataSets = new List<AbstractDataset>();
+                numberOfValues = new List<int>();
+            }
+
+            attributeCount = abstractDataset.attributesCount;
+
+            dataSets.Add(abstractDataset);
+            numberOfValues.Add(abstractDataset.numberOfValues[0]);
+
+            //Link Default Index to Data
+            LinkChannelToData();
+        }
+
+        public virtual List<AbstractDataset> GetAppendedData()
+        {
+            return dataSets;
+        }
+
+        public virtual void CreateColorLegend(GameObject legend)
+        {
+            if (legend == null) Debug.LogError("No Legend GameObject created!");
+            else visContainer.CreateColorLegend(legend);
+        }
+
+        public void SetChannel(VisChannel visChannel, Attribute attribute, bool normalized)
+        {
+            double[] values;
+
+            if (normalized) values = attribute.GetNumericalValNorm();
+            else values = attribute.GetNumericalVal();
+
+            visContainer.SetChannel(visChannel, values);
+        }
+
+        public void CreateAxis(Attribute attribute, bool normalized, Direction axisDirection)
+        {
+            double[] minMaxValues;
+
+            if (normalized) minMaxValues = attribute.GetMinMaxValNorm(); 
+            else minMaxValues = attribute.GetMinMaxVal();
+
+            if (attribute.IsNumerical())
+            {
+                visContainer.CreateAxis(attribute.GetName(), minMaxValues, axisDirection);
+            }
+            else
+            {
+                visContainer.CreateAxis(attribute.GetName(), attribute.GetTextualVal(), axisDirection);
             }
         }
 
-        dataSets.Add(abstractDataset);
-        numberOfValues.Add(values.ElementAt(0).Value.Length);
-
-        // Test if every attribute has the same amount of values
-        for (int dim = 0; dim < attributeCount; dim++)
+        public virtual void ChangeAxisAttribute(int axisId, int selectedDimension, int numberOfTicks)
         {
-            var currentValueCount = values.ElementAt(dim).Value.Length;
+            //Todo: Instead of Axis ID use encoding Id to change that encoding(Axis, Color, Size, Shape, ...)
+        }
 
-            if (currentValueCount <= 0 || currentValueCount - numberOfValues[numberOfValues.Count-1] != 0)
+        public virtual void CreateDataMarks()
+        {
+
+        }
+
+        public virtual void ChangeDataMarks()
+        {
+
+        }
+
+
+
+        public virtual void UpdateVis()
+        {
+            // Update Grid
+            if(visContainerObject != null) visContainer.MoveGridBasedOnViewingDirection();
+
+            // Update different Channels/Marks of Vis (Data, Scale, Color,...)
+        }
+
+        /// <summary>
+        /// Method returns the selected Visualization child class
+        /// </summary>
+        /// <param name="vistype"></param>
+        /// <returns></returns>
+        public static Vis GetSpecificVisType(Enum vistype)
+        {
+            switch (vistype)
             {
-                Debug.LogError("Number of data values do not match (Missing Values!)");
-                return;
+                default:
+                case VisType.BarChart:
+                    return new VisBarChart();
+                case VisType.Histogram:
+                    return new VisHistogram();
+                case VisType.Scatterplot:
+                    return new VisScatterplot();
+                case VisType.TimeScatter:              
+                    return new VisTimeScatter();
+                case VisType.MDDGlyphs:
+                    return new VisMDDGlyphs();
             }
-
-            //numberOfValues = currentValueCount;
         }
 
-
     }
-
-    public virtual List<AbstractDataset> GetAppendedData()
-    {
-        return dataSets;
-    }
-
-    public virtual void CreateColorLegend(GameObject legend)
-    {
-        if (legend == null) Debug.LogError("No Legend GameObject created!");
-        else visContainer.CreateColorLegend(legend);
-    }
-
-    public virtual void ChangeAxisAttribute(int axisId, int selectedDimension, int numberOfTicks)
-    {
-        //Todo: Instead of Axis ID use encoding Id to change that encoding(Axis, Color, Size, Shape, ...)
-    }
-
-    public virtual void CreateDataMarks()
-    {
-
-    }
-
-    public virtual void ChangeDataMarks()
-    {
-
-    }
-
-
-
-    public virtual void UpdateVis()
-    {
-        // Update Grid
-        visContainer.MoveGridBasedOnViewingDirection();
-
-        // Update different Channels/Marks of Vis (Data, Scale, Color,...)
-    }
-
-    /// <summary>
-    /// Method returns the selected Visualization child class
-    /// </summary>
-    /// <param name="vistype"></param>
-    /// <returns></returns>
-    public static Vis GetSpecificVisType(Enum vistype)
-    {
-        switch (vistype)
-        {
-            default:
-            case VisType.BarChart:
-                return new VisBarChart();
-            case VisType.Histogram:
-                return new VisHistogram();
-            case VisType.Scatterplot:
-                return new VisScatterplot();
-            case VisType.TimeScatter:              
-                return new VisTimeScatter();
-            case VisType.MDDGlyphs:
-                return new VisMDDGlyphs();
-        }
-    }
-
 }

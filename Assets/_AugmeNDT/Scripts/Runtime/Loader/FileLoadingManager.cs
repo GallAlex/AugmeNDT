@@ -1,6 +1,4 @@
-using SimpleFileBrowser;
 using System;
-using System.Collections;
 using System.IO;
 using System.Threading.Tasks;
 using UnityEditor;
@@ -11,199 +9,203 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 #endif
 
-/// <summary>
-/// Concrete class for loading a file based on its extension and selects the appropriate loader (factory) for it.
-/// Loader depends on System (Hololens2, Windows,...)
-/// </summary>
-public class FileLoadingManager
+
+namespace AugmeNDT
 {
-    public enum DatasetType
-    {
-        Primary,
-        Secondary,
-        Unknown
-    }
-
-    private bool loadingSucceded = false;
-
-    //List<FileLoader> entities = new List<FileLoader>(); // get with var mhdFileLoader = entities.OfType<MhdFileLoader>();
-    private FileLoader loaderFactory;
-
-    private string filePath = "";
-
-    private DataVisGroup dataVisGroup;
-
-    #region Getter/Setter
-    public FileLoader LoaderFactory { get => loaderFactory; set => loaderFactory = value; }
-    #endregion
-
-
-    public async Task<bool> LoadDataset()
-    {
-        try
-        {
-            if (filePath == "")
-            {
-                filePath = "No Data";
-                Debug.LogError("Failed to import dataset");
-                return false;
-            }
-
-            //fileName = Path.GetFileNameWithoutExtension(filePath);
-            FileExtension fileTyp = GetDatasetType(filePath);
-
-            //Choose Loader here
-            switch (fileTyp)
-            {
-                case FileExtension.Raw:
-                    loadingSucceded = await CreateRawLoader(filePath);
-                    break;
-                case FileExtension.Mhd:
-                    loaderFactory = new MhdFileLoader(filePath);
-                    loadingSucceded = true;
-                    break;
-                case FileExtension.Csv:
-                    loaderFactory = new CsvLoader();
-                    loadingSucceded = true;
-                    break;
-                case FileExtension.DICOM:
-                    loadingSucceded = false;
-                    throw new NotImplementedException(fileTyp.ToString() + " extension is currently not supported");
-                case FileExtension.Unknown:
-                    loadingSucceded = false;
-                    throw new NotImplementedException(fileTyp.ToString() + " extension is currently not supported");
-                default:
-                    return false;
-            }
-
-            if (!loadingSucceded) return false;
-
-            Debug.Log("LoadData...");
-            await Task.Run(() => loaderFactory.LoadData(filePath));
-
-            // Create new group for the loading action
-            dataVisGroup = new DataVisGroup();
-
-            StoreDataVisGroup();
-
-            //TODO: Create and return one single Dataset class for primary and secondary data?
-
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError(ex);
-        }
-
-        return loadingSucceded;
-    }
-
     /// <summary>
-    /// Returns the detected extension type of the file
+    /// Concrete class for loading a file based on its extension and selects the appropriate loader (factory) for it.
+    /// Loader depends on System (Hololens2, Windows,...)
     /// </summary>
-    /// <param name="filePath"></param>
-    /// <returns></returns>
-    public static FileExtension GetDatasetType(string filePath)
+    public class FileLoadingManager
     {
-        FileExtension datasetType;
-
-        // Get .* extension
-        string extension = Path.GetExtension(filePath);
-
-        switch (extension)
+        public enum DatasetType
         {
-            case ".raw":
-                datasetType = FileExtension.Raw;
-                break;
-            case ".mhd":
-                datasetType = FileExtension.Mhd;
-                break;
-            case ".csv":
-                datasetType = FileExtension.Csv;
-                break;
-            case ".dicom":
-            case ".dcm":
-                datasetType = FileExtension.DICOM;
-                break;
-            default:
-                datasetType = FileExtension.Unknown;
-                throw new NotImplementedException("Data extension format [" + extension + "] not supported");
+            Primary,
+            Secondary,
+            Unknown
         }
 
-        return datasetType;
-    }
+        private bool loadingSucceded = false;
 
-    private async Task<bool> CreateRawLoader(string filePath)
-    {
-        GameObject rawFileWindowUI = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/UIPrefabs/RawFileWindow"));
-        RawFileWindow rawFileWindow = rawFileWindowUI.GetComponent<RawFileWindow>();
+        //List<FileLoader> entities = new List<FileLoader>(); // get with var mhdFileLoader = entities.OfType<MhdFileLoader>();
+        private FileLoader loaderFactory;
 
-        bool startImport = await rawFileWindow.WaitForInput();
+        private string filePath = "";
+        //private string fileName = "";
 
-        if (startImport)
+        private DataVisGroup dataVisGroup;
+
+        #region Getter/Setter
+        public FileLoader LoaderFactory { get => loaderFactory; set => loaderFactory = value; }
+        #endregion
+
+
+        public async Task<bool> LoadDataset()
         {
-            loaderFactory = new RawFileLoader(filePath, rawFileWindow.XDim, rawFileWindow.YDim, rawFileWindow.ZDim, rawFileWindow.DataFormat, rawFileWindow.Endianness, rawFileWindow.BytesToSkip);
-        }
-        else
-        {
-            Debug.LogError("Raw loading canceled");
-        }
-        GameObject.Destroy(rawFileWindowUI);
-
-        return startImport;
-    }
-
-
-    /// <summary>
-    /// Methods stores the currently loaded datasets in a DataVisGroup
-    /// </summary>
-    private void StoreDataVisGroup()
-    {
-        // Primary Datasets
-        if ((loaderFactory.datasetType == DatasetType.Primary))
-        {
-            if (loaderFactory.voxelDataset != null) dataVisGroup.SetVoxelData(loaderFactory.voxelDataset);
-        }
-        // Secondary Datasets
-        else if ((loaderFactory.datasetType == DatasetType.Secondary))
-        {
-
-            if (loaderFactory.secondaryDataType == ISecondaryData.SecondaryDataType.Abstract)
+            try
             {
-                if (loaderFactory.abstractDataset != null) dataVisGroup.SetAbstractCsvData(loaderFactory.abstractDataset);
-            }
-            if (loaderFactory.secondaryDataType == ISecondaryData.SecondaryDataType.Spatial)
-            {
-                if (loaderFactory.polyFiberDataset != null)
+                if (filePath == "")
                 {
-                    dataVisGroup.SetPolyData(loaderFactory.polyFiberDataset);
-                    dataVisGroup.SetAbstractCsvData(loaderFactory.polyFiberDataset.ExportForDataVis());
+                    filePath = "No Data";
+                    Debug.LogError("Failed to import dataset");
+                    return false;
+                }
+
+                //fileName = Path.GetFileNameWithoutExtension(filePath);
+                FileExtension fileTyp = GetDatasetType(filePath);
+
+                //Choose Loader here
+                switch (fileTyp)
+                {
+                    case FileExtension.Raw:
+                        loadingSucceded = await CreateRawLoader(filePath);
+                        break;
+                    case FileExtension.Mhd:
+                        loaderFactory = new MhdFileLoader(filePath);
+                        loadingSucceded = true;
+                        break;
+                    case FileExtension.Csv:
+                        loaderFactory = new CsvLoader();
+                        loadingSucceded = true;
+                        break;
+                    case FileExtension.DICOM:
+                        loadingSucceded = false;
+                        throw new NotImplementedException(fileTyp.ToString() + " extension is currently not supported");
+                    case FileExtension.Unknown:
+                        loadingSucceded = false;
+                        throw new NotImplementedException(fileTyp.ToString() + " extension is currently not supported");
+                    default:
+                        return false;
+                }
+
+                if (!loadingSucceded) return false;
+
+                Debug.Log("LoadData...");
+                await Task.Run(() => loaderFactory.LoadData(filePath));
+
+                // Create new group for the loading action
+                dataVisGroup = new DataVisGroup();
+
+                StoreDataVisGroup();
+
+                //TODO: Create and return one single Dataset class for primary and secondary data?
+
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(ex);
+            }
+
+            return loadingSucceded;
+        }
+
+        /// <summary>
+        /// Returns the detected extension type of the file
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        public static FileExtension GetDatasetType(string filePath)
+        {
+            FileExtension datasetType;
+
+            // Get .* extension
+            string extension = Path.GetExtension(filePath);
+
+            switch (extension)
+            {
+                case ".raw":
+                    datasetType = FileExtension.Raw;
+                    break;
+                case ".mhd":
+                    datasetType = FileExtension.Mhd;
+                    break;
+                case ".csv":
+                    datasetType = FileExtension.Csv;
+                    break;
+                case ".dicom":
+                case ".dcm":
+                    datasetType = FileExtension.DICOM;
+                    break;
+                default:
+                    datasetType = FileExtension.Unknown;
+                    throw new NotImplementedException("Data extension format [" + extension + "] not supported");
+            }
+
+            return datasetType;
+        }
+
+        private async Task<bool> CreateRawLoader(string filePath)
+        {
+            GameObject rawFileWindowUI = GameObject.Instantiate((GameObject)Resources.Load("Prefabs/UIPrefabs/RawFileWindow"));
+            RawFileWindow rawFileWindow = rawFileWindowUI.GetComponent<RawFileWindow>();
+
+            bool startImport = await rawFileWindow.WaitForInput();
+
+            if (startImport)
+            {
+                loaderFactory = new RawFileLoader(filePath, rawFileWindow.XDim, rawFileWindow.YDim, rawFileWindow.ZDim, rawFileWindow.DataFormat, rawFileWindow.Endianness, rawFileWindow.BytesToSkip);
+            }
+            else
+            {
+                Debug.LogError("Raw loading canceled");
+            }
+            GameObject.Destroy(rawFileWindowUI);
+
+            return startImport;
+        }
+
+
+        /// <summary>
+        /// Methods stores the currently loaded datasets in a DataVisGroup
+        /// </summary>
+        private void StoreDataVisGroup()
+        {
+            // Primary Datasets
+            if ((loaderFactory.datasetType == DatasetType.Primary))
+            {
+                if (loaderFactory.voxelDataset != null) dataVisGroup.SetVoxelData(loaderFactory.voxelDataset);
+            }
+            // Secondary Datasets
+            else if ((loaderFactory.datasetType == DatasetType.Secondary))
+            {
+
+                if (loaderFactory.secondaryDataType == ISecondaryData.SecondaryDataType.Abstract)
+                {
+                    if (loaderFactory.abstractDataset != null) dataVisGroup.SetAbstractCsvData(loaderFactory.abstractDataset);
+                }
+                if (loaderFactory.secondaryDataType == ISecondaryData.SecondaryDataType.Spatial)
+                {
+                    if (loaderFactory.polyFiberDataset != null)
+                    {
+                        dataVisGroup.SetPolyData(loaderFactory.polyFiberDataset);
+                        dataVisGroup.SetAbstractCsvData(loaderFactory.polyFiberDataset.ExportForDataVis());
+                    }
                 }
             }
+            // Unknown
+            else
+            {
+                Debug.LogError("No Primary or Secondary Data detected");
+            }
+
         }
-        // Unknown
-        else
+
+        /// <summary>
+        /// Returns the most recently DataVisGroup containing the loaded file
+        /// </summary>
+        /// <returns></returns>
+        public DataVisGroup GetDataVisGroup()
         {
-            Debug.LogError("No Primary or Secondary Data detected");
+            return dataVisGroup;
         }
 
-    }
 
-    /// <summary>
-    /// Returns the most recently DataVisGroup containing the loaded file
-    /// </summary>
-    /// <returns></returns>
-    public DataVisGroup GetDataVisGroup()
-    {
-        return dataVisGroup;
-    }
+        #region FilePickerMethods
 
-
-    #region FilePickerMethods
-
-    public async Task<String> StartPicker()
-    {
+        public async Task<String> StartPicker()
+        {
 #if !UNITY_EDITOR && UNITY_WSA_10_0
-        Debug.Log("HOLOLENS 2 PICKER");
+            Debug.Log("HOLOLENS 2 PICKER");
             return await FilePicker_Hololens();
 
 #endif
@@ -213,16 +215,16 @@ public class FileLoadingManager
         return await FilePicker_Win();
 #endif
 
-    }
+        }
 
 
-    #if !UNITY_EDITOR && UNITY_WSA_10_0
-    private async Task<String> FilePicker_Hololens()
-    {
-        var completionSource = new TaskCompletionSource<String>();
+#if !UNITY_EDITOR && UNITY_WSA_10_0
+        private async Task<String> FilePicker_Hololens()
+        {
+            var completionSource = new TaskCompletionSource<String>();
         
-        // Calls to UWP must be made on the UI thread.
-        UnityEngine.WSA.Application.InvokeOnUIThread(async () =>
+            // Calls to UWP must be made on the UI thread.
+            UnityEngine.WSA.Application.InvokeOnUIThread(async () =>
             {
                 var filepicker = new FileOpenPicker();
                 filepicker.FileTypeFilter.Add("*");
@@ -254,12 +256,12 @@ public class FileLoadingManager
 
             }, true);
         
-        return await completionSource.Task;
-    }
-    #endif
+            return await completionSource.Task;
+        }
+#endif
 
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
     private async Task<String> FilePicker_Win()
     {
 
@@ -277,8 +279,9 @@ public class FileLoadingManager
         return filePath;
     }
 
-    #endif
+#endif
 
-    #endregion
+        #endregion
 
+    }
 }
