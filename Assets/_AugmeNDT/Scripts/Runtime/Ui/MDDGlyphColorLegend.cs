@@ -17,11 +17,11 @@ namespace AugmeNDT{
         // BreakPoints from https://brownmath.com/stat/shape.htm#Skewness
         // Acceptable limits of ±2 (Trochim & Donnelly, 2006; Field, 2000 & 2009; Gravetter & Wallnau, 2014)
         /* https://www.researchgate.net/post/What_is_the_acceptable_range_of_skewness_and_kurtosis_for_normal_distribution_of_data
-     * Trochim, W. M., & Donnelly, J. P. (2006). The research methods knowledge base (3rd ed.). Cincinnati, OH:Atomic Dog.
-     * Gravetter, F., & Wallnau, L. (2014). Essentials of statistics for the behavioral sciences (8th ed.). Belmont, CA: Wadsworth.
-     * Field, A. (2000). Discovering statistics using spss for windows. London-Thousand Oaks- New Delhi: Sage publications.
-     * Field, A. (2009). Discovering statistics using SPSS. London: SAGE.
-     */
+         * Trochim, W. M., & Donnelly, J. P. (2006). The research methods knowledge base (3rd ed.). Cincinnati, OH:Atomic Dog.
+         * Gravetter, F., & Wallnau, L. (2014). Essentials of statistics for the behavioral sciences (8th ed.). Belmont, CA: Wadsworth.
+         * Field, A. (2000). Discovering statistics using spss for windows. London-Thousand Oaks- New Delhi: Sage publications.
+         * Field, A. (2009). Discovering statistics using SPSS. London: SAGE.
+         */
         // Skewness Thresholds
         private const double leftSkewedThreshold = -2.0;      // min skewness
         private const double symmetricThreshold = 0.0;
@@ -227,7 +227,6 @@ namespace AugmeNDT{
 
         private Color GetDetailedColoring(double skewness, double kurtosis)
         {
-            Debug.Log("GetDetailedColoring");
 
             // If detailed View is on, we only show the glyphs that are within the range of the selected skewness and kurtosis
             if (!(skewness <= maxSkewness && skewness >= minSkewness))

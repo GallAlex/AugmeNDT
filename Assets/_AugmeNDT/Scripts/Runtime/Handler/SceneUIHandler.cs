@@ -90,6 +90,7 @@ namespace AugmeNDT{
                 setChannels.Add(VisChannel.XPos, abstractDataset.GetAttribute(i));
                 sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, setChannels);
             }
+
         }
 
         public void ChangeVisTicks()

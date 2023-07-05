@@ -181,16 +181,6 @@ namespace AugmeNDT{
             return dataVisGroups[selectedGroup].GetAttributeCount();
         }
 
-        /// <summary>
-        /// Returns the amount of derived attributes the abstract dataset has
-        /// </summary>
-        /// <param name="selectedGroup"></param>
-        /// <returns></returns>
-        public int GetDerivedAttributeCount(int selectedGroup)
-        {
-            return dataVisGroups[selectedGroup].GetDerivedAttributeCount();
-        }
-
         public AbstractDataset GetAbstractDataset(int selectedGroup)
         {
             return dataVisGroups[selectedGroup].GetAbstractDataset();

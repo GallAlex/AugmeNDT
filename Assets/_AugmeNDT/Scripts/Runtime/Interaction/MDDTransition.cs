@@ -26,7 +26,7 @@ namespace AugmeNDT{
                 {
                     if (!isTransitioned)
                     {
-                        Debug.Log("Transition fits to 2D");
+                        //Debug.Log("Transition fits to 2D");
                         mddVis.ApplyMDDTransition(true);
                         isTransitioned = true; 
                     }
@@ -35,7 +35,7 @@ namespace AugmeNDT{
                 {
                     if (isTransitioned)
                     {
-                        Debug.Log("Transition fits to 3D");
+                        //Debug.Log("Transition fits to 3D");
                         mddVis.ApplyMDDTransition(false);
                         isTransitioned = false;
                     }

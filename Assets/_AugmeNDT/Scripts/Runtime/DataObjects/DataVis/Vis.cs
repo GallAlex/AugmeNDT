@@ -49,6 +49,7 @@ namespace AugmeNDT
 
         // Data
         public List<AbstractDataset> dataSets;                          // List of Datasets as Dictionaries with all data attributes with their <name,values>. Dictionaries should all have the same attributes
+        public DataEnsemble dataEnsemble; 
         public int attributeCount = 0;                                  // Number of attributes retrieved from the dataValues.
         public List<int> numberOfValues;                                // Number of values for each attribut from the dataValues.
 
@@ -78,6 +79,8 @@ namespace AugmeNDT
 
             definedChannelEncoding = new Dictionary<VisChannel, int[]>();
             channelEncoding = new Dictionary<VisChannel, Attribute>();
+
+            dataEnsemble = new DataEnsemble();
 
             //Set default channel encodings
             DefineChannelToData(VisChannel.XPos, 1);
@@ -136,7 +139,7 @@ namespace AugmeNDT
         /// </summary>
         /// <param name="visChannel"></param>
         /// <param name="derivedAttrId"></param>
-        public void DefineChannelToData(VisChannel visChannel, AbstractDataset.DerivedAttributes derivedAttrId)
+        public void DefineChannelToData(VisChannel visChannel, DerivedAttributes.DerivedAttributeCalc derivedAttrId)
         {
             definedChannelEncoding[visChannel] = new int[] {-1, (int)derivedAttrId };
         }
@@ -168,11 +171,11 @@ namespace AugmeNDT
         /// Replaces the previous attribute if already set
         /// </summary>
         /// <param name="visChannel"></param>
-        /// <param name="attributeId"></param>
-        private void SetChannelEncoding(VisChannel visChannel, AbstractDataset.DerivedAttributes derivedAttrId)
-        {
-            channelEncoding[visChannel] = dataSets[0].GetDerivedAttribute(derivedAttrId);
-        }
+        /// <param name="derivedAttrId"></param>
+        //private void SetChannelEncoding(VisChannel visChannel, DerivedAttributes.DerivedAttributeCalc derivedAttrId)
+        //{
+        //    channelEncoding[visChannel] = dataSets[0].GetDerivedAttribute(derivedAttrId);
+        //}
 
         /// <summary>
         /// Links the defined channels to the data. Has to be called after appending the data!
@@ -190,7 +193,7 @@ namespace AugmeNDT
                 // Attribute id [0] is not defined - derived attribute [1] used
                 if (definedChannel.Value[0] == -1)
                 {
-                    SetChannelEncoding(definedChannel.Key, (AbstractDataset.DerivedAttributes)definedChannel.Value[1]);
+                    //SetChannelEncoding(definedChannel.Key, (AbstractDataset.DerivedAttributes)definedChannel.Value[1]);
                 }
                 // Attribute id [0] is defined - attribute used
                 else
@@ -236,6 +239,8 @@ namespace AugmeNDT
             dataSets.Add(abstractDataset);
             numberOfValues.Add(abstractDataset.numberOfValues[0]);
 
+            dataEnsemble.AddAbstractDataSet(abstractDataset);
+
             //Link Default Index to Data
             LinkChannelToData();
         }
@@ -258,7 +263,15 @@ namespace AugmeNDT
             if (normalized) values = attribute.GetNumericalValNorm();
             else values = attribute.GetNumericalVal();
 
-            visContainer.SetChannel(visChannel, values);
+            if (attribute.IsNumerical())
+            {
+                visContainer.SetChannel(visChannel, values);
+            }
+            else
+            {
+                visContainer.SetChannel(visChannel, attribute.GetNumericalVal());
+            }
+
         }
 
         public void CreateAxis(Attribute attribute, bool normalized, Direction axisDirection)

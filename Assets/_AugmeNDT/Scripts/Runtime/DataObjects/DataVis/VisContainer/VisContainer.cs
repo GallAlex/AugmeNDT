@@ -255,6 +255,13 @@ namespace AugmeNDT{
         {
             specificColorsSet = true;
             specificColorChannel = colorValues;
+
+            //Set dummy data for channelValues
+            if (!channelValues.ContainsKey(VisChannel.Color) || channelValues[VisChannel.Color].Length != colorValues.Length)
+            {
+                channelValues[VisChannel.Color] = new double[colorValues.Length];
+            }
+            
         }
 
         public DataMark.Channel GetDataMarkChannelValues(DataMark.Channel channel, int valueIndex)

@@ -8,26 +8,12 @@ namespace AugmeNDT{
     {
 
         /// <summary>
-        /// Derived Attributes
+        /// Possible Calcuation on Datasets (Attributes)
         /// </summary>
-        public enum DerivedAttributes
+        public enum DatasetCalculation
         {
-            // DistributionValues
-            LargestElement,
-            SmallestElement,
-            Median,
-            Mean,
-            Variance,
-            StdDev,
-            Iqr,
-            UpperQuartile,
-            LowerQuartile,
-            Kurtosis,
-            Skewness,
-            Modality,
-            //Other
-
-            NumberOfDerivedAttributes
+            ChiSquared,
+            NumberOfDatasetCalculations
         }
 
 
@@ -35,17 +21,13 @@ namespace AugmeNDT{
 
         public string datasetName;                                  // Name of the dataset
 
-        public int attributesCount;                                 // Number of attributes from the csv file which can be accessed
-        public int derivedAttributesCount;                          // Number of derived parameters from the attributes which can be accessed
-
-        public List<int> numberOfValues;                            // Number of values for each attribute in the csv file
-
         public List<string> attributeNames;                         // Attribute names in the order found in the header of the csv file
-        public List<string> derivedAttributeNames;                  // Derived parameters from the attributes in the order found in the header of the csv file
+        public int attributesCount;                                 // Number of attributes from the csv file which can be accessed
+        public int numericAttributesCount;                          // Number of numerical attributes (from all attributes -> attributesCount)
 
         public Attribute headerValues;                              // Attribute for the header (Attribute names in the order found in the header of the csv file)
         public List<Attribute> attributeValues;                     // List of all attributes (name, values, normValues,...), index zero is the textual Header attribut (all attribute names)
-        public List<List<Attribute>> derivedAttributeValues;        // List of all derived attributes (name, values, normValues,...) for the initial attributess like statistics, metrics,... 
+        public List<int> numberOfValues;                            // Number of values for each attribute in the csv file
 
 
         public Dictionary<string, DistributionValues> statisticValues;          
@@ -61,7 +43,6 @@ namespace AugmeNDT{
 
             InitializeDatasets(numericalData);
             CheckAttributeValueCount();
-            CalculateDerivedValues();
         }
 
         /// <summary>
@@ -75,19 +56,8 @@ namespace AugmeNDT{
 
             //Set up Lists
             attributeValues = new List<Attribute>(attributesCount);
-            derivedAttributeValues = new List<List<Attribute>>(attributesCount);
 
-            // How many derived attributes are there?
-            derivedAttributesCount = (int)DerivedAttributes.NumberOfDerivedAttributes;
-            derivedAttributeNames = new List<string>(derivedAttributesCount);
-
-            // Save the strings from the Enum in the derivedAttributesParams List
-            for (int i = 0; i < derivedAttributesCount; i++)
-            {
-                derivedAttributeNames.Add(((DerivedAttributes)i).ToString());
-            }
-
-            // Add the remaining attributes
+            // Add attributes
             for (int i = 0; i < attributesCount; i++)
             {
                 attributeValues.Add(CreateAttribute(attributeNames[i], numericalData.ElementAt(i).Value));
@@ -102,6 +72,32 @@ namespace AugmeNDT{
         public void SetDatasetName(string name)
         {
             datasetName = name;
+        }
+
+        /// <summary>
+        /// Returns the name of the dataset
+        /// </summary>
+        /// <returns></returns>
+        public string GetDatasetName()
+        {
+            return datasetName;
+        }
+
+        /// <summary>
+        /// Method runs through all attributes and counts the number of numerical attributes
+        /// </summary>
+        /// <returns></returns>
+        public int GetNumericalValuesCount()
+        {
+            numericAttributesCount = 0;
+            foreach (var attr in attributeValues)
+            {
+                if (attr.IsNumerical())
+                {
+                    numericAttributesCount++; 
+                }
+            }
+            return numericAttributesCount;
         }
 
         /// <summary>
@@ -125,58 +121,100 @@ namespace AugmeNDT{
         }
 
         /// <summary>
-        /// Returns the Derived Attribute with the given Id for a specific Attribute
+        /// Returns the Derived Attributes for a specific Attribute
         /// </summary>
         /// <param name="attrId"></param>
-        /// <param name="derivedAttrId"></param>
         /// <returns></returns>
-        public Attribute GetDerivedAttribute(int attrId, DerivedAttributes derivedAttrId)
+        public DerivedAttributes GetDerivedAttribute(int attrId)
         {
-            return derivedAttributeValues[attrId][(int)derivedAttrId];
+            return attributeValues[attrId].GetDerivedAttributes();
 
         }
 
         /// <summary>
-        /// Returns a new Attribute which consists of the choosen Derived Attribute values for all attributes
-        /// </summary>
-        /// <param name="derivedAttrId"></param>
-        /// <returns></returns>
-        public Attribute GetDerivedAttribute(DerivedAttributes derivedAttrId)
-        {
-            // Run through all attributes and add the derived attribute values to the new attribute
-            double[] aggregatedValues = new double[attributesCount];
-            for (var attrIndex = 0; attrIndex < derivedAttributeValues.Count; attrIndex++)
-            {
-                // Derived Attribute values are always one double value [0]
-                aggregatedValues[attrIndex] = derivedAttributeValues[attrIndex][(int)derivedAttrId].GetNumericalVal()[0];
-            }
-
-            return CreateAttribute(derivedAttributeNames[(int)derivedAttrId], aggregatedValues);
-        }
-
-        /// <summary>
-        /// Returns a new Attribute which consists of all Values of all attributes
+        /// Returns all Values of all numerical attributes
         /// </summary>
         /// <returns></returns>
-        public Attribute GetAllAttributes()
+        public double[] GetAllAttributeValues(bool normalized)
         {
-            // Run through all attributes and add all values to the new attribute
-            double[] aggregatedValues = new double[attributesCount * numberOfValues[0]];
-            int currentIndex = 0;
+            // Run through all attributes and add all values 
+            List<double> aggregatedValues = new List<double>(numericAttributesCount * (int)DerivedAttributes.DerivedAttributeCalc.NumberOfDerivedAttributes);
 
             for (var attrIndex = 0; attrIndex < attributesCount; attrIndex++)
             {
-                for (var valIndex = 0; valIndex < numberOfValues[0]; valIndex++)
-                {
-                    aggregatedValues[currentIndex] = attributeValues[attrIndex].GetNumericalVal()[valIndex];
-                    currentIndex++;
-                }
+                if (!attributeValues[attrIndex].IsNumerical()) continue;
+
+                double[] values;
+                if(normalized) values = attributeValues[attrIndex].GetNumericalValNorm();
+                else values = attributeValues[attrIndex].GetNumericalVal();
+                
+                aggregatedValues.AddRange(values);
             }
 
-            return CreateAttribute("Attribute Values", aggregatedValues);
+            return aggregatedValues.ToArray();
         }
 
+        /// <summary>
+        /// Returns the min/max values of a specific attribute
+        /// </summary>
+        /// <param name="attrId"></param>
+        /// <param name="normalized"></param>
+        /// <returns></returns>
+        public double[] GetMinMaxAttributeValues(int attrId, bool normalized)
+        {
+            double[] minMax;
 
+            if(normalized) minMax = attributeValues[attrId].GetMinMaxValNorm();
+            else minMax = attributeValues[attrId].GetMinMaxVal();
+
+            return minMax;
+        }
+
+        /// <summary>
+        /// Return the min/max values over all numerical attributes
+        /// </summary>
+        /// <param name="normalized"></param>
+        /// <returns></returns>
+        public double[] GetMinMaxAttributeValues(bool normalized)
+        {
+            // Run through all attributes and add all min/max values 
+            double[] aggregatedValues = new double[numericAttributesCount * 2];
+
+            for (var attrIndex = 0; attrIndex < attributesCount; attrIndex++)
+            {
+                if (!attributeValues[attrIndex].IsNumerical()) continue;
+
+                double[] minMax;
+                if(normalized) minMax = attributeValues[attrIndex].GetMinMaxValNorm();
+                else minMax = attributeValues[attrIndex].GetMinMaxVal();
+
+                aggregatedValues[attrIndex] = minMax[0];
+                aggregatedValues[attrIndex + 1] = minMax[1];
+            }
+
+            return DataEnsemble.GetMinMaxValues(aggregatedValues);
+        }
+
+        /// <summary>
+        /// Returns the value of the choosen Derived Attribute for all attributes
+        /// </summary>
+        /// <param name="derivedAttrId"></param>
+        /// <returns></returns>
+        public double[] GetDerivedAttribute(DerivedAttributes.DerivedAttributeCalc derivedAttrId, bool normalized)
+        {
+            // Run through all attributes and add the derived attribute values to the new attribute
+            double[] aggregatedValues = new double[attributesCount];
+
+            for (var attrIndex = 0; attrIndex < attributesCount; attrIndex++)
+            {
+                // Derived Attribute values are always one double value [0]
+                aggregatedValues[attrIndex] = attributeValues[attrIndex].GetDerivedValue(derivedAttrId, normalized);
+            } 
+            
+            return aggregatedValues;
+        }
+
+        
         /// <summary>
         /// Method runs through all attributes and stores/checks the number of values for each attribute
         /// </summary>
@@ -196,81 +234,6 @@ namespace AugmeNDT{
         }
 
         /// <summary>
-        /// Calculates the derived Values of the Attributes.
-        /// </summary>
-        private void CalculateDerivedValues()
-        {
-            // For each attribute...
-            for (var attr = 0; attr < attributeValues.Count; attr++)
-            {
-                //Preprocess here everything
-                derivedAttributeValues.Add(new List<Attribute>(derivedAttributesCount));
-
-                // Calculate statistic values from dataset
-                DistributionValues statVal = new DistributionValues();
-                    
-                // Check if textual?
-                statVal.GetDescriptiveStatisticValues(attributeValues[attr].GetNumericalVal());
-
-                statisticValues.Add(attributeNames[attr], statVal); //TODO: TEST variable
-
-                // For each derived attribute fill values in...
-                for (var derivedAttr = 0; derivedAttr < derivedAttributesCount; derivedAttr++)
-                {
-                    string currentDerivedAttrName = derivedAttributeNames[derivedAttr];
-
-                    switch ((DerivedAttributes)derivedAttr)
-                    {
-                        // DistributionValues
-                        case DerivedAttributes.LargestElement:
-                            derivedAttributeValues[attr].Add(CreateAttribute(currentDerivedAttrName, new []{statVal.LargestElement}));
-                            break;
-                        case DerivedAttributes.SmallestElement:
-                            derivedAttributeValues[attr].Add(CreateAttribute(currentDerivedAttrName, new[] { statVal.SmallestElement }));
-                            break;
-                        case DerivedAttributes.Median:
-                            derivedAttributeValues[attr].Add(CreateAttribute(currentDerivedAttrName, new[] { statVal.Median }));
-                            break;
-                        case DerivedAttributes.Mean:
-                            derivedAttributeValues[attr].Add(CreateAttribute(currentDerivedAttrName, new[] { statVal.Mean }));
-                            break;
-                        case DerivedAttributes.Variance:
-                            derivedAttributeValues[attr].Add(CreateAttribute(currentDerivedAttrName, new[] { statVal.Variance }));
-                            break;
-                        case DerivedAttributes.StdDev:
-                            derivedAttributeValues[attr].Add(CreateAttribute(currentDerivedAttrName, new[] { statVal.StdDev }));
-                            break;
-                        case DerivedAttributes.Iqr:
-                            derivedAttributeValues[attr].Add(CreateAttribute(currentDerivedAttrName, new[] { statVal.Iqr }));
-                            break;
-                        case DerivedAttributes.UpperQuartile:
-                            derivedAttributeValues[attr].Add(CreateAttribute(currentDerivedAttrName, new[] { statVal.UpperQuartile }));
-                            break;
-                        case DerivedAttributes.LowerQuartile:
-                            derivedAttributeValues[attr].Add(CreateAttribute(currentDerivedAttrName, new[] { statVal.LowerQuartile }));
-                            break;
-                        case DerivedAttributes.Kurtosis:
-                            derivedAttributeValues[attr].Add(CreateAttribute(currentDerivedAttrName, new[] { statVal.Kurtosis }));
-                            break;
-                        case DerivedAttributes.Skewness:
-                            derivedAttributeValues[attr].Add(CreateAttribute(currentDerivedAttrName, new[] { statVal.Skewness }));
-                            break;
-                        case DerivedAttributes.Modality:
-                            derivedAttributeValues[attr].Add(CreateAttribute(currentDerivedAttrName, new[] { statVal.Modality }));
-                            break;
-                        //Other
-                        //case DerivedAttributes.ChiSquared:
-                        //    break;
-                        default:
-                            throw new NotImplementedException();
-                    }
-
-                }
-            }
-
-        }
-
-        /// <summary>
         /// Create a numerical Attribute
         /// </summary>
         /// <param name="name"></param>
@@ -278,6 +241,7 @@ namespace AugmeNDT{
         /// <returns></returns>
         private Attribute CreateAttribute(string name, double[] value)
         {
+            numericAttributesCount++;
             return new Attribute(name, value);
         }
 
@@ -314,29 +278,25 @@ namespace AugmeNDT{
 
 
             //#### PRINT DERIVED VALUES ####
-            if (normalizedVals) Debug.Log("OUTPUT: Dataset - Derived Attributes NORMALIZED \n" + "Number of Derived Attributes: " + derivedAttributesCount);
-            else Debug.Log("OUTPUT: Dataset - Derived Attributes \n" + "Number of Derived Attributes: " + derivedAttributesCount);
+            string[] derivedNames = DerivedAttributes.GetDerivedAttributeNames();
 
-            string[] derivedNames = derivedAttributeNames.ToArray();
+            if (normalizedVals) Debug.Log("OUTPUT: Dataset - Derived Attributes NORMALIZED \n" + "Number of Derived Attributes: " + derivedNames.Length);
+            else Debug.Log("OUTPUT: Dataset - Derived Attributes \n" + "Number of Derived Attributes: " + derivedNames.Length);
+
             string combinedDerivedVal = "";
-
-            // Output statisticValues for Debug Purposes
-            for (var derivedValList = 0; derivedValList < attributesCount; derivedValList++)
+            
+            for (var index = 0; index < attributeValues.Count; index++)
             {
                 List<double[]> derivedValues = new List<double[]>();
+                combinedDerivedVal += attributeNames[index] + ":\n";
 
-                combinedDerivedVal += attributeNames[derivedValList] + ":\n";
-                
-                for (int derivedId = 0; derivedId < derivedAttributeValues[derivedValList].Count; derivedId++)
+                for (int derivedIdIndex = 0; derivedIdIndex < derivedNames.Length; derivedIdIndex++)
                 {
-                    //derivedNames[derivedId] = derivedAttributeNames[derivedId];
-                    if (normalizedVals) derivedValues.Add(derivedAttributeValues[derivedValList][derivedId].GetNumericalValNorm());
-                    else derivedValues.Add(derivedAttributeValues[derivedValList][derivedId].GetNumericalVal());
+                    derivedValues.Add(new []{attributeValues[index].GetDerivedAttributes().GetDerivedValue((DerivedAttributes.DerivedAttributeCalc)derivedIdIndex, normalizedVals)});
                 }
-
                 combinedDerivedVal += TablePrint.ToStringTable(derivedNames, derivedValues) + "\n";
             }
-
+            
             Debug.Log(combinedDerivedVal);
         }
 

@@ -1,5 +1,6 @@
 
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace AugmeNDT{
 
@@ -12,13 +13,16 @@ namespace AugmeNDT{
         private string name;                    // Name of the attribute
         private bool numericalType;             // True if the attribute is numerical, false if it is textual
 
-        private double[] numericalValues;       // If the attribute is numerical, this array contains the numerical values
         private string[] textualValues;         // If the attribute is textual, this array contains the textual values
 
+        //NUMERICAL
+        private double[] numericalValues;       // If the attribute is numerical, this array contains the numerical values
         private double[] minMaxValue;           // Minimum/Maximum value of the attribute (numericalValues)
 
         private double[] numericalValuesNorm;   // Numerical values normalized between 0 and 1
         private double[] minMaxValueNorm;       // Minimum/Maximum value of the normalized attribute (numericalValuesNorm)
+
+        private DerivedAttributes derivedAttributes;    // Stores the derived attributes of the (normalized) numerical attribute
 
         #region Getter/Setter
 
@@ -89,6 +93,8 @@ namespace AugmeNDT{
 
             numericalValues = values;
             SetMinMaxValues();
+
+            derivedAttributes = new DerivedAttributes(numericalValues, GetNumericalValNorm());
         }
 
         public Attribute(string attributeName, string[] values)
@@ -109,6 +115,27 @@ namespace AugmeNDT{
         {
             return numericalValues.Length;
         }
+
+        public DerivedAttributes GetDerivedAttributes()
+        {
+            if (!numericalType)
+            {
+                Debug.LogError("Attribute is not numerical. No Derived attributes could be calculated!");
+                return null;
+            }
+            return derivedAttributes;
+        }
+
+        public double GetDerivedValue(DerivedAttributes.DerivedAttributeCalc derivedAttr, bool normalized)
+        {
+            if (!numericalType)
+            {
+                Debug.LogError("Derived attributes can only be calculated for numerical attributes!");
+                return -1;
+            }
+            return derivedAttributes.GetDerivedValue(derivedAttr, normalized);
+        }
+
 
         /// <summary>
         /// If a textual attribute is given, this method will set the numerical values for the attribute.
@@ -163,6 +190,25 @@ namespace AugmeNDT{
             numericalValuesNorm = currentNormScale.GetNormalizedArray(numericalValues);
         }
 
+        public string PrintAttribute()
+        {
+            string output = "";
+
+            string[] header = new[] { "Name", "Is Numeric?"};
+            List<string[]> values = new List<string[]>();
+
+            if (textualValues == null) textualValues = new []{""};
+
+            values.Add(new[] { name});
+            values.Add(new[] { numericalType.ToString() });
+
+            output += TablePrint.ToStringTable(header, values) + "\n";
+            output += "Numerical Values : \n" + TablePrint.ToStringRow(numericalValues) + "\n";
+            output += "Textual Values : \n" + TablePrint.ToStringRow(textualValues);
+
+            return output;
+        }
+
         /// <summary>
         /// Sets the minimum and maximum values of the attribute based on the normalized numerical values.
         /// </summary>
@@ -185,5 +231,6 @@ namespace AugmeNDT{
 
             minMaxValueNorm = new double[2] { minValueNorm, maxValueNorm };
         }
+
     }
 }
