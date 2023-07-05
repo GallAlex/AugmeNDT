@@ -317,11 +317,6 @@ namespace AugmeNDT
             return csvAbstractData.attributesCount;
         }
 
-        public int GetDerivedAttributeCount()
-        {
-            return csvAbstractData.derivedAttributesCount;
-        }
-
         public AbstractDataset GetAbstractDataset()
         {
             return csvAbstractData;

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.XR.ARSubsystems;
 
 namespace AugmeNDT{
     /// <summary>
@@ -40,163 +41,160 @@ namespace AugmeNDT{
             base.CreateVis(container);
 
             //Set default channel encodings
-            SetChannelEncoding(VisChannel.XPos, dataSets[0].GetHeader());
-            SetChannelEncoding(VisChannel.YPos, dataSets[0].GetAllAttributes());
-            SetChannelEncoding(VisChannel.ZPos, dataSets[0].GetDerivedAttribute(AbstractDataset.DerivedAttributes.Modality));
+            //SetChannelEncoding(VisChannel.XPos, dataSets[0].GetHeader());
+            //SetChannelEncoding(VisChannel.YPos, dataSets[0].GetAllAttributeValues(true));
+            //SetChannelEncoding(VisChannel.ZPos, dataSets[0].GetDerivedAttribute(DerivedAttributes.DerivedAttributeCalc.Kurtosis, true));
 
             if (dataSets.Count > 1) use4DData = true;
         
-            if(!use4DData) xyzTicks = new int[] { dataSets[0].attributesCount -1 , 13, 7 };
-            else xyzTicks = new int[] { dataSets[0].attributesCount - 1, 10, dataSets.Count };
+            if(!use4DData) xyzTicks = new int[] { dataSets[0].attributesCount, 13, 7 };
+            else xyzTicks = new int[] { dataSets[0].attributesCount, 10, dataSets.Count };
 
             xyzOffset = new float[] { 0.05f, 0.05f, 0.05f };
 
             SetVisParams();
 
-            DataPreparation();
-
             Debug.Log("Create MDDGlyph");
 
-            double[] datasets = new double[dataSets.Count];
-            string[] datasetNames = new string[dataSets.Count];
-            for (int i = 0; i < dataSets.Count; i++)
-            {
-                datasets[i] = i;
-                datasetNames[i] = "Dataset_" + i;
-            }
-            //Debug.Log("datasets: " + datasets.Length);
-
-            //## 02: Create Axes and Grids
-
-            // X Axis
-            CreateAxis(channelEncoding[VisChannel.XPos], false, (Direction)0);
-            visContainer.CreateGrid((Direction)0, (Direction)1);
-
-            // Y Axis
-            visContainer.CreateAxis("Attributes Value", new []{minMaxStatisticValues[0].SmallestElement, minMaxStatisticValues[1].LargestElement}, (Direction)1);
-            //CreateAxis(channelEncoding[VisChannel.YPos], true, (Direction)1);
-            visContainer.CreateGrid((Direction)1, (Direction)2);
-
-            if (!use4DData)
-            {
-                // Z Axis
-                //encodedAttribute.Add(2);
-                visContainer.CreateAxis("Modality", new[] { minMaxStatisticValues[0].Modality, minMaxStatisticValues[1].Modality }, (Direction)2);
-                //CreateAxis(channelEncoding[VisChannel.ZPos], true, (Direction)2);
-                visContainer.CreateGrid((Direction)2, (Direction)0); 
-            }
-            else
-            {
-                // Z Axis
-                //encodedAttribute.Add(2);
-                visContainer.CreateAxis("Timestep", datasetNames, (Direction)2); 
-                visContainer.CreateGrid((Direction)2, (Direction)0);
-            }
-
-
-            //## 03: Calculate Channels
             MDDGlyphColorLegend legend = new MDDGlyphColorLegend(this);
-            legend.SetMinMaxSkewKurtValues(new double[]{minMaxStatisticValues[0].Skewness, minMaxStatisticValues[1].Skewness}, new double[] { minMaxStatisticValues[0].Kurtosis, minMaxStatisticValues[1].Kurtosis });
 
-            int numberOfFeatures = dataSets[0].attributeNames.Count;
-            int numberOfDatasets = dataSets[0].statisticValues.Count;
-            int currentDataSet = 0;
-
-
-            double[] xPos = new double[numberOfFeatures * numberOfDatasets];
-            double[] zPos = new double[numberOfFeatures * numberOfDatasets];
-            double[] barHeight = new double[numberOfFeatures * numberOfDatasets];
-            double[] q1 = new double[numberOfFeatures * numberOfDatasets];
-            double[] q2 = new double[numberOfFeatures * numberOfDatasets];
-            double[] modality = new double[numberOfFeatures * numberOfDatasets];
-            Color[] c = new Color[numberOfFeatures * numberOfDatasets];
-
-            // For every Attribute one Data Mark
-            //Loop through every dataset statisticValues[] and create a Data Mark for every Attribute in every dataset
-            foreach (var dataSet in dataSets)
-            {
-                // Calculate and combine statistical data
-                for (int feature = 0; feature < numberOfFeatures; feature++)
-                {
-                    //Add values of second dataset afterwards 
-                    int featureIndex = feature + (numberOfFeatures * currentDataSet);
-
-                    xPos[featureIndex] = feature;
-                    zPos[featureIndex] = currentDataSet;
-                    //Size - Distance between lower and upper quartiles
-                    q1[featureIndex] = dataSet.statisticValues.ElementAt(feature).Value.LowerQuartile;
-                    q2[featureIndex] = dataSet.statisticValues.ElementAt(feature).Value.UpperQuartile;
-                    barHeight[featureIndex] = q2[feature] - q1[feature];
-                    modality[featureIndex] = dataSet.statisticValues.ElementAt(feature).Value.Modality;
-
-                    //c[featureIndex] = legend.GetColoring(dataSet.statisticValues.ElementAt(feature).Value.Skewness, dataSet.statisticValues.ElementAt(feature).Value.Kurtosis); 
-                    //TODO: Add non special coloring
-                }
-
-                currentDataSet++;
-            }
-
-            if (use4DData)
-            {
-                timeDifference = new List<double[]>(dataSets[0].attributesCount);
-
-                // For all attributes (attributeCount)
-                for (int i = 0; i < dataSets[0].attributesCount; i++)
-                {
-                    List<double> differences = new List<double>();
-                    string temp = "CalculateChiSquaredMetric of " + dataSets[0].attributeNames[i] + ": \n";
-
-                    // Calculate time difference between all datasets
-                    for (int dataSetFirstId = 0; dataSetFirstId < dataSets.Count; dataSetFirstId++)
-                    {
-                        for (int dataSetSecondId = dataSetFirstId; dataSetSecondId < dataSets.Count; dataSetSecondId++)
-                        {
-                            var diff = DistributionCalc.GetChiSquaredMetric(dataSets[dataSetFirstId].GetAttribute(i).GetNumericalValNorm(), dataSets[dataSetSecondId].GetAttribute(i).GetNumericalValNorm());
-                            differences.Add(diff);
-                            temp += dataSetFirstId + " -> " + dataSetSecondId + " = " + diff + "\n";
-
-                        }
-                    }
-                    Debug.Log(temp);
-
-                    timeDifference.Add(differences.ToArray());
-                }
-
-            }
-
-            Debug.Log("XPos: " + xPos.Length);
-
-            //X Axis (Attributes)
-            visContainer.SetChannel(VisChannel.XPos, xPos);
-
-            Debug.Log("YPos: " + q1.Length);
-
-            //Y Axis (Mean)
-            visContainer.SetChannel(VisChannel.YPos, q1);
-
-            Debug.Log("barHeight: " + barHeight.Length);
-
-            // Y Size (IQR)
-            visContainer.SetChannel(VisChannel.YSize, barHeight);
 
             if (!use4DData)
             {
-                Debug.Log("modality: " + modality.Length);
+                //## 02: Create Axes and Grids
+
+                // X Axis
+                CreateAxis(dataEnsemble.GetHeaderAttribute(0), false, (Direction)0);
+                visContainer.CreateGrid((Direction)0, (Direction)1);
+
+                // Y Axis
+                visContainer.CreateAxis("Attributes Value", dataEnsemble.GetMinMaxAttrVal(0, true), (Direction)1);
+                visContainer.CreateGrid((Direction)1, (Direction)2);
+
+                // Z Axis
+                visContainer.CreateAxis("Modality", dataEnsemble.GetMinMaxDerivedAttrVal(0, DerivedAttributes.DerivedAttributeCalc.Modality, false), (Direction)2);
+                visContainer.CreateGrid((Direction)2, (Direction)0);
+
+
+                //## 03: Calculate Channels
+                //legend.SetMinMaxSkewKurtValues(new double[]{minMaxStatisticValues[0].Skewness, minMaxStatisticValues[1].Skewness}, new double[] { minMaxStatisticValues[0].Kurtosis, minMaxStatisticValues[1].Kurtosis });
+                legend.SetMinMaxSkewKurtValues(dataEnsemble.GetMinMaxDerivedAttrVal(0, DerivedAttributes.DerivedAttributeCalc.Skewness, false), dataEnsemble.GetMinMaxDerivedAttrVal(0, DerivedAttributes.DerivedAttributeCalc.Kurtosis, false));
+
+                //X Axis (Attributes)
+                SetChannel(VisChannel.XPos, dataEnsemble.GetHeaderAttribute(0), false);
+
+                //Y Axis (Q1)
+                visContainer.SetChannel(VisChannel.YPos, dataEnsemble.GetDerivedAttributeValues(0, DerivedAttributes.DerivedAttributeCalc.LowerQuartile, true));
+
+                // Y Size (IQR)
+                visContainer.SetChannel(VisChannel.YSize, dataEnsemble.GetDerivedAttributeValues(0, DerivedAttributes.DerivedAttributeCalc.Iqr, true));
+
                 //Z Axis (Modality)
-                visContainer.SetChannel(VisChannel.ZPos, modality);
+                visContainer.SetChannel(VisChannel.ZPos, dataEnsemble.GetDerivedAttributeValues(0, DerivedAttributes.DerivedAttributeCalc.Modality, false));
+
+                //Color (Skewness + Kurtosis)
+                //visContainer.SetChannel(VisChannel.Color, dataEnsemble.GetDerivedAttributeValues(0, DerivedAttributes.DerivedAttributeCalc.Modality, true));
+                CreateMDDGlyphColors(legend);
             }
             else
             {
-                Debug.Log("zPos: " + zPos.Length);
+                visContainer.SetHandleText("4D Vis");
+
+                //## 02: Create Axes and Grids
+
+                // X Axis
+                //CreateAxis(channelEncoding[VisChannel.XPos], false, (Direction)0);
+                CreateAxis(dataEnsemble.GetHeaderAttribute(0), false, (Direction)0);
+                visContainer.CreateGrid((Direction)0, (Direction)1);
+
+                // Y Axis
+                visContainer.CreateAxis("Attributes Value", dataEnsemble.GetMinMaxAttrVal(true), (Direction)1);
+                //visContainer.CreateAxis("Attributes Value", new []{minMaxStatisticValues[0].SmallestElement, minMaxStatisticValues[1].LargestElement}, (Direction)1);
+                //CreateAxis(channelEncoding[VisChannel.YPos], true, (Direction)1);
+                visContainer.CreateGrid((Direction)1, (Direction)2);
+
+                // Z Axis
+                //visContainer.CreateAxis("Timestep", datasetNames, (Direction)2); 
+                Attribute timeSteps = new Attribute("Datasets", dataEnsemble.GetAbstractDataSetNames());
+                CreateAxis(timeSteps, false, (Direction)2);
+                visContainer.CreateGrid((Direction)2, (Direction)0);
+
+
+                //## 03: Calculate Channels
+
+                //Need dummy/repeated Vals for textual attributes
+                double[] xPos = new double[dataEnsemble.GetDataSetCount() * dataEnsemble.GetDataSet(0).attributesCount];
+                double[] zPos = new double[dataEnsemble.GetDataSetCount() * dataEnsemble.GetDataSet(0).attributesCount];
+
+                //TODO: CHECK X Pos Vals!
+
+                for (int dataSet = 0; dataSet < dataEnsemble.GetDataSetCount(); dataSet++)
+                {
+                    for (int attr = 0; attr < dataEnsemble.GetDataSet(0).attributesCount; attr++)
+                    {
+                        xPos[attr + (dataSet * dataEnsemble.GetDataSet(0).attributesCount)] = attr;
+                        zPos[attr + (dataSet * dataEnsemble.GetDataSet(0).attributesCount)] = dataSet;
+                    }
+
+                }
+
+                //Debug.Log(TablePrint.ToStringRow(xPos));
+                //Debug.Log(TablePrint.ToStringRow(zPos));
+
+                //legend.SetMinMaxSkewKurtValues(new double[]{minMaxStatisticValues[0].Skewness, minMaxStatisticValues[1].Skewness}, new double[] { minMaxStatisticValues[0].Kurtosis, minMaxStatisticValues[1].Kurtosis });
+                legend.SetMinMaxSkewKurtValues(dataEnsemble.GetMinMaxDerivedAttrVal(DerivedAttributes.DerivedAttributeCalc.Skewness, false), dataEnsemble.GetMinMaxDerivedAttrVal(DerivedAttributes.DerivedAttributeCalc.Kurtosis, false));
+
+                //X Axis (Attributes)
+                visContainer.SetChannel(VisChannel.XPos, xPos);
+
+                //Y Axis (Q1)
+                visContainer.SetChannel(VisChannel.YPos, dataEnsemble.GetDerivedAttributeValues(DerivedAttributes.DerivedAttributeCalc.LowerQuartile, true));
+
+                // Y Size (IQR)
+                visContainer.SetChannel(VisChannel.YSize, dataEnsemble.GetDerivedAttributeValues(DerivedAttributes.DerivedAttributeCalc.Iqr, true));
+
                 //Z Axis (Timesteps)
                 visContainer.SetChannel(VisChannel.ZPos, zPos);
+
+                //Color (Skewness + Kurtosis)
+                //visContainer.SetChannel(VisChannel.Color, zPos);
+                CreateMDDGlyphColors(legend);
+
+
+                // ChiSquared
+                //TODO: Save as Matrix? timeDifference[0][0] = 
+                timeDifference = new List<double[]>(dataSets[0].attributesCount);
+                string chiSquared = "ChiSquaredMetric: \n";
+
+                // For all attributes (attributeCount)
+                for (int attr = 0; attr < dataEnsemble.GetDataSet(0).attributesCount; attr++)
+                {
+                    List<double> differences = new List<double>();
+                    differences.Add(0);
+                    string temp = "CalculateChiSquaredMetric of " + dataSets[0].attributeNames[attr] + ": \n";
+
+                    // Calculate time difference between current and next dataset
+                    for (int currentDataSet = 0; currentDataSet < dataSets.Count-1; currentDataSet++)
+                    {
+                        var diff = DistributionCalc.GetChiSquaredMetric(dataEnsemble.GetAttribute(currentDataSet, attr).GetNumericalVal(), dataEnsemble.GetAttribute(currentDataSet + 1, attr).GetNumericalVal());
+                        differences.Add(diff);
+                        temp += currentDataSet + " -> " + (currentDataSet + 1) + " = " + diff + "\n";
+                    }
+                    chiSquared += temp + "\n";
+
+                    if (dataSets.Count > 1)
+                    {
+                        Attribute normalize = new Attribute("Normalized ChiSquaredMetric", differences.ToArray());
+                        TablePrint.ToStringRow(normalize.GetNumericalValNorm());
+                        timeDifference.Add(normalize.GetNumericalValNorm()); 
+                    }
+                    else timeDifference.Add(differences.ToArray());
+                }
+
+                Debug.Log(chiSquared);
             }
 
-            //Color (Skewness + Kurtosis)
-            visContainer.SetChannel(VisChannel.Color, zPos);
-            CreateMDDGlyphColors(legend);
-
-
+            
             //## 04: Create Data Marks
             visContainer.CreateDataMarks(dataMarkPrefab, new []{1, 0, 1});
 
@@ -211,8 +209,8 @@ namespace AugmeNDT{
             //visContainer.CreateDataMarkAxisLine(0);
             //visContainer.CreateDataMarkAxisLine(1);
 
-            dataSets[0].PrintDatasetValues(false);
-            dataSets[0].PrintDatasetValues(true);
+            //dataSets[0].PrintDatasetValues(false);
+            //dataSets[0].PrintDatasetValues(true);
 
             //## 06: Rescale
             visContainerObject.transform.localScale = new Vector3(width, height, depth);
@@ -231,63 +229,29 @@ namespace AugmeNDT{
             visContainer.ChangeDataMarks();
         }
 
-        /// <summary>
-        /// Calculates the minMax statistical Values over all datasets
-        /// </summary>
-        private void DataPreparation()
-        {
-            int currentDataSet = 0;
-
-            // Gather all statisticValues from all all Features in all datasets in one List (dataSets.Count * numberOfStatisticValues)
-            List<DistributionValues> aggregatedStatisticValues = new List<DistributionValues>();
-
-            //TODO: Calculate statistic data from every dataset by looping through dataValues[]
-            //TODO: Calculate global Min/Max over every dataset by looking at local min/max for every Attribute in a Dataset
-            foreach (var data in dataSets)
-            {
-                // Add the statistic Values of all Features from the current datasets in one List
-                aggregatedStatisticValues.AddRange(data.statisticValues.Values.ToList());
-
-                Debug.Log(">> MDDGlyh - DataSet [" + currentDataSet + "]: \n");
-                data.PrintDatasetValues(false);
-                data.PrintDatasetValues(true);
-
-                currentDataSet++;
-            }
-
-            // Calculate min/max values of statisticValues over all Datasets
-            minMaxStatisticValues = DistributionValues.GetMinMaxDistValues(aggregatedStatisticValues);
-        }
-
 
         public void CreateMDDGlyphColors(MDDGlyphColorLegend legend)
         {
 
             Debug.Log(">> Create NEW MDDGlyph Colors");
 
-            int numberOfFeatures = dataSets[0].attributesCount;
-            int numberOfDatasets = dataSets[0].statisticValues.Count;
+            int numberOfAttributes = dataEnsemble.GetDataSet(0).attributesCount;
+            int numberOfDatasets = dataEnsemble.GetDataSetCount();
             int currentDataSet = 0;
 
-            Color[] c = new Color[numberOfFeatures * numberOfDatasets];
+            Color[] c = new Color[numberOfAttributes * numberOfDatasets];
 
-            // For every Attribute one Data Mark
-            //Loop through every dataset statisticValues[] and create a Data Mark for every Attribute in every dataset
-            foreach (var dataSet in dataSets)
+            for (int dataSet = 0; dataSet < numberOfDatasets; dataSet++)
             {
-                // Calculate and combine statistical data
-                for (int feature = 0; feature < numberOfFeatures; feature++)
+                for (int attr = 0; attr < numberOfAttributes; attr++)
                 {
-                    //Add values of second dataset afterwards 
-                    int featureIndex = feature + (numberOfFeatures * currentDataSet);
+                    c[attr + (dataSet * numberOfAttributes)] = legend.GetColoring(dataEnsemble.GetDerivedAttributeValues(dataSet, DerivedAttributes.DerivedAttributeCalc.Skewness, false)[attr], dataEnsemble.GetDerivedAttributeValues(dataSet, DerivedAttributes.DerivedAttributeCalc.Kurtosis, false)[attr]);
 
-                    c[featureIndex] = legend.GetColoring(dataSet.statisticValues.ElementAt(feature).Value.Skewness, dataSet.statisticValues.ElementAt(feature).Value.Kurtosis);
                 }
-
-                currentDataSet++;
             }
 
             visContainer.SetSpecificColor(c);
+
         }
 
         public List<int> GetFiberIDsFromIQRRange(int attribute, int axis)
@@ -329,8 +293,10 @@ namespace AugmeNDT{
                 timeScatter.depth = 1;
                 //TODO: Copy the properties of the MDDGlyph Vis like offset, ticks,...
                 //AbstractDataset statisticalData = new AbstractDataset();
+
                 timeScatter.AppendData(dataSets[0]);
                 timeScatter.SetChannelEncoding(VisChannel.XPos, dataSets[0].GetHeader());
+                timeScatter.SetChannelEncoding(VisChannel.YPos, new Attribute(DerivedAttributes.DerivedAttributeCalc.Modality.ToString(), dataSets[0].GetDerivedAttribute(DerivedAttributes.DerivedAttributeCalc.Modality,false)));
                 timeScatter.CreateVis(visContainerObject);
                 timeScatter.visContainerObject.transform.Rotate(90,0,0);
                 timeScatter.visContainerObject.SetActive(false);
@@ -346,15 +312,45 @@ namespace AugmeNDT{
                 timeScatter.depth = 1;
                 //TODO: Copy the properties of the MDDGlyph Vis like offset, ticks,...
 
-                Dictionary<string, double[]> timeData = new Dictionary<string, double[]>();
-                for (var index = 0; index < dataSets[0].attributesCount; index++)
-                {
-                    timeData.Add(dataSets[0].attributeNames[index], timeDifference[index]);
-                }
+                //Dictionary<string, double[]> timeData = new Dictionary<string, double[]>();
+                //for (var index = 0; index < dataSets[0].attributesCount; index++)
+                //{
+                //    timeData.Add(dataSets[0].attributeNames[index], timeDifference[index]);
+                //}
+                //AbstractDataset timeDataset = new AbstractDataset("Time Relationship", dataSets[0].attributeNames, timeData);
+                //timeScatter.AppendData(timeDataset);
 
-                AbstractDataset timeDataset = new AbstractDataset("Time Relationship", dataSets[0].attributeNames, timeData);
-                timeScatter.AppendData(timeDataset);
-                timeDataset.PrintDatasetValues(true);
+                double[] timeDiff = new double[dataSets[0].attributesCount * dataEnsemble.GetDataSetCount()];
+
+                Debug.Log("TimeDiff Length: " + timeDiff.Length);
+                string timeDiffString = "";
+
+                for (int attr = 0; attr < dataSets[0].attributesCount; attr++)
+                {
+                    timeDiffString += "\n";
+                    for (int i = 0; i < timeDifference[attr].Length; i++)
+                    {
+                        timeDiffString += ("Attr: " + attr + " dataset: " + i + " Value: " + timeDifference[attr][i]) + "\n";
+                        timeDiff[i + (attr * timeDifference[attr].Length)] = timeDifference[attr][i];
+                    }
+                    
+                }
+                Debug.Log(timeDiffString);
+
+                for (int dataSet = 0; dataSet < dataEnsemble.GetDataSetCount(); dataSet++)
+                {
+                    timeScatter.AppendData(dataSets[dataSet]);
+                }
+                Attribute timeDiffAttr = new Attribute("Time Difference", timeDiff);
+
+                timeScatter.SetChannelEncoding(VisChannel.XPos, dataSets[0].GetHeader());
+                timeScatter.SetChannelEncoding(VisChannel.YPos, timeDiffAttr);
+                SetChannelEncoding(VisChannel.Color, new Attribute("Datasets", dataEnsemble.GetAbstractDataSetNames()));
+
+                Debug.Log(dataSets[0].GetHeader().PrintAttribute());
+                Debug.Log(timeDiffAttr.PrintAttribute());
+
+                //timeDataset.PrintDatasetValues(true);
 
                 timeScatter.CreateVis(visContainerObject);
                 timeScatter.visContainerObject.transform.Rotate(90, 0, 0);

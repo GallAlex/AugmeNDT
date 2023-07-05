@@ -22,8 +22,7 @@ namespace AugmeNDT{
         {
             if (columnHeaders.Length != values.Count)
             {
-                Debug.Log("columnHeaders count " + columnHeaders.Length + " , values count " + values.Count);
-                Debug.LogError("Not all column headers have values!");
+                Debug.LogError("Not all column headers have values! \n" + "columnHeaders count " + columnHeaders.Length + " , values count " + values.Count);
                 return "Error";
             }
 
@@ -44,6 +43,30 @@ namespace AugmeNDT{
             return ToStringTable(arrValues);
         }
 
+        public static string ToStringTable<T>(string[] columnHeaders, T[] values)
+        {
+            if (columnHeaders.Length != values.Length)
+            {
+                Debug.LogError("Not all column headers have values! \n" + "columnHeaders count " + columnHeaders.Length + " , values count " + values.Length);
+                return "Error";
+            }
+
+            // Write a 2D string array from the columnHeaders and values
+            string[,] arrValues = new string[values.Length + 1, columnHeaders.Length];
+
+            for (int i = 0; i < columnHeaders.Length; i++)
+            {
+                arrValues[0, i] = columnHeaders[i]; // Header Row
+
+                for (int j = 0; j < values.Length; j++)
+                {
+                    arrValues[j + 1, i] = values[j].ToString();
+
+                }
+            }
+
+            return ToStringTable(arrValues);
+        }
 
         /// <summary>
         /// Method returns the formatted string of the 2D string array
@@ -101,6 +124,23 @@ namespace AugmeNDT{
             }
 
             return maxColumnsWidth;
+        }
+
+        public static string ToStringRow<T>(T[] arrValues)
+        {
+            int maxColumnsWidth = arrValues.Length;
+            var sb = new StringBuilder();
+
+            for (int i = 0; i < arrValues.Length; i++)
+            {
+                string row = arrValues[i].ToString();
+                row = row.PadRight(maxColumnsWidth);
+
+                sb.Append(" | ");
+                sb.Append(arrValues[i].ToString());
+            }
+
+            return sb.ToString();
         }
 
     }
