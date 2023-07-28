@@ -64,7 +64,7 @@ namespace AugmeNDT
         public float depth = 0.25f;                                     // Vis container depth in centimeters.
         public float[] xyzOffset = new[]{0.1f, 0.1f, 0.1f};             // Offset from origin (0,0) and End (1,0) for the Axes (x,y,z).
         public int[] xyzTicks = { 11, 11, 11 };                         // Amount of Ticks between min/max tick for Axes (x,y,z).
-        public Color[] colorScheme = { Color.cyan, Color.magenta };     // Defines Color Scheme for Color Channel
+        public Color[] colorScheme = { Color.cyan, Color.white, Color.magenta };     // Defines Color Scheme for Color Channel
 
         // Interactions
         public VisInteractor visInteractor;                             // Interactor for the Vis    

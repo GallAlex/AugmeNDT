@@ -162,6 +162,61 @@ namespace AugmeNDT{
 
 
                 // ChiSquared
+                // Saves a List of Datasets, each containing a List of Attributes with their TimeDifferences to the previous Dataset
+                List<List<double>> timeVals = new List<List<double>>(dataSets.Count);
+                string temp = "CalculateChiSquaredMetric: \n";
+
+                // For each DataSet (without the last one)...
+                for (int currentDataSet = 0; currentDataSet < dataSets.Count; currentDataSet++)
+                {
+                    List<double> attrTimeVals = new List<double>(dataSets[currentDataSet].attributesCount);
+                    timeVals.Add(attrTimeVals);
+
+                    temp += "\n Dataset " + currentDataSet + "\n";
+                    
+                    // For each Attribute...
+                    for (int attr = 0; attr < dataEnsemble.GetDataSet(0).attributesCount; attr++)
+                    {
+                        // First DataSet has no time difference, Fill first row with 0s (0-> 0) 
+                        if (currentDataSet == 0)
+                        {
+                            attrTimeVals.Add(0);
+                            temp += "A" + attr + ": 0 -> 0 = " + attrTimeVals[attr] + "\n";
+
+                        }
+                        else
+                        {
+                            var diff = DistributionCalc.GetChiSquaredMetric(dataEnsemble.GetAttribute(currentDataSet-1, attr).GetNumericalVal(), dataEnsemble.GetAttribute(currentDataSet, attr).GetNumericalVal());
+                            var origDiff = diff;
+                            diff += timeVals[currentDataSet-1][attr];
+
+                            attrTimeVals.Add(diff);
+
+                            temp += "A" + attr + ": " + (currentDataSet - 1) + " -> " + currentDataSet + " = " + diff + " (" + origDiff + " + " + timeVals[currentDataSet - 1][attr] + ") \n";
+                        }
+
+                    }
+
+                }
+
+                Debug.Log(temp);
+
+                // Normalize
+                timeDifference = new List<double[]>(dataSets[0].attributesCount);
+
+                for (int attr = 0; attr < dataEnsemble.GetDataSet(0).attributesCount; attr++)
+                {
+                    List<double> differences = new List<double>();
+                    for (int currentDataSet = 0; currentDataSet < dataSets.Count; currentDataSet++)
+                    {
+                        differences.Add(timeVals[currentDataSet][attr]);
+                    }
+
+                    Attribute normalize = new Attribute("Normalized ChiSquaredMetric", differences.ToArray());
+                    timeDifference.Add(normalize.GetNumericalValNorm());
+                }
+
+                /*
                 //TODO: Save as Matrix? timeDifference[0][0] = 
                 timeDifference = new List<double[]>(dataSets[0].attributesCount);
                 string chiSquared = "ChiSquaredMetric: \n";
@@ -177,11 +232,15 @@ namespace AugmeNDT{
                     for (int currentDataSet = 0; currentDataSet < dataSets.Count-1; currentDataSet++)
                     {
                         var diff = DistributionCalc.GetChiSquaredMetric(dataEnsemble.GetAttribute(currentDataSet, attr).GetNumericalVal(), dataEnsemble.GetAttribute(currentDataSet + 1, attr).GetNumericalVal());
+                        var origDiff = diff;
+                        // Add value of last diff to current diff (differences[0] always 0)
+                        diff += differences[currentDataSet];
                         differences.Add(diff);
-                        temp += currentDataSet + " -> " + (currentDataSet + 1) + " = " + diff + "\n";
+                        temp += currentDataSet + " -> " + (currentDataSet + 1) + " = " + diff + " (" + origDiff + ")"+ "\n";
                     }
                     chiSquared += temp + "\n";
 
+                    // Normalize summed ChiSquaredMetric
                     if (dataSets.Count > 1)
                     {
                         Attribute normalize = new Attribute("Normalized ChiSquaredMetric", differences.ToArray());
@@ -192,6 +251,7 @@ namespace AugmeNDT{
                 }
 
                 Debug.Log(chiSquared);
+                */
             }
 
             
@@ -320,18 +380,17 @@ namespace AugmeNDT{
                 //AbstractDataset timeDataset = new AbstractDataset("Time Relationship", dataSets[0].attributeNames, timeData);
                 //timeScatter.AppendData(timeDataset);
 
-                double[] timeDiff = new double[dataSets[0].attributesCount * dataEnsemble.GetDataSetCount()];
+                List<double> timeDiff = new List<double>();
 
-                Debug.Log("TimeDiff Length: " + timeDiff.Length);
-                string timeDiffString = "";
+                string timeDiffString = "timeDiffString: \n";
 
-                for (int attr = 0; attr < dataSets[0].attributesCount; attr++)
+                for (int i = 0; i < dataEnsemble.GetDataSetCount(); i++)
                 {
                     timeDiffString += "\n";
-                    for (int i = 0; i < timeDifference[attr].Length; i++)
+                    for (int attr = 0; attr < dataSets[0].attributesCount; attr++)
                     {
                         timeDiffString += ("Attr: " + attr + " dataset: " + i + " Value: " + timeDifference[attr][i]) + "\n";
-                        timeDiff[i + (attr * timeDifference[attr].Length)] = timeDifference[attr][i];
+                        timeDiff.Add(timeDifference[attr][i]);
                     }
                     
                 }
@@ -341,11 +400,11 @@ namespace AugmeNDT{
                 {
                     timeScatter.AppendData(dataSets[dataSet]);
                 }
-                Attribute timeDiffAttr = new Attribute("Time Difference", timeDiff);
+                Attribute timeDiffAttr = new Attribute("Time Difference", timeDiff.ToArray());
 
                 timeScatter.SetChannelEncoding(VisChannel.XPos, dataSets[0].GetHeader());
                 timeScatter.SetChannelEncoding(VisChannel.YPos, timeDiffAttr);
-                SetChannelEncoding(VisChannel.Color, new Attribute("Datasets", dataEnsemble.GetAbstractDataSetNames()));
+                timeScatter.SetChannelEncoding(VisChannel.Color, new Attribute("Datasets", dataEnsemble.GetAbstractDataSetNames()));
 
                 Debug.Log(dataSets[0].GetHeader().PrintAttribute());
                 Debug.Log(timeDiffAttr.PrintAttribute());
