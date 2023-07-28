@@ -25,13 +25,18 @@ namespace AugmeNDT{
 
             SetVisParams();
 
+            for (int i = 0; i < dataEnsemble.GetDataSetCount(); i++)
+            {
+                dataEnsemble.GetDataSet(i).PrintDatasetValues(false); 
+            }
+
             //## 01:  Create Axes and Grids
 
             // X Axis
             CreateAxis(channelEncoding[VisChannel.XPos], false, Direction.X);
             visContainer.CreateGrid(Direction.X, Direction.Y);
 
-            Debug.Log("YPos Min/Max: " + TablePrint.ToStringRow(channelEncoding[VisChannel.YPos].GetMinMaxVal()));
+            //Debug.Log("YPos Min/Max: " + TablePrint.ToStringRow(channelEncoding[VisChannel.YPos].GetMinMaxVal()));
 
             // Y Axis
             CreateAxis(channelEncoding[VisChannel.YPos], false, Direction.Y);
@@ -62,6 +67,10 @@ namespace AugmeNDT{
                 headerVals = channelEncoding[VisChannel.XPos].GetNumericalVal();
                 dataSetCol = channelEncoding[VisChannel.Color].GetNumericalVal();
             }
+
+            Debug.Log("HeaderVals: \n" + TablePrint.ToStringRow(headerVals));
+            Debug.Log("DataSetCol: \n" + TablePrint.ToStringRow(dataSetCol));
+            Debug.Log("YPos: \n" + TablePrint.ToStringRow(channelEncoding[VisChannel.YPos].GetNumericalVal()));
 
             //## 02: Set Remaining Vis Channels (Color,...)
             visContainer.SetChannel(VisChannel.XPos, headerVals);
