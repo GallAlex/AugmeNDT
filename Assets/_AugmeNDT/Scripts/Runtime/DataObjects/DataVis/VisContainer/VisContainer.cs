@@ -34,7 +34,7 @@ namespace AugmeNDT{
         // Interactor
         private VisInteractor visInteractor;
 
-        private Bounds containerBounds;              // Width, Height, Length of the Container
+        private Bounds containerBounds;                               // Width, Height, Length of the initial Container
         private ContainerHandle containerHandle;                     // Stores reference to the Container Handle
         private float[] xyzOffset;
         private int[] xyzTicks;
@@ -107,6 +107,11 @@ namespace AugmeNDT{
         public void RemoveContainerHandle()
         {
             containerHandle.Remove();
+        }
+
+        public Bounds GetContainerBounds()
+        {
+            return containerBounds;
         }
 
         /// <summary>

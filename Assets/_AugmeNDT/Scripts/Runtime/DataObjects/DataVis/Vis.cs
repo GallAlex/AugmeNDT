@@ -105,6 +105,15 @@ namespace AugmeNDT
         }
 
         /// <summary>
+        /// Method sets the position of the anchored vis container
+        /// </summary>
+        /// <param name="pos"></param>
+        public void SetVisContainerPosition(Vector3 pos)
+        {
+            visContainerObject.transform.localPosition = pos;
+        }
+
+        /// <summary>
         /// Gives the Vis acces to its DataVis group
         /// </summary>
         /// <param name="group"></param>

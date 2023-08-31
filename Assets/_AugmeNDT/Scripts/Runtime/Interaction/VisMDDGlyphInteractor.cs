@@ -31,7 +31,7 @@ namespace AugmeNDT{
             // Select all values == fibers which are covered by the encoded range in this Glyph 
             // As Glyphs are numbered by Order of Attributes, selectedGlyph ID equals Attribute ID
             // Todo: Maybe use Scale to get from Glyph values in Chart back to Data Values
-            List<int> selectedFiberIds = visMddGlyphs.GetFiberIDsFromIQRRange(selectedGlyph, 1);
+            List<int> selectedFiberIds = visMddGlyphs.GetFiberIDsFromIQRRange(selectedGlyph);
 
             Debug.Log("[" + selectedFiberIds.Count + "] Selected Fibers");
 

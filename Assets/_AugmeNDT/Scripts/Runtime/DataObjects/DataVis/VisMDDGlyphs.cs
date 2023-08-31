@@ -1,3 +1,4 @@
+using Microsoft.MixedReality.Toolkit.UI;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -19,6 +20,9 @@ namespace AugmeNDT{
         // If more than one dataset is loaded, should the z-Axis be for the other Datasets?
         private bool use4DData = false;
 
+        private GameObject selectionBoxPrefab;
+        private List<GameObject> selectionBoxes;
+
         private GameObject colorLegend;
         private VisTimeScatter timeScatter;
 
@@ -30,6 +34,8 @@ namespace AugmeNDT{
 
             dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Bar");
             tickMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Tick");
+
+            selectionBoxPrefab = (GameObject)Resources.Load("Prefabs/SelectionBox");
 
             // Create Interactor
             visInteractor = new VisMDDGlyphInteractor(this);
@@ -263,6 +269,10 @@ namespace AugmeNDT{
             CreateColorLegend(colorLegend);
 
 
+            //## 06: Create Selection Boxes for X Axis
+            CreateSelectionBoxes();
+
+
             //visContainer.GatherDataMarkValueInformation(0);
             //visContainer.GatherDataMarkValueInformation(1);
 
@@ -272,12 +282,12 @@ namespace AugmeNDT{
             //dataSets[0].PrintDatasetValues(false);
             //dataSets[0].PrintDatasetValues(true);
 
-            //## 06: Rescale
+            //## 07: Rescale
             visContainerObject.transform.localScale = new Vector3(width, height, depth);
             //colorBar.transform.localScale = new Vector3(width, height, depth);
 
 
-            //## 07: Set up individual Interctions
+            //## 08: Set up individual Interctions
             SetUpVisTransitionInteractor(visContainerObject);
 
             return visContainerObject;
@@ -314,19 +324,27 @@ namespace AugmeNDT{
 
         }
 
-        public List<int> GetFiberIDsFromIQRRange(int attribute, int axis)
+        /// <summary>
+        /// Method returns a List of Fiber IDs that are between (including border values) the IQR Range of the selected attribute
+        /// </summary>
+        /// <param name="attribute"></param>
+        /// <returns></returns>
+        public List<int> GetFiberIDsFromIQRRange(int attribute)
         {
             int datasetNumber = 0;
-        
-            var q1 = dataSets[datasetNumber].statisticValues.ElementAt(attribute).Value.LowerQuartile;
-            var q2 = dataSets[datasetNumber].statisticValues.ElementAt(attribute).Value.UpperQuartile;
+            
+            var q1 = dataEnsemble.GetDerivedAttributeValues(datasetNumber, DerivedAttributes.DerivedAttributeCalc.LowerQuartile, true)[attribute];
+            var q2 = dataEnsemble.GetDerivedAttributeValues(datasetNumber, DerivedAttributes.DerivedAttributeCalc.UpperQuartile, true)[attribute];
 
             // Go through every fiber and check if it is in the IQR Range (in the normalizedDataSets)
             List<int> fiberIDs = new List<int>();
-        
-            for (int i = 0; i < dataSets[datasetNumber].GetAttribute(attribute).GetNumericalValNorm().Length; i++)
+
+            
+            for (int i = 0; i < dataEnsemble.GetAttribute(datasetNumber, attribute).GetNumericalValNorm().Length; i++)
             {
-                var value = dataSets[datasetNumber].GetAttribute(attribute).GetNumericalValNorm()[i];
+                //var value = dataSets[datasetNumber].GetAttribute(attribute).GetNumericalValNorm()[i];
+                var value = dataEnsemble.GetAttribute(datasetNumber, attribute).GetNumericalValNorm()[i];
+
                 if (value >= q1 && value <= q2)
                 {
                     fiberIDs.Add(i);
@@ -442,6 +460,69 @@ namespace AugmeNDT{
 
         }
 
+        private void CreateSelectionBoxes()
+        {
+            GameObject boxHierachy = new GameObject("SelectionBoxes");
+            boxHierachy.transform.parent = visContainer.visContainer.transform;
+
+            var numberOfBoxes = dataEnsemble.GetHeaderAttribute(0).GetNumberOfValues();
+            selectionBoxes = new List<GameObject>(numberOfBoxes);
+
+            // TODO: Get Size of one Glyphs for selection box width
+            float glyphSize = 0.05f;
+            Scale scaling = visContainer.GetAxisScale(Direction.X);
+
+            for (int box = 0; box < numberOfBoxes; box++)
+            { 
+                // Get X Pos of Attribute for Box
+                float xPos = (float)scaling.GetScaledValue(box);
+                Vector3 boxPos = new Vector3(xPos, 0.5f, 0.5f);     // Chart is shifted by 0.5
+
+                GameObject selectionBox = GameObject.Instantiate(selectionBoxPrefab, boxPos, Quaternion.identity, boxHierachy.transform);
+                selectionBox.transform.localScale = new Vector3(glyphSize, selectionBox.transform.localScale.y, selectionBox.transform.localScale.z);
+                selectionBox.name ="SelectionBox_" + box;
+
+                // Give selectionBox a Attribute ID for later selection and ref to class
+                SelectionBoxInteractable interactable = selectionBox.GetComponent<SelectionBoxInteractable>();
+                interactable.selectionBoxID = box;
+                interactable.refToMDDGlyph = this;
+                interactable.chartArea = visContainer.GetContainerBounds();
+                interactable.selectionBox = selectionBox;
+
+                selectionBoxes.Add(selectionBox);
+            }
+
+
+        }
+
+        //Should be called once a selection boxed is dragged out
+        public Vis CreateNewVis(int attribute, Vector3 pos)
+        {
+
+            VisMDDGlyphs singleMDDGlyphs = new VisMDDGlyphs();
+            singleMDDGlyphs.title = "Filtered MDD Glyphs";
+            singleMDDGlyphs.axes = 2;
+            singleMDDGlyphs.width = 1;
+            singleMDDGlyphs.height = 1;
+            singleMDDGlyphs.depth = 1;
+            
+            for (int dataSet = 0; dataSet < dataEnsemble.GetDataSetCount(); dataSet++)
+            {
+                singleMDDGlyphs.AppendData(dataEnsemble.GetDataSet(dataSet));
+            }
+            
+            singleMDDGlyphs.CreateVis(visContainerObject);
+            singleMDDGlyphs.SetVisContainerPosition(pos);
+
+            return singleMDDGlyphs;
+        }
+
+        //Should be called once a new vis is dragged back into the main vis
+        public void DeleteNewVis()
+        {
+
+
+        }
     }
 }
 
