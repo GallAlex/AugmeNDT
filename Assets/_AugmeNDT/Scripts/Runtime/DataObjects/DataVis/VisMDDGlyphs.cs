@@ -487,7 +487,6 @@ namespace AugmeNDT{
                 interactable.selectionBoxID = box;
                 interactable.refToMDDGlyph = this;
                 interactable.chartArea = visContainer.GetContainerBounds();
-                interactable.selectionBox = selectionBox;
 
                 selectionBoxes.Add(selectionBox);
             }

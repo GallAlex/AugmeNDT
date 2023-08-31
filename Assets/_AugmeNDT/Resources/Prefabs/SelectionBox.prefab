@@ -273,8 +273,8 @@ MonoBehaviour:
   affectedScripts:
   - {fileID: 5295900513300609981}
   - {fileID: 5295900513300609978}
-  - {fileID: 5295900513300609980}
   - {fileID: 5295900513300609983}
+  interactionEnabled: 1
 --- !u!114 &3476620145367945050
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -289,4 +289,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   visibleOnCloseInteractionScript: {fileID: 675118392}
   interactable: {fileID: 5295900513300609976}
-  selectionBoxID: SelectionBox_
+  chartArea:
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 0, y: 0, z: 0}
+  selectionBoxID: 0

@@ -12,6 +12,7 @@ namespace AugmeNDT
     {
         //public float visibilityRange = 0.2f; // The range in which hands affect object visibility
         public List<MonoBehaviour> affectedScripts;
+        public bool interactionEnabled = true;
 
         private Renderer objectRenderer;
         private Collider objectColl;
@@ -24,28 +25,42 @@ namespace AugmeNDT
 
         private void Update()
         {
-            // Check if any hand is in range
-            bool leftHandInRange = IsHandInRange(Handedness.Left);
-            bool rightHandInRange = IsHandInRange(Handedness.Right);
+            if (interactionEnabled)
+            {
+                // Check if any hand is in range
+                bool leftHandInRange = IsHandInRange(Handedness.Left);
+                bool rightHandInRange = IsHandInRange(Handedness.Right);
 
-            // If no hand is in range, set the object invisible
-            if (!leftHandInRange && !rightHandInRange)
-            {
-                objectRenderer.enabled = false;
-                ToggleScripts(false);
+                // If no hand is in range, set the object invisible
+                if (!leftHandInRange && !rightHandInRange)
+                {
+                    objectRenderer.enabled = false;
+                    ToggleScripts(false);
+                }
+                // If only left hand is in range, set the object visible
+                else if (leftHandInRange)
+                {
+                    objectRenderer.enabled = true;
+                    ToggleScripts(true);
+                }
+                // If only right hand is in range, set the object visible
+                else if (rightHandInRange)
+                {
+                    objectRenderer.enabled = true;
+                    ToggleScripts(true);
+                } 
             }
-            // If only left hand is in range, set the object visible
-            else if (leftHandInRange)
-            {
-                objectRenderer.enabled = true;
-                ToggleScripts(true);
-            }
-            // If only right hand is in range, set the object visible
-            else if (rightHandInRange)
-            {
-                objectRenderer.enabled = true;
-                ToggleScripts(true);
-            }
+        }
+
+        public void EnableInteraction(bool enable)
+        {
+            interactionEnabled = enable;
+        }
+
+        public void ShowObject(bool show)
+        {
+            objectRenderer.enabled = show;
+            ToggleScripts(show);
         }
 
         private bool IsHandInRange(Handedness hand)

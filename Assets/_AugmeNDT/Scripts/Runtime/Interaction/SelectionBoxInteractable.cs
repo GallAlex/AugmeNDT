@@ -11,12 +11,13 @@ namespace AugmeNDT{
         public Interactable interactable;
 
         public VisMDDGlyphs refToMDDGlyph;
-        public GameObject selectionBox;
         public Bounds chartArea;
 
         public int selectionBoxID;
 
         private Vector3 initalSelectionBoxPos;
+        private GameObject selectionBox;
+
         private Vis refToVis; 
 
         void Start()
@@ -24,7 +25,7 @@ namespace AugmeNDT{
             var onGrabReceiver = interactable.AddReceiver<InteractableOnGrabReceiver>();
             onGrabReceiver.OnGrab.AddListener(() => OnGrab());
             onGrabReceiver.OnRelease.AddListener(() => OnGrabRelease());
-
+            selectionBox = this.gameObject;
             initalSelectionBoxPos = selectionBox.transform.localPosition;
         }
 
@@ -34,7 +35,7 @@ namespace AugmeNDT{
             {
                 if (!CheckDraggedDistanceReached(refToVis.visContainerObject.transform.localPosition))
                 {
-                    ShowSelectionBox();
+                    RemoveDraggedOutVis();
                 }
             }
         }
@@ -42,7 +43,8 @@ namespace AugmeNDT{
         public void OnGrab()
         {
             Debug.Log("Grab!");
-            visibleOnCloseInteractionScript.enabled = false;
+            visibleOnCloseInteractionScript.interactionEnabled = false;
+            visibleOnCloseInteractionScript.ShowObject(true);
         }
 
         public void OnGrabRelease()
@@ -55,19 +57,26 @@ namespace AugmeNDT{
             {
                 //Reset Selection Box
                 selectionBox.transform.localPosition = initalSelectionBoxPos;
+                visibleOnCloseInteractionScript.interactionEnabled = true;
+                visibleOnCloseInteractionScript.ShowObject(false);
             }
             else
             {
+                // Move Pos to the left front corner of the selection box
                 Vector3 newPos = new Vector3(selectionBox.transform.localPosition.x, selectionBox.transform.localPosition.y - 0.5f, selectionBox.transform.localPosition.z - 0.5f);
+                
+                // Hide selection box
+                visibleOnCloseInteractionScript.interactionEnabled = false;
+                visibleOnCloseInteractionScript.ShowObject(false);
+
                 refToVis = refToMDDGlyph.CreateNewVis(selectionBoxID, newPos);
             }
 
-            visibleOnCloseInteractionScript.enabled = true;
+            
         }
 
         /// <summary>
-        /// Methods checks if the new Pos of the selection box is outside the chart Area.
-        /// If the selection box is not outside the chart area the selection box is reset to its initial position.
+        /// Methods checks if the currentPos is outside the chart Area.
         /// </summary>
         /// <returns></returns>
         private bool CheckDraggedDistanceReached(Vector3 currentPos)
@@ -75,31 +84,23 @@ namespace AugmeNDT{
             bool reached = !chartArea.Contains(currentPos);
             //Debug.Log("Reached?: " + reached + "\nchartArea: " + chartArea + "\n currentPos: " + currentPos);
 
-
             return reached;
         }
 
-        // If the selection box is dragged out of the chart area, the selection box is hidden and a new Vis is created
-        private void HideSelectionBox()
-        {
-            // Move Pos to the left front corner of the selection box
-            Vector3 newPos = new Vector3(selectionBox.transform.localPosition.x, selectionBox.transform.localPosition.y - 0.5f, selectionBox.transform.localPosition.z - 0.5f);
-            // Hide selection box
-            //selectionBox.SetActive(false);
-
-            refToVis = refToMDDGlyph.CreateNewVis(selectionBoxID, newPos);
-        }
 
         // If the selection box is not dragged out of the area it gets resetted to its initial position
-        private void ShowSelectionBox()
+        private void RemoveDraggedOutVis()
         {
             if (refToVis != null)
             {
                 refToVis.DeleteVis();
                 refToVis = null;
-                //selectionBox.SetActive(true);
             }
-            visibleOnCloseInteractionScript.enabled = true;
+
+            // Show selection box
+            visibleOnCloseInteractionScript.interactionEnabled = true;
+            visibleOnCloseInteractionScript.ShowObject(true);
+
             selectionBox.transform.localPosition = initalSelectionBoxPos;
         }
 
