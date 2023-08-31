@@ -6,11 +6,11 @@ Currently tested with the Microsoft Hololens 2.
 Dependencies and versions utilized:
 | Name                                                                    | Version  |
 | ----------------------------------------------------------------------- | -------- |
-| Unity                                                                   | 2021.3.14 |
+| Unity                                                                   | 2022.3.8f1 |
 | C#                                                                      | 9.0      |
 | .NET Standard                                                  | 2.1      |
 | .NET Framework                                             | 4.8      |
-| [MRTK](https://github.com/microsoft/MixedRealityToolkit-Unity/releases)                                                                   | 2.8.2.0  |
+| [MRTK](https://github.com/microsoft/MixedRealityToolkit-Unity/releases)                                                                   | 2.8.3.0  |
 | [Math.NET Numerics](https://numerics.mathdotnet.com/#Math-NET-Numerics)| 5.0.0    | 
 
 For easy loading of NuGet packages in Unity, the NuGetForUnity Asset can be used. 
