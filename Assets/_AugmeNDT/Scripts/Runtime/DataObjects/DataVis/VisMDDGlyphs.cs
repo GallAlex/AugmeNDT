@@ -315,8 +315,31 @@ namespace AugmeNDT{
             {
                 for (int attr = 0; attr < numberOfAttributes; attr++)
                 {
-                    c[attr + (dataSet * numberOfAttributes)] = legend.GetColoring(dataEnsemble.GetDerivedAttributeValues(dataSet, DerivedAttributes.DerivedAttributeCalc.Skewness, false)[attr], dataEnsemble.GetDerivedAttributeValues(dataSet, DerivedAttributes.DerivedAttributeCalc.Kurtosis, false)[attr]);
+                    var index = attr + (dataSet * numberOfAttributes);
 
+                    Color gylphColor = legend.GetColoring(
+                        dataEnsemble.GetDerivedAttributeValues(dataSet, DerivedAttributes.DerivedAttributeCalc.Skewness,
+                            false)[attr],
+                        dataEnsemble.GetDerivedAttributeValues(dataSet, DerivedAttributes.DerivedAttributeCalc.Kurtosis,
+                            false)[attr]);
+
+                    c[index] = gylphColor;
+
+                    //TODO: Make Visibility parameter in DataMarks
+                    // Check if a dataMark was instantiated for this index (attribute)
+                    if (index < visContainer.dataMarkList.Count)
+                    {
+                        // Hide all glyphs that are not in the IQR Range
+                        if (gylphColor == new Color(0, 1.0f, 0, 0))
+                        {
+                            visContainer.dataMarkList[attr + (dataSet * numberOfAttributes)].GetDataMarkInstance().SetActive(false);
+                        }
+                        else
+                        {
+                            visContainer.dataMarkList[attr + (dataSet * numberOfAttributes)].GetDataMarkInstance().SetActive(true);
+                        }
+
+                    }
                 }
             }
 
@@ -498,22 +521,27 @@ namespace AugmeNDT{
         public Vis CreateNewVis(int attribute, Vector3 pos)
         {
 
-            VisMDDGlyphs singleMDDGlyphs = new VisMDDGlyphs();
-            singleMDDGlyphs.title = "Filtered MDD Glyphs";
-            singleMDDGlyphs.axes = 2;
-            singleMDDGlyphs.width = 1;
-            singleMDDGlyphs.height = 1;
-            singleMDDGlyphs.depth = 1;
+            VisStackedHistogram stackedHistogram = new VisStackedHistogram();
+            stackedHistogram.title = "Stacked Histogram";
+            stackedHistogram.axes = 2;
+            stackedHistogram.width = 1;
+            stackedHistogram.height = 1;
+            stackedHistogram.depth = 1;
             
             for (int dataSet = 0; dataSet < dataEnsemble.GetDataSetCount(); dataSet++)
             {
-                singleMDDGlyphs.AppendData(dataEnsemble.GetDataSet(dataSet));
+                stackedHistogram.AppendData(dataEnsemble.GetDataSet(dataSet));
             }
-            
-            singleMDDGlyphs.CreateVis(visContainerObject);
-            singleMDDGlyphs.SetVisContainerPosition(pos);
 
-            return singleMDDGlyphs;
+            string axisName = "Datasets\n(" + dataEnsemble.GetAttribute(attribute).GetName() + ")";
+
+            stackedHistogram.SetChannelEncoding(VisChannel.XPos, new Attribute(axisName, dataEnsemble.GetAbstractDataSetNames()));
+            stackedHistogram.SetChannelEncoding(VisChannel.YPos, dataEnsemble.GetAttribute(attribute));
+
+            stackedHistogram.CreateVis(visContainerObject);
+            stackedHistogram.SetVisContainerPosition(pos);
+
+            return stackedHistogram;
         }
 
         //Should be called once a new vis is dragged back into the main vis

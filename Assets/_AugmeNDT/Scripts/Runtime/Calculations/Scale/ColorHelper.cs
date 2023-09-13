@@ -30,6 +30,11 @@ namespace AugmeNDT{
         public static Color[] violetSingleHueValues02 = new[] { ReturnColorFromHex("#D2B6E3"), ReturnColorFromHex("#8856A7"), ReturnColorFromHex("#572179") };
         public static Color[] violetSingleHueValues03 = new[] { ReturnColorFromHex("#FAF7F8"), ReturnColorFromHex("#E7C3CC"), ReturnColorFromHex("#A86273") };
 
+        // Stacked Histogram ChangeIndicator: From ligth blue to dark blue
+        public static Color[] blueHueValues = new[] { ReturnColorFromHex("#deebf7"), ReturnColorFromHex("#9ecae1"), ReturnColorFromHex("#3182bd") };
+        
+        // Stacked Histogram ChangeIndicator: From ligth red to dark red
+        public static Color[] redHueValues = new[] { ReturnColorFromHex("#fee0d2"), ReturnColorFromHex("#fc9272"), ReturnColorFromHex("#de2d26")};
 
         /// <summary>
         /// Method takes in string with hex value of color and returns color between 0-1

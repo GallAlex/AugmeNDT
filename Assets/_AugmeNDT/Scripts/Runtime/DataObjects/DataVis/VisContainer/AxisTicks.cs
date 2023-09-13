@@ -61,11 +61,7 @@ namespace AugmeNDT{
 
             tickList = new List<GameObject>();
 
-            //Todo if scale is scale.ordinal, then numberOfTicks == range.Count || domain.Count
-            //numberOfTicks = scale.range.Count;
-
-            // if scale is scale.linear, then use user defined numberOfTicks
-            double tickSpacing = GetOffestTickSpacing(numberOfTicks);
+            double tickSpacing = GetOffsetTickSpacing(numberOfTicks);       // increment
 
             // tick from min to max value
             for (int tick = 0; tick < numberOfTicks; tick++)
@@ -87,7 +83,7 @@ namespace AugmeNDT{
         /// <param name="numberOfTicks"></param>
         public void ChangeTicks(Scale scale, int numberOfTicks)
         {
-            double tickSpacing = GetOffestTickSpacing(numberOfTicks);
+            double tickSpacing = GetOffsetTickSpacing(numberOfTicks);       // increment
             int ticksInList = tickList.Count;
 
             if (numberOfTicks == 0 && ticksInList == 0) return;
@@ -189,17 +185,21 @@ namespace AugmeNDT{
 
 
         /// <summary>
-        /// Calculates the distance between ticks based on the lenght of the Axis (axisStartEndPoints) and the number of Ticks (for that range)
+        /// Calculates the distance (increment) between ticks based on the lenght of the Axis (axisStartEndPoints) and the number of Ticks (for that range)
         /// The Axis length is assumed to be 1 Unity Unit [starting at (0,0,0) and endinf at (1,0,0)].
+        /// If only one tick is needed the increment is set to halfe the length of the Axis.
         /// </summary>
         /// <param name="numberOfTicks"></param>
         /// <returns></returns>
-        private double GetOffestTickSpacing(int numberOfTicks)
+        private double GetOffsetTickSpacing(int numberOfTicks)
         {
-       
-            if (numberOfTicks <= 0) return 0;
-            int numberOfSpacings = numberOfTicks - 1;
+            int numberOfSpacings = 0;
 
+            if (numberOfTicks <= 0) return 0;
+            if (numberOfTicks == 1) numberOfSpacings = 2;
+            else numberOfSpacings = numberOfTicks - 1;
+
+            //return the increment between ticks
             return (axisStartEndPoints[1] - axisStartEndPoints[0]) / (double)numberOfSpacings;
         }
 

@@ -20,6 +20,11 @@ namespace AugmeNDT{
             Color startColor = range[0];
             Color endColor = range[1];
 
+            if (value < minValue || value > maxValue)
+            {
+                Debug.LogError("Value is greater/smaller than max/min value! Expect wrong Colors!");
+            }
+
             double ratio = (value - minValue) / (maxValue - minValue);
 
             if (double.IsNaN(ratio))
@@ -51,20 +56,26 @@ namespace AugmeNDT{
 
         public static Color GetCategoricalColor(double value, double minValue, double maxValue, Color[] range)
         {
+            if (value < minValue || value > maxValue)
+            {
+                Debug.LogError("Value is greater/smaller than max/min value! Expect wrong Colors!");
+            }
 
             double ratio = (value - minValue) / (maxValue - minValue);
+
             if (double.IsNaN(ratio))
             {
                 Debug.LogError("Calculation yielded NaN: Check Results");
                 ratio = 0;
             }
+
             int colorIndex = Convert.ToInt32(ratio * (range.Length - 1));
             colorIndex = Math.Abs(colorIndex);
 
             // clamp the color index to ensure it's within range
             //colorIndex = Math.Min(Math.Max(colorIndex, 0), range.Length - 1);
 
-            Debug.Log("colorIndex: " + colorIndex + " | ratio: " + ratio+ " | value: " + value + " | minValue: " + minValue + " | maxValue: " + maxValue);
+            //Debug.Log("colorIndex: " + colorIndex + " | ratio: " + ratio+ " | value: " + value + " | minValue: " + minValue + " | maxValue: " + maxValue);
 
 
             Color selectedColor = range[colorIndex];

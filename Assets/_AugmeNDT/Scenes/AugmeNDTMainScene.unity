@@ -582,6 +582,7 @@ GameObject:
   - component: {fileID: 940550590}
   - component: {fileID: 940550594}
   - component: {fileID: 940550595}
+  - component: {fileID: 940550597}
   - component: {fileID: 940550596}
   m_Layer: 0
   m_Name: TestCube
@@ -715,7 +716,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 940550586}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02c43fa3daa4bba498babe3c9f384365, type: 3}
   m_Name: 
@@ -741,6 +742,20 @@ MonoBehaviour:
   localCenter: {x: 0, y: 0, z: -0.5}
   bounds: {x: 1, y: 1}
   touchableCollider: {fileID: 940550590}
+--- !u!114 &940550597
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 940550586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5afd5316c63705643b3daba5a6e923bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTetherWhenManipulating: 0
+  IsBoundsHandles: 0
 --- !u!1 &944465523
 GameObject:
   m_ObjectHideFlags: 0

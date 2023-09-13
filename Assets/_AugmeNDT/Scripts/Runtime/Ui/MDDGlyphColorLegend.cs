@@ -154,7 +154,7 @@ namespace AugmeNDT{
         public Color GetColoring(double skewness, double kurtosis)
         {
             // Define final color by checking kurtosis Value (Error Value Green)
-            Color finalColor = new Color(0, 1.0f, 0);
+            Color finalColor = new Color(0, 1.0f, 0, 0);
 
             if (detailedViewOn)
             {
@@ -232,13 +232,13 @@ namespace AugmeNDT{
             if (!(skewness <= maxSkewness && skewness >= minSkewness))
             {
                 //Debug.Log(skewness + " < " + maxSkewness + " && " + skewness + " >= " + minSkewness);
-                return new Color(0, 1.0f, 0);
+                return new Color(0, 1.0f, 0, 0);
             }
 
             if (!(kurtosis <= maxKurtosis && kurtosis >= minKurtosis))
             {
                 //Debug.Log(kurtosis + " < " + maxKurtosis + " && " + kurtosis + " >= " + minKurtosis);
-                return new Color(0, 1.0f, 0);
+                return new Color(0, 1.0f, 0, 0);
             }
             //TODO: Is the range correct?
 

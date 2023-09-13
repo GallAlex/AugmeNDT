@@ -1,5 +1,6 @@
 using System;
 using MathNet.Numerics.Statistics;
+using UnityEngine;
 
 namespace AugmeNDT{
     public class HistogramValues
@@ -10,6 +11,11 @@ namespace AugmeNDT{
         public HistogramValues(double[] data)
         {
             hist = new Histogram(data, DistributionCalc.GetNumberOfBins(data.Length));
+        }
+
+        public HistogramValues(double[] data, int bin, double lowerBound, double upperBound)
+        {
+            hist = new Histogram(data, bin, lowerBound, upperBound);
         }
 
         public int GetBinCount()
@@ -104,6 +110,32 @@ namespace AugmeNDT{
         public double GetUpperBinBound(int bin)
         {
             return hist[bin].UpperBound;
+        }
+
+        /// <summary>
+        /// Method calculates the difference in frequency between the same bins in this histogram and a given one.
+        /// The two histograms need to have the same amount of bins, otherwise an empty Array is returned.
+        /// A array in the length of the number of bins, containing the frequency differences is returned.
+        /// The calculation uses hist2 - current histogram: If the frequency difference is positive, the second histogram has a higher frequency in this bin.
+        /// </summary>
+        /// <param name="hist2"></param>
+        /// <returns></returns>
+        public double[] GetBinFrequencyDifference(HistogramValues hist2)
+        {
+            if (hist.BucketCount != hist2.GetBinCount())
+            {
+                Debug.LogError("Histograms have different bin counts");
+                return Array.Empty<double>();
+            }
+
+            double[] frequencyDifference = new double[hist.BucketCount];
+
+            for (int i = 0; i < hist.BucketCount; i++)
+            {
+                frequencyDifference[i] = (hist2.GetBinFrequency(i) - hist[i].Count);
+            }
+
+            return frequencyDifference;
         }
 
         /// <summary>

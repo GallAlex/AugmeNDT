@@ -66,7 +66,7 @@ namespace AugmeNDT{
 
         /// <summary>
         /// Method creates the set amount of ticks on the Axis based on the given scale.
-        /// If numberOfTicks is zero no tick will be created, otherwise the set amount of ticks (>=2) will be drawn
+        /// If numberOfTicks is zero no tick will be created, otherwise the set amount of ticks will be drawn
         /// </summary>
         /// <param name="axisTransform"></param>
         /// <param name="dataScale"></param>
@@ -75,7 +75,6 @@ namespace AugmeNDT{
         private AxisTicks CreateAxisTicks(Transform axisTransform, Scale dataScale, int numberOfTicks)
         {
             axisTicks = new AxisTicks();
-            if (numberOfTicks == 1) numberOfTicks = 2;
 
             axisTicks.SetAxisProperties(tickOffset);
             axisTicks.CreateTicks(axisTransform, dataScale, numberOfTicks);

@@ -258,9 +258,11 @@ namespace AugmeNDT{
 
         public void PrintDatasetValues(bool normalizedVals)
         {
+            string normalizedText = "Attributes";
+            if (normalizedVals) normalizedText = "Attributes NORMALIZED";
+
             //#### PRINT ATTRIBUTE VALUES ####
-            if (normalizedVals) Debug.Log("OUTPUT: Dataset [" + datasetName + "] - Attributes NORMALIZED \n" + "Number of Attributes: " + (attributesCount));
-            else Debug.Log("OUTPUT: Dataset [" + datasetName + "] - Attributes \n" + "Number of Attributes: " + (attributesCount));
+            Debug.Log("OUTPUT: Dataset [" + datasetName + "] - "+ normalizedText + " \n" + "Number of Attributes: " + (attributesCount) + ", " + "Number of data points: " + (numberOfValues[0]));
 
             List<double[]> values = new List<double[]>();
 
@@ -280,8 +282,7 @@ namespace AugmeNDT{
             //#### PRINT DERIVED VALUES ####
             string[] derivedNames = DerivedAttributes.GetDerivedAttributeNames();
 
-            if (normalizedVals) Debug.Log("OUTPUT: Dataset [" + datasetName + "] - Derived Attributes NORMALIZED \n" + "Number of Derived Attributes: " + derivedNames.Length);
-            else Debug.Log("OUTPUT: Dataset [" + datasetName + "] - Derived Attributes \n" + "Number of Derived Attributes: " + derivedNames.Length);
+            Debug.Log("OUTPUT: Dataset [" + datasetName + "] - Derived " + normalizedText + " \n" + "Number of Derived Attributes: " + derivedNames.Length + " \n");
 
             string combinedDerivedVal = "";
             

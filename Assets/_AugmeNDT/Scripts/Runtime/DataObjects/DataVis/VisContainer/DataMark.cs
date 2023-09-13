@@ -69,7 +69,7 @@ namespace AugmeNDT{
                 rotation = new Vector3(0, 0, 0),
                 size = new Vector3(0.03f, 0.03f, 0.03f),
                 facing = new Vector3(0, 0, -1),
-                color = new Vector4(1, 0, 0, 1)
+                color = new Vector4(0.5f, 0.5f, 0.5f, 1)
             };
 
             return channel;
