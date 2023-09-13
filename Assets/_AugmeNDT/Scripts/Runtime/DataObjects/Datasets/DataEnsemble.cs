@@ -50,9 +50,34 @@ namespace AugmeNDT
             return abstractDatasets[dataSetId].GetHeader();
         }
 
+        /// <summary>
+        /// Returns the the selected attribute of the selected dataset.
+        /// </summary>
+        /// <param name="dataSetId"></param>
+        /// <param name="attributeId"></param>
+        /// <returns></returns>
         public Attribute GetAttribute(int dataSetId, int attributeId)
         {
             return abstractDatasets[dataSetId].GetAttribute(attributeId);
+        }
+
+        public Attribute GetAttribute(int attributeId)
+        {
+            // Use List as the same attribute from different datasets can have different amount of values
+            List<double> aggregatedValues = new List<double>();
+
+            for (int dataset = 0; dataset < abstractDatasets.Count; dataset++)
+            {
+                var currentAttribute = GetAttribute(dataset, attributeId);
+                var values = currentAttribute.GetNumericalVal();
+
+                for (int j = 0; j < values.Length; j++)
+                {
+                    aggregatedValues.Add(values[j]);
+                }
+            }
+
+            return new Attribute(GetAttribute(0, attributeId).GetName(),aggregatedValues.ToArray());
         }
 
         /// <summary>

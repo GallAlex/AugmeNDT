@@ -7,11 +7,12 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: DataMarkMaterial
+  m_Name: DataMarkMaterial_Outline
   m_Shader: {fileID: 4800000, guid: 5bdea20278144b11916d77503ba1467a, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
+  - _BORDER_LIGHT
   - _DIRECTIONAL_LIGHT
   - _SPECULAR_HIGHLIGHTS
   m_InvalidKeywords:
@@ -81,13 +82,13 @@ Material:
     - _AlbedoAssignedAtRuntime: 1
     - _BlendOp: 0
     - _BlendedClippingWidth: 1
-    - _BorderLight: 0
+    - _BorderLight: 1
     - _BorderLightOpaque: 0
     - _BorderLightOpaqueAlpha: 1
     - _BorderLightReplacesAlbedo: 0
     - _BorderLightUsesHoverColor: 0
-    - _BorderMinValue: 0.1
-    - _BorderWidth: 0.1
+    - _BorderMinValue: 0.65
+    - _BorderWidth: 0.05
     - _BumpScale: 1
     - _ClippingBorder: 0
     - _ClippingBorderWidth: 0.025
@@ -110,10 +111,10 @@ Material:
     - _EnvironmentColorIntensity: 0.5
     - _EnvironmentColorThreshold: 1.5
     - _EnvironmentColoring: 0
-    - _FadeBeginDistance: 0.85
+    - _FadeBeginDistance: 2.37
     - _FadeCompleteDistance: 0.5
     - _FadeMinValue: 0
-    - _FluentLightIntensity: 1
+    - _FluentLightIntensity: 0.7
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
@@ -133,6 +134,7 @@ Material:
     - _NearPlaneFade: 0
     - _NormalMapScale: 1
     - _OcclusionStrength: 1
+    - _OutlineWidth: 10
     - _Parallax: 0.02
     - _PressIntensity: 1
     - _PressRimPower: 5
@@ -168,9 +170,9 @@ Material:
     - _ZTest: 4
     - _ZWrite: 1
     m_Colors:
-    - _BorderColor: {r: 0, g: 0, b: 0, a: 1}
+    - _BorderColor: {r: 0.041466713, g: 1, b: 0, a: 1}
     - _ClippingBorderColor: {r: 1, g: 0.2, b: 0, a: 1}
-    - _Color: {r: 0.3490566, g: 0.11690104, b: 0.11690104, a: 1}
+    - _Color: {r: 1, g: 0, b: 0, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _EmissiveColor: {r: 0, g: 0, b: 0, a: 1}
     - _EnvironmentColorX: {r: 1, g: 0, b: 0, a: 1}
@@ -178,7 +180,8 @@ Material:
     - _EnvironmentColorZ: {r: 0, g: 0, b: 1, a: 1}
     - _HoverColorOverride: {r: 1, g: 1, b: 1, a: 1}
     - _InnerGlowColor: {r: 1, g: 1, b: 1, a: 0.75}
-    - _PressRimColor: {r: 1, g: 1, b: 1, a: 1}
+    - _OutlineColor: {r: 0.9716981, g: 0.04277907, b: 0.04277907, a: 1}
+    - _PressRimColor: {r: 0, g: 0, b: 0, a: 1}
     - _ProximityLightCenterColorOverride: {r: 1, g: 0, b: 0, a: 0}
     - _ProximityLightMiddleColorOverride: {r: 0, g: 1, b: 0, a: 0.5}
     - _ProximityLightOuterColorOverride: {r: 0, g: 0, b: 1, a: 1}

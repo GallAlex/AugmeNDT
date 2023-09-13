@@ -16,13 +16,15 @@ namespace AugmeNDT{
         {
             dataScaleType = DataScaleType.Nominal;
 
-            domainValues = Convert.ToInt32(domain[1] - domain[0]);
+            domainValues = Convert.ToInt32(domain[1] - domain[0]) ;
 
-            if (domainValues == names.Count || domain[0] != 0)
+            if (domainValues != names.Count-1 || domain[0] != 0)
             {
                 Debug.LogError("Not enough Names for the domain entered");
                 return;
             }
+
+            if(domainValues < 1) domainValues = 1;  // Prevent division by zero
 
             rangeMin = range[0];
             rangeMax = range[1];
@@ -36,11 +38,13 @@ namespace AugmeNDT{
 
             domainValues = Convert.ToInt32(domain[1] - domain[0]);
 
-            if (domainValues == names.Count || domain[0] != 0)
+            if (domainValues != names.Count - 1 || domain[0] != 0)
             {
                 Debug.LogError("Not enough Names for the domain entered");
                 return;
             }
+
+            if (domainValues < 1) domainValues = 1;  // Prevent division by zero
 
             rangeMin = range[0];
             rangeMax = range[1];

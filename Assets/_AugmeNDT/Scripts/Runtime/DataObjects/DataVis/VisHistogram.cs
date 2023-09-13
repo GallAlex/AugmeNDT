@@ -63,8 +63,8 @@ namespace AugmeNDT
             hist = new HistogramValues(attribute.GetNumericalVal());
 
             bins = new Attribute(attribute.GetName(), hist.GetBinIntervals());
-            frequencies = new Attribute("Frequency", hist.GetBinFrequencies()); // Histograms normaly start from 0, so ignore min value
-            
+            frequencies = new Attribute("Frequency", hist.GetBinFrequencies()); // Histograms normaly start from 0, so ignore min value (=> from 0.0 to frequencies.GetMinMaxVal()[1] ) 
+
             yPos = new double[hist.GetBinCount()];                              // yPos should start at 0
             Array.Fill(yPos, 0);
         }

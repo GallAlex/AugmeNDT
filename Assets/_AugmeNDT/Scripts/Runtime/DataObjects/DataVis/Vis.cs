@@ -14,6 +14,7 @@ namespace AugmeNDT
         Scatterplot,
         TimeScatter,
         MDDGlyphs,
+        StackedHistogram,
         NumberOfVisTypes,
     }
 
@@ -345,6 +346,8 @@ namespace AugmeNDT
                     return new VisTimeScatter();
                 case VisType.MDDGlyphs:
                     return new VisMDDGlyphs();
+                case VisType.StackedHistogram:
+                    return new VisStackedHistogram();
             }
         }
 
