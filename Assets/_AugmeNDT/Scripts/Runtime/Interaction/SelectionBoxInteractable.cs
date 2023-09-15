@@ -16,17 +16,18 @@ namespace AugmeNDT{
         public int selectionBoxID;
 
         private Vector3 initalSelectionBoxPos;
-        private GameObject selectionBox;
+        private Quaternion initalSelectionBoxRot;
 
         private Vis refToVis; 
 
         void Start()
         {
             var onGrabReceiver = interactable.AddReceiver<InteractableOnGrabReceiver>();
+            initalSelectionBoxPos = this.transform.localPosition;
+            initalSelectionBoxRot = this.transform.localRotation;
+
             onGrabReceiver.OnGrab.AddListener(() => OnGrab());
             onGrabReceiver.OnRelease.AddListener(() => OnGrabRelease());
-            selectionBox = this.gameObject;
-            initalSelectionBoxPos = selectionBox.transform.localPosition;
         }
 
         void Update()
@@ -42,28 +43,29 @@ namespace AugmeNDT{
 
         public void OnGrab()
         {
-            Debug.Log("Grab!");
+            Debug.Log("Grabbed Box: " + this.selectionBoxID);
             visibleOnCloseInteractionScript.interactionEnabled = false;
             visibleOnCloseInteractionScript.ShowObject(true);
         }
 
         public void OnGrabRelease()
         {
-            Debug.Log("Released Grab!");
-            var check = CheckDraggedDistanceReached(selectionBox.transform.localPosition);
+            Debug.Log("Released Grab: " + this.selectionBoxID);
+            var check = CheckDraggedDistanceReached(this.transform.localPosition);
             Debug.Log("CheckDraggedDistanceReached: " + check);
 
             if (!check)
             {
                 //Reset Selection Box
-                selectionBox.transform.localPosition = initalSelectionBoxPos;
+                this.transform.localPosition = initalSelectionBoxPos;
+                this.transform.localRotation = initalSelectionBoxRot;
                 visibleOnCloseInteractionScript.interactionEnabled = true;
                 visibleOnCloseInteractionScript.ShowObject(false);
             }
             else
             {
                 // Move Pos to the left front corner of the selection box
-                Vector3 newPos = new Vector3(selectionBox.transform.localPosition.x, selectionBox.transform.localPosition.y - 0.5f, selectionBox.transform.localPosition.z - 0.5f);
+                Vector3 newPos = new Vector3(this.transform.localPosition.x, this.transform.localPosition.y - 0.5f, this.transform.localPosition.z - 0.5f);
                 
                 // Hide selection box
                 visibleOnCloseInteractionScript.interactionEnabled = false;
@@ -101,7 +103,8 @@ namespace AugmeNDT{
             visibleOnCloseInteractionScript.interactionEnabled = true;
             visibleOnCloseInteractionScript.ShowObject(true);
 
-            selectionBox.transform.localPosition = initalSelectionBoxPos;
+            this.transform.localPosition = initalSelectionBoxPos;
+            this.transform.localRotation = initalSelectionBoxRot;
         }
 
 

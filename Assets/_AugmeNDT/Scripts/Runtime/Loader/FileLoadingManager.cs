@@ -204,6 +204,7 @@ namespace AugmeNDT
 
         public async Task<String> StartPicker()
         {
+            filePath = ""; //Clear filePath
 #if !UNITY_EDITOR && UNITY_WSA_10_0
             Debug.Log("HOLOLENS 2 PICKER");
             return await FilePicker_Hololens();

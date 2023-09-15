@@ -87,8 +87,11 @@ namespace AugmeNDT{
             //## Wait for Loadings to finish ##
             if (!loadingSucceded)
             {
+                return null;
                 Debug.LogError("Loading aborted!");
             }
+
+            Debug.Log("> Adding DataVis Group");
 
             // Add Group
             dataVisGroups.Add(fileLoadingManager.GetDataVisGroup());
