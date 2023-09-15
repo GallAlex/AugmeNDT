@@ -14,9 +14,9 @@ Material:
   m_ValidKeywords:
   - _BORDER_LIGHT
   - _DIRECTIONAL_LIGHT
+  - _DISABLE_ALBEDO_MAP
   - _SPECULAR_HIGHLIGHTS
-  m_InvalidKeywords:
-  - _ALBEDOASSIGNEDATRUNTIME_ON
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
@@ -79,7 +79,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _AlbedoAlphaMode: 0
-    - _AlbedoAssignedAtRuntime: 1
+    - _AlbedoAssignedAtRuntime: 0
     - _BlendOp: 0
     - _BlendedClippingWidth: 1
     - _BorderLight: 1
@@ -87,8 +87,8 @@ Material:
     - _BorderLightOpaqueAlpha: 1
     - _BorderLightReplacesAlbedo: 0
     - _BorderLightUsesHoverColor: 0
-    - _BorderMinValue: 0.65
-    - _BorderWidth: 0.05
+    - _BorderMinValue: 1
+    - _BorderWidth: 0.068
     - _BumpScale: 1
     - _ClippingBorder: 0
     - _ClippingBorderWidth: 0.025
@@ -114,7 +114,7 @@ Material:
     - _FadeBeginDistance: 2.37
     - _FadeCompleteDistance: 0.5
     - _FadeMinValue: 0
-    - _FluentLightIntensity: 0.7
+    - _FluentLightIntensity: 1
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1

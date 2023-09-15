@@ -203,7 +203,7 @@ namespace AugmeNDT
         /// </summary>
         private void DrawChangeIndicator()
         {
-            int numberOfBOI = 2; // Number of Bins of Interest (BOI) defines how many bins with the highest change are returned (ranked from most change to less change)
+            int numberOfBOI = 3; // Number of Bins of Interest (BOI) defines how many bins with the highest change are returned (ranked from most change to less change)
             List<Dictionary<int, double>> marksToDraw = GetHighestChange(numberOfBOI);
 
             string text = "";
