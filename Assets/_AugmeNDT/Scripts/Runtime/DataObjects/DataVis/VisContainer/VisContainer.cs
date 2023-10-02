@@ -186,15 +186,20 @@ namespace AugmeNDT{
 
         /// <summary>
         /// Adds the given color legend as gameobject to the colorLegendContainer.
+        /// The position depends on the number of axes
         /// </summary>
         /// <param name="legend"></param>
-        public virtual void CreateColorLegend(GameObject legend)
+        /// <param name="axes"></param>
+        public virtual void CreateColorLegend(GameObject legend, int axes)
         {
             legend.transform.parent = colorLegendContainer.transform;
 
+            float zPos = 0f;
+            if(axes == 3) zPos = containerBounds.size.z / 2.0f;     // If 3D than position it in the center of the cube
+
             //TODO: Set specific docking positions for elements (legend,...)?
             //Move the legend to the right edge of the container (+ half of the width of the legend)
-            colorLegendContainer.transform.localPosition = new Vector3(containerBounds.size.x + legend.transform.localScale.x / 2.0f, containerBounds.size.y / 2.0f, containerBounds.size.z / 2.0f);
+            colorLegendContainer.transform.localPosition = new Vector3(containerBounds.size.x + legend.transform.localScale.x / 2.0f, containerBounds.size.y / 2.0f, zPos);
             colorLegendContainer.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
         }
 
@@ -378,11 +383,6 @@ namespace AugmeNDT{
             }
 
             dataMarkList[dataMarkID].ChangeDataMark(channel);
-
-        }
-
-        public void HideColorLegend(GameObject legend)
-        {
 
         }
 

@@ -44,7 +44,7 @@ namespace AugmeNDT{
         public void OnGrab()
         {
             Debug.Log("Grabbed Box: " + this.selectionBoxID);
-            visibleOnCloseInteractionScript.interactionEnabled = false;
+            visibleOnCloseInteractionScript.EnableInteraction(false);
             visibleOnCloseInteractionScript.ShowObject(true);
         }
 
@@ -59,16 +59,16 @@ namespace AugmeNDT{
                 //Reset Selection Box
                 this.transform.localPosition = initalSelectionBoxPos;
                 this.transform.localRotation = initalSelectionBoxRot;
-                visibleOnCloseInteractionScript.interactionEnabled = true;
+                visibleOnCloseInteractionScript.EnableInteraction(true);
                 visibleOnCloseInteractionScript.ShowObject(false);
             }
             else
             {
                 // Move Pos to the left front corner of the selection box
                 Vector3 newPos = new Vector3(this.transform.localPosition.x, this.transform.localPosition.y - 0.5f, this.transform.localPosition.z - 0.5f);
-                
+
                 // Hide selection box
-                visibleOnCloseInteractionScript.interactionEnabled = false;
+                visibleOnCloseInteractionScript.EnableInteraction(false);
                 visibleOnCloseInteractionScript.ShowObject(false);
 
                 refToVis = refToMDDGlyph.CreateNewVis(selectionBoxID, newPos);
@@ -100,7 +100,7 @@ namespace AugmeNDT{
             }
 
             // Show selection box
-            visibleOnCloseInteractionScript.interactionEnabled = true;
+            visibleOnCloseInteractionScript.EnableInteraction(true);
             visibleOnCloseInteractionScript.ShowObject(true);
 
             this.transform.localPosition = initalSelectionBoxPos;

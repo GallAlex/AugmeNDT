@@ -116,6 +116,35 @@ namespace AugmeNDT{
             return numericalValues.Length;
         }
 
+        /// <summary>
+        /// Returns the Index (position in array) of a given value of the attribute.
+        /// Returns a List with the index of all occurencies found or a empty List if the value is not found at all.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="normalized"></param>
+        /// <returns></returns>
+        public List<int> GetIndexOfValue(double value, bool normalized)
+        {
+            List<int> indices = new List<int>();
+
+            for (int i = 0; i < numericalValues.Length; i++)
+            {
+                if (normalized)
+                {
+                    if (numericalValuesNorm[i].Equals(value))
+                    {
+                        indices.Add(i);
+                    }
+                }
+                else
+                if (numericalValues[i].Equals(value))
+                {
+                    indices.Add(i);
+                }
+            }
+            return indices;
+        }
+
         public DerivedAttributes GetDerivedAttributes()
         {
             if (!numericalType)

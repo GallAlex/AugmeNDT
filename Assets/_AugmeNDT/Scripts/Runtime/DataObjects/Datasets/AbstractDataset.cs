@@ -7,16 +7,6 @@ namespace AugmeNDT{
     public class AbstractDataset
     {
 
-        /// <summary>
-        /// Possible Calcuation on Datasets (Attributes)
-        /// </summary>
-        public enum DatasetCalculation
-        {
-            ChiSquared,
-            NumberOfDatasetCalculations
-        }
-
-
         //######### Basic Dataset Infos #########
 
         public string datasetName;                                  // Name of the dataset
@@ -214,6 +204,18 @@ namespace AugmeNDT{
             return aggregatedValues;
         }
 
+        /// <summary>
+        /// Returns the found Ids of a given Value in a specific Attribute
+        /// </summary>
+        /// <param name="attrId"></param>
+        /// <param name="value"></param>
+        /// <param name="normalized"></param>
+        /// <returns></returns>
+        public List<int> GetIdOfAttributeValue(int attrId, double value, bool normalized)
+        {
+            return attributeValues[attrId].GetIndexOfValue(value, normalized);
+        }
+
         
         /// <summary>
         /// Method runs through all attributes and stores/checks the number of values for each attribute
@@ -255,6 +257,7 @@ namespace AugmeNDT{
         {
             return new Attribute(name, value);
         }
+
 
         public void PrintDatasetValues(bool normalizedVals)
         {

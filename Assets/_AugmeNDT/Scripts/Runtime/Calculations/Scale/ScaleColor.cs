@@ -8,6 +8,16 @@ namespace AugmeNDT{
         {
         }
 
+        /// <summary>
+        /// This method interpolates (mix) colors based on a given input value's proportion between a minimum and maximum value.
+        /// The colors to be interpolated will be taken from the array range.
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="minValue"></param>
+        /// <param name="maxValue"></param>
+        /// <param name="range"></param>
+        /// <returns></returns>
         public static Color GetInterpolatedColor(double value, double minValue, double maxValue, Color[] range)
         {
             //If only one Color
@@ -54,6 +64,14 @@ namespace AugmeNDT{
             return interpolatedColor;
         }
 
+        /// <summary>
+        /// The method calculates and assigns a specific categorical color from a predefined color range array based on the given value within a specified min-max value interval.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="minValue"></param>
+        /// <param name="maxValue"></param>
+        /// <param name="range"></param>
+        /// <returns></returns>
         public static Color GetCategoricalColor(double value, double minValue, double maxValue, Color[] range)
         {
             if (value < minValue || value > maxValue)
@@ -83,7 +101,65 @@ namespace AugmeNDT{
             return selectedColor;
         }
 
-        public static int GetCategoricalColorIndex(double value, double minValue, double maxValue, int colors)
+        /// <summary>
+        /// The method calculates and assigns a specific categorical color from a predefined color range array based on the given value within a specified min-max value interval.
+        /// The color array has to be an uneven number of colors so that a specific midValue is always assigned to the middle color.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="minValue"></param>
+        /// <param name="midValue"></param>
+        /// <param name="maxValue"></param>
+        /// <param name="range"></param>
+        /// <returns></returns>
+        public static Color GetCategoricalColor(double value, double minValue, double midValue, double maxValue, Color[] range)
+        {
+            if (range.Length % 2 == 0)
+            {
+                Debug.LogError("Not an uneven number of colors specified! MidValue will be ignored");
+                return GetCategoricalColor(value, minValue, maxValue, range);
+            }
+            if (midValue > maxValue || midValue < minValue)
+            {
+                Debug.LogError("MidValue is greater/smaller than max/min value! MidValue will be ignored!");
+                return GetCategoricalColor(value, minValue, maxValue, range);
+            }
+            if (value < minValue || value > maxValue)
+            {
+                Debug.LogError("Value is greater/smaller than max/min value! Expect wrong Colors!");
+            }
+
+            // Calculate midvalue color index - int is truncated
+            int centerColorIndex = (range.Length / 2);
+            
+            // Select midvalue color
+            if (value == midValue) return range[centerColorIndex];
+
+            Color[] subColors = new Color[range.Length / 2];    // Create Array with only upper/lower part of the colors
+
+            // Select color for values bigger than midValue
+            if (value > midValue)
+            {
+                Array.Copy(range, centerColorIndex + 1, subColors, 0, subColors.Length);
+                return GetCategoricalColor(value, midValue, maxValue, subColors);
+            }
+            if (value < midValue)
+            {
+                Array.Copy(range, 0, subColors, 0, subColors.Length);
+                return GetCategoricalColor(value, minValue, midValue, subColors);
+            }
+
+            return Color.green; //Error Color
+        }
+
+        /// <summary>
+        /// Method returns the index of the color which would be returned by GetCategoricalColor
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="minValue"></param>
+        /// <param name="maxValue"></param>
+        /// <param name="colors"></param>
+        /// <returns></returns>
+        public static int GetCategoricalColorIndex(double value, double minValue, double maxValue, int numberOfColors)
         {
             double ratio = (value - minValue) / (maxValue - minValue);
             if (double.IsNaN(ratio))
@@ -91,10 +167,33 @@ namespace AugmeNDT{
                 Debug.LogError("Calculation yielded NaN: Check Results");
                 ratio = 0;
             }
-            int colorIndex = Convert.ToInt32(ratio * (colors - 1));
+            int colorIndex = Convert.ToInt32(ratio * (numberOfColors - 1));
             colorIndex = Math.Abs(colorIndex);
 
             return colorIndex;
+        }
+
+        /// <summary>
+        /// Method returns the minimal & maximal value which returns the specified color by GetCategoricalColor
+        /// </summary>
+        /// <param name="colorIndex"></param>
+        /// <param name="minValue"></param>
+        /// <param name="maxValue"></param>
+        /// <param name="range"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        public static double[] GetCategoricalColorValueRange(int colorIndex, double minValue, double maxValue, int numberOfColors)
+        {
+            if (colorIndex < 0 || colorIndex >= numberOfColors)
+            {
+                throw new ArgumentOutOfRangeException(nameof(colorIndex), "Invalid color index.");
+            }
+
+            double rangeLength = maxValue - minValue;
+            double rangeStart = minValue + (rangeLength / numberOfColors) * colorIndex;
+            double rangeEnd = minValue + (rangeLength / numberOfColors) * (colorIndex + 1);
+
+            return new double[] { rangeStart, rangeEnd };
         }
     }
 }

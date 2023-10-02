@@ -80,40 +80,28 @@ namespace AugmeNDT
                 // DistributionValues
                 case DerivedAttributeCalc.LargestElement:
                     return distributionValues[norm].LargestElement;
-                    break;
                 case DerivedAttributeCalc.SmallestElement:
                     return distributionValues[norm].SmallestElement;
-                    break;
                 case DerivedAttributeCalc.Median:
                     return distributionValues[norm].Median;
-                    break;
                 case DerivedAttributeCalc.Mean:
                     return distributionValues[norm].Mean;
-                    break;
                 case DerivedAttributeCalc.Variance:
                     return distributionValues[norm].Variance;
-                    break;
                 case DerivedAttributeCalc.StdDev:
                     return distributionValues[norm].StdDev;
-                    break;
                 case DerivedAttributeCalc.Iqr:
                     return distributionValues[norm].Iqr;
-                    break;
                 case DerivedAttributeCalc.UpperQuartile:
                     return distributionValues[norm].UpperQuartile;
-                    break;
                 case DerivedAttributeCalc.LowerQuartile:
                     return distributionValues[norm].LowerQuartile;
-                    break;
                 case DerivedAttributeCalc.Kurtosis:
                     return distributionValues[norm].Kurtosis;
-                    break;
                 case DerivedAttributeCalc.Skewness:
                     return distributionValues[norm].Skewness;
-                    break;
                 case DerivedAttributeCalc.Modality:
                     return distributionValues[norm].Modality;
-                    break;
                 default:
                     throw new NotImplementedException();
             }

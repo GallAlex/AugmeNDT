@@ -1,5 +1,6 @@
 using MathNet.Numerics.Distributions;
 using MathNet.Numerics.LinearAlgebra.Factorization;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static UnityEngine.EventSystems.EventTrigger;
 using static UnityEngine.Rendering.DebugUI;
 using static UnityEngine.XR.ARSubsystems.XRFaceMesh;
 
@@ -25,7 +27,9 @@ namespace AugmeNDT
         private double[] minMaxYPos;                // Min and Max Y-Position (over all dataset)
         private Attribute yPos;                     // Stacked bars: Position based on the frequency of the previous bin (for each dataset)
 
-        private Material changeIndicatorMaterial;   // Material for the change indicator
+
+        int numberOfBOI = 3; // Number of Bins of Interest (BOI) defines how many bins with the highest change are returned (ranked from most change to less change)
+        private GameObject changeIndicatorPrefab;   // Material for the change indicator
         private double[] posMinMaxChange;              // Min and Max change for all positive Indicators
         private double[] negMinMaxChange;              // Min and Max change for all negative Indicators
 
@@ -38,7 +42,7 @@ namespace AugmeNDT
             dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/BarWithOutline");
             tickMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Tick");
 
-            changeIndicatorMaterial = (Material)Resources.Load("Materials/DataMarkMaterial", typeof(Material));
+            changeIndicatorPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/ChangeIndicator");
         }
 
 
@@ -54,6 +58,9 @@ namespace AugmeNDT
 
             //## 00: Preprocess Data
             PrepareHistogram(channelEncoding[VisChannel.YPos]);
+
+            // TODO: Test Setting
+            numberOfBOI = binCount;
 
             xyzTicks = new[] { channelEncoding[VisChannel.XPos].GetNumberOfValues(), binCount, 13 };
             visContainer.SetAxisTickNumber(xyzTicks);
@@ -114,9 +121,21 @@ namespace AugmeNDT
             visContainer.CreateDataMarks(dataMarkPrefab, new[] { 1, 0, 1 });
 
             // Only if we have multiple Bars
-            if(use4DData) DrawChangeIndicator();
+            if (use4DData)
+            {
+                DrawChangeIndicator();
 
-            //## 04: Rescale Chart
+                //## 04: Create Color Scalar Bar
+
+                LegendColorBar colorScalarBar = new LegendColorBar();
+                GameObject colorBar = colorScalarBar.CreateColorScalarBar(visContainerObject.transform.position, "Frequency Difference", new[] { negMinMaxChange[0], posMinMaxChange[1] }, 1, ColorHelper.divergingValues);
+                //colorBar01.transform.parent = colorScalarBarContainer.transform;
+                CreateColorLegend(colorBar);
+            }
+
+            DrawBinIndicator();
+
+            //## 05: Rescale Chart
             visContainerObject.transform.localScale = new Vector3(width, height, depth);
 
 
@@ -203,7 +222,6 @@ namespace AugmeNDT
         /// </summary>
         private void DrawChangeIndicator()
         {
-            int numberOfBOI = 3; // Number of Bins of Interest (BOI) defines how many bins with the highest change are returned (ranked from most change to less change)
             List<Dictionary<int, double>> marksToDraw = GetHighestChange(numberOfBOI);
 
             string text = "";
@@ -228,49 +246,71 @@ namespace AugmeNDT
                 {
 
                     // If value is zero - no changes found
-                    if (entry.Value == 0) continue;
+                    //if (entry.Value == 0) continue;
 
-                    // TODO: Reference DataMarks by something better then ID?
+                    // TODO: Reference DataMarks by something better then ID? DataMark has Row/Index ID and dataset ID (select first row of first Dataset with first row of second dataset)
                     int currentID = entry.Key + (dataSet * binCount);
                     int nextID = entry.Key + ((dataSet+ 1) * binCount);
 
                     GameObject currentDataMark = visContainer.dataMarkList[currentID].GetDataMarkInstance();
                     GameObject nextDataMark = visContainer.dataMarkList[nextID].GetDataMarkInstance();
-                    float currentDataMarkYSize_half = currentDataMark.transform.localScale.y / 2.0f;
-                    float nextDataMarkYSize_half = nextDataMark.transform.localScale.y / 2.0f;
-                    float currentDataMarkXSize_half = currentDataMark.transform.localScale.x / 2.0f;
-                    float nextDataMarkXSize_half = nextDataMark.transform.localScale.x / 2.0f;
 
-                    GameObject indicator = new GameObject("Line_" + currentID + "_" + nextID);
+                    GameObject indicator = GameObject.Instantiate(changeIndicatorPrefab);
+                    indicator.name = "Line_" + currentID + "_" + nextID;
                     indicator.transform.parent = ChangeIndicator.transform;
 
-                    var meshFilter = indicator.AddComponent<MeshFilter>();
-                    var meshRenderer = indicator.AddComponent<MeshRenderer>();
-                    meshRenderer.material = new Material(changeIndicatorMaterial);
-                    
+                    //Set Interaction details
+                    ChangeIndicatorInteractable interactable = indicator.GetComponent<ChangeIndicatorInteractable>();
+                    interactable.indicatorID = entry.Key + "_" + dataSet + "_" + (dataSet + 1);
+                    interactable.refToClass = this;
+
+                    var meshFilter = indicator.GetComponent<MeshFilter>();
+                    var meshCollider = indicator.GetComponent<MeshCollider>();
+                    var meshRenderer = indicator.GetComponent<MeshRenderer>();
                     meshRenderer.material.color = CreateChangeIndicatorColor(entry.Value);
-                    
 
                     //## Create Quad Mesh
 
                     // Create vertices
-                    Vector3[] vertices = new Vector3[4];
-                    vertices[0] = new Vector3(currentDataMark.transform.localPosition.x + currentDataMarkXSize_half, currentDataMark.transform.localPosition.y + currentDataMarkYSize_half, currentDataMark.transform.localPosition.z);
-                    vertices[1] = new Vector3(currentDataMark.transform.localPosition.x + currentDataMarkXSize_half, currentDataMark.transform.localPosition.y - currentDataMarkYSize_half, currentDataMark.transform.localPosition.z);
-                    vertices[2] = new Vector3(nextDataMark.transform.localPosition.x - nextDataMarkXSize_half, nextDataMark.transform.localPosition.y - nextDataMarkYSize_half, nextDataMark.transform.localPosition.z);
-                    vertices[3] = new Vector3(nextDataMark.transform.localPosition.x - nextDataMarkXSize_half, nextDataMark.transform.localPosition.y + nextDataMarkYSize_half, nextDataMark.transform.localPosition.z);
+                    Vector3[] vertices = new Vector3[8];
+
+                    //Front Side
+                    vertices[0] = AncerPointCalc.GetAncorPoint(currentDataMark.transform, AncerPointCalc.AncorPointX.Right, AncerPointCalc.AncorPointY.Bottom, AncerPointCalc.AncorPointZ.Front);
+                    vertices[1] = AncerPointCalc.GetAncorPoint(nextDataMark.transform, AncerPointCalc.AncorPointX.Left, AncerPointCalc.AncorPointY.Bottom, AncerPointCalc.AncorPointZ.Front);
+                    vertices[2] = AncerPointCalc.GetAncorPoint(nextDataMark.transform, AncerPointCalc.AncorPointX.Left, AncerPointCalc.AncorPointY.Top, AncerPointCalc.AncorPointZ.Front);
+                    vertices[3] = AncerPointCalc.GetAncorPoint(currentDataMark.transform, AncerPointCalc.AncorPointX.Right, AncerPointCalc.AncorPointY.Top, AncerPointCalc.AncorPointZ.Front);
+                    //Back Side
+                    vertices[4] = AncerPointCalc.GetAncorPoint(currentDataMark.transform, AncerPointCalc.AncorPointX.Right, AncerPointCalc.AncorPointY.Top, AncerPointCalc.AncorPointZ.Back);
+                    vertices[5] = AncerPointCalc.GetAncorPoint(nextDataMark.transform, AncerPointCalc.AncorPointX.Left, AncerPointCalc.AncorPointY.Top, AncerPointCalc.AncorPointZ.Back);
+                    vertices[6] = AncerPointCalc.GetAncorPoint(nextDataMark.transform, AncerPointCalc.AncorPointX.Left, AncerPointCalc.AncorPointY.Bottom, AncerPointCalc.AncorPointZ.Back);
+                    vertices[7] = AncerPointCalc.GetAncorPoint(currentDataMark.transform, AncerPointCalc.AncorPointX.Right, AncerPointCalc.AncorPointY.Bottom, AncerPointCalc.AncorPointZ.Back);
+
 
                     int[] triangles = {
                         0, 2, 1, //face front
                         0, 3, 2,
+                        2, 3, 4, //face top
+                        2, 4, 5,
+                        1, 2, 5, //face right
+                        1, 5, 6,
+                        0, 7, 4, //face left
+                        0, 4, 3,
+                        5, 4, 7, //face back
+                        5, 7, 6,
+                        0, 6, 7, //face bottom
+                        0, 1, 6
                     };
 
                     Mesh mesh = meshFilter.mesh;
                     mesh.Clear();
                     mesh.vertices = vertices;
                     mesh.triangles = triangles;
-                    mesh.Optimize();
+                    mesh.RecalculateBounds();
                     mesh.RecalculateNormals();
+                    mesh.Optimize();
+
+                    meshCollider.sharedMesh = mesh;
+
                 }
 
             }
@@ -322,11 +362,22 @@ namespace AugmeNDT
             Debug.Log("Neg Vals: " + TablePrint.ToStringRow(currentNegChangeValues.ToArray()));
 
             // Store Min/Max Value for all positive and negative changes over all Dataset
-            posMinMaxChange = new[] { currentPosChangeValues.Min(), currentPosChangeValues.Max() };
-            negMinMaxChange = new[] { currentNegChangeValues.Min(), currentNegChangeValues.Max() };
+            if (currentPosChangeValues.Count > 0)
+            {
+                posMinMaxChange = new[] { currentPosChangeValues.Min(), currentPosChangeValues.Max() };
+                Debug.Log("posMinMaxChange Vals: " + TablePrint.ToStringRow(posMinMaxChange));
+            }
+            if (currentNegChangeValues.Count > 0)
+            {
+                negMinMaxChange = new[] { currentNegChangeValues.Min(), currentNegChangeValues.Max() };
+                Debug.Log("negMinMaxChange Vals: " + TablePrint.ToStringRow(negMinMaxChange));
+            }
+            else
+            {
+                posMinMaxChange = new[] { 0.0, 0.0 };
+                negMinMaxChange = new[] { 0.0, 0.0 };
 
-            Debug.Log("posMinMaxChange Vals: " + TablePrint.ToStringRow(posMinMaxChange));
-            Debug.Log("negMinMaxChange Vals: " + TablePrint.ToStringRow(negMinMaxChange));
+            }
 
             return highestChanges;
         }
@@ -339,12 +390,79 @@ namespace AugmeNDT
         /// <returns></returns>
         private Color CreateChangeIndicatorColor(double change)
         {
-            if(change < 0) return ScaleColor.GetCategoricalColor(change, negMinMaxChange[0], 0, ColorHelper.blueHueValues);
+            return ScaleColor.GetCategoricalColor(change, negMinMaxChange[0], 0, posMinMaxChange[1], ColorHelper.divergingValues);
+
+            if (change < 0) return ScaleColor.GetCategoricalColor(change, negMinMaxChange[0], 0, ColorHelper.blueHueValues);
             else if (change > 0) return ScaleColor.GetCategoricalColor(change, 0, posMinMaxChange[1], ColorHelper.redHueValues);
             else return Color.green; // Erorr
 
         }
 
+        /// <summary>
+        /// Method draws a line between the same bins of different datasets (timesteps).
+        /// The Line is always drawn from the top of the bin to the top of the bin in the next timestep.
+        /// </summary>
+        private void DrawBinIndicator()
+        {
+            GameObject lineMark = new GameObject("BinConnectors");
+            lineMark.transform.parent = visContainer.dataMarkContainer.transform;
+
+            // Connect the same bins in all datasets with a line
+            for (int binIndex = 0; binIndex < binCount; binIndex++)
+            {
+                for (int dataSet = 0; dataSet < dataEnsemble.GetDataSetCount() - 1; dataSet++)
+                {
+                    // Get the DataMarks for the same bin in different datasets
+                    int currentDataMark = binIndex + (dataSet * binCount);
+                    int nextDataMark = binIndex + ((dataSet + 1) * binCount);
+
+                    GameObject line = new GameObject("BinLine_" + binIndex);
+                    line.transform.parent = lineMark.transform;
+
+                    float lineThickness = 0.0008f;
+                    Color lineColor = Color.white;
+
+                    LineRenderer lineRenderer = line.AddComponent<LineRenderer>();
+                    lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+                    lineRenderer.startColor = lineColor;
+                    lineRenderer.endColor = lineColor;
+                    lineRenderer.startWidth = lineThickness;
+                    lineRenderer.endWidth = lineThickness;
+                    lineRenderer.widthMultiplier = 1f;
+                    lineRenderer.useWorldSpace = false;
+
+                    // Draw a line between the two points if they share the same x value
+                    lineRenderer.SetPosition(0, AncerPointCalc.GetAncorPoint(visContainer.dataMarkList[currentDataMark].GetDataMarkInstance().transform, AncerPointCalc.AncorPointX.Right, AncerPointCalc.AncorPointY.Top, AncerPointCalc.AncorPointZ.Front));
+                    lineRenderer.SetPosition(1, AncerPointCalc.GetAncorPoint(visContainer.dataMarkList[nextDataMark].GetDataMarkInstance().transform, AncerPointCalc.AncorPointX.Left, AncerPointCalc.AncorPointY.Top, AncerPointCalc.AncorPointZ.Front));
+
+                }
+
+            }
+            
+        }
+
+        public void OnTouchIndicator(string indicatorId)
+        {
+            // Check which Indicator is selected
+            List<int> Ids = VisInteractor.GetIDNumbers(indicatorId);
+            int binIndex = Ids[0];
+            int dataSet = Ids[1];
+            int nextDataSet = Ids[2];
+
+            Debug.Log("OnTouchIndicator:\n Bin: " + binIndex + " dataSet: " + dataSet + " nextDataSet: " + nextDataSet);
+
+            // Get the DataVisGroup of the selected Indicator
+            //GetDataVisGroup();
+
+            // Select all values == fibers which are covered by the encoded range in the bins 
+            //List<int> selectedFiberIds = visMddGlyphs.GetFiberIDsFromIQRRange(selectedGlyph);
+
+            //Debug.Log("[" + selectedFiberIds.Count + "] Selected Fibers");
+
+            // Color Polyfibers of selected FiberIds in the respective DataVisGroup
+            //visMddGlyphs.GetDataVisGroup().HighlightPolyFibers(selectedFiberIds, Color.white);
+
+        }
 
     }
 }

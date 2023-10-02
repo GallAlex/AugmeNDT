@@ -30,7 +30,6 @@ namespace AugmeNDT{
         public Scale dataScale;
 
         private float tickOffset;
-        private float tickLabelOffset = 0.03f;
 
         public DataAxis(float tickOffset)
         {

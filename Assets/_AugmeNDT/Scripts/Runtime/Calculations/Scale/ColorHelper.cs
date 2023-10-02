@@ -1,4 +1,5 @@
 using UnityEngine;
+using ColorUtility = UnityEngine.ColorUtility;
 
 namespace AugmeNDT{
     /// <summary>
@@ -32,9 +33,12 @@ namespace AugmeNDT{
 
         // Stacked Histogram ChangeIndicator: From ligth blue to dark blue
         public static Color[] blueHueValues = new[] { ReturnColorFromHex("#deebf7"), ReturnColorFromHex("#9ecae1"), ReturnColorFromHex("#3182bd") };
-        
         // Stacked Histogram ChangeIndicator: From ligth red to dark red
         public static Color[] redHueValues = new[] { ReturnColorFromHex("#fee0d2"), ReturnColorFromHex("#fc9272"), ReturnColorFromHex("#de2d26")};
+
+        // Stacked Histogram ChangeIndicator: Diverging Scheme from from green to purple over gray
+        public static Color[] divergingValues = new[] { ReturnColorFromHex("#88d8b0"), ReturnColorFromHex("#2a9d8f"), ReturnColorFromHex("#264653"), ReturnColorFromHex("#808080"), ReturnColorFromHex("#c77dff"), ReturnColorFromHex("#9e00ff"), ReturnColorFromHex("#4a148c") };
+
 
         /// <summary>
         /// Method takes in string with hex value of color and returns color between 0-1
@@ -48,6 +52,16 @@ namespace AugmeNDT{
             if (!ColorUtility.TryParseHtmlString(hexColor, out newCol)) Debug.LogError("ColorHelper: Color could not be parsed from hex string: " + hexColor);
 
             return newCol;
+        }
+
+        /// <summary>
+        /// Method takes in color and returns a hex string (starting with '#')
+        /// </summary>
+        /// <param name="col"></param>
+        /// <returns></returns>
+        public static string ReturnHexFromColor(Color col)
+        {
+            return "#" + ColorUtility.ToHtmlStringRGB(col);
         }
 
         /// <summary>

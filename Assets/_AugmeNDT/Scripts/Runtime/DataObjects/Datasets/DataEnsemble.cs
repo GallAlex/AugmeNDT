@@ -126,6 +126,19 @@ namespace AugmeNDT
             return GetMinMaxValues(aggregatedValues);
         }
 
+        /// <summary>
+        /// Returns the foudn Ids of the given value in the selected attribute for the selected dataset.
+        /// </summary>
+        /// <param name="dataSetId"></param>
+        /// <param name="attributeId"></param>
+        /// <param name="value"></param>
+        /// <param name="normalized"></param>
+        /// <returns></returns>
+        public List<int> GetIndexOfAttrVal(int dataSetId, int attributeId, double value, bool normalized)
+        {
+            return abstractDatasets[dataSetId].GetAttribute(attributeId).GetIndexOfValue(value, normalized);
+        }
+
         //#####################     DERIVED ATTRIBUTE METHODS     #####################
 
         public DerivedAttributes GetDerivedAttribute(int dataSetId, int attributeId)
@@ -214,6 +227,7 @@ namespace AugmeNDT
 
 
         // TODO: MOVE TO SPECIAL DATASET UTILITY CLASS
+        //#####################     UTILITY METHODS     #####################
 
         /// <summary>
         /// Gets the minimum and maximum values of the attribute based on the numerical values.
