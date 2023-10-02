@@ -60,7 +60,7 @@ namespace AugmeNDT{
         public static double GetKurtosisValue(double[] data)
         {
             var value = Statistics.Kurtosis(data);
-            if (double.IsNaN(value)) Debug.LogError("Skewness Value is NaN: Data has less than four entries or an entry is NaN");
+            if (double.IsNaN(value)) Debug.LogError("Kurtosis Value is NaN: Data has less than four entries or an entry is NaN");
 
             return value;
         }

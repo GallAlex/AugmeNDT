@@ -20,6 +20,8 @@ namespace AugmeNDT{
         // If more than one dataset is loaded, should the z-Axis be for the other Datasets?
         private bool use4DData = false;
 
+        private GameObject meanBarPrefab;
+
         private GameObject selectionBoxPrefab;
         private List<GameObject> selectionBoxes;
 
@@ -35,10 +37,12 @@ namespace AugmeNDT{
             dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Bar");
             tickMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Tick");
 
+            meanBarPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Bar");
+
             selectionBoxPrefab = (GameObject)Resources.Load("Prefabs/SelectionBox");
 
             // Create Interactor
-            visInteractor = new VisMDDGlyphInteractor(this);
+            //visInteractor = new VisMDDGlyphInteractor(this);
         }
     
 
@@ -263,11 +267,12 @@ namespace AugmeNDT{
             
             //## 04: Create Data Marks
             visContainer.CreateDataMarks(dataMarkPrefab, new []{1, 0, 1});
+            CreateMeanBar(); 
 
             //## 05: Create Color Scalar Bar
             colorLegend = legend.GetColorLegend();
             CreateColorLegend(colorLegend);
-
+            
 
             //## 06: Create Selection Boxes for X Axis
             CreateSelectionBoxes();
@@ -284,7 +289,6 @@ namespace AugmeNDT{
 
             //## 07: Rescale
             visContainerObject.transform.localScale = new Vector3(width, height, depth);
-            //colorBar.transform.localScale = new Vector3(width, height, depth);
 
 
             //## 08: Set up individual Interctions
@@ -307,7 +311,6 @@ namespace AugmeNDT{
 
             int numberOfAttributes = dataEnsemble.GetDataSet(0).attributesCount;
             int numberOfDatasets = dataEnsemble.GetDataSetCount();
-            int currentDataSet = 0;
 
             Color[] c = new Color[numberOfAttributes * numberOfDatasets];
 
@@ -527,7 +530,8 @@ namespace AugmeNDT{
             stackedHistogram.width = 1;
             stackedHistogram.height = 1;
             stackedHistogram.depth = 1;
-            
+            stackedHistogram.visInteractor = new VisMDDGlyphInteractor(this);
+
             for (int dataSet = 0; dataSet < dataEnsemble.GetDataSetCount(); dataSet++)
             {
                 stackedHistogram.AppendData(dataEnsemble.GetDataSet(dataSet));
@@ -544,12 +548,36 @@ namespace AugmeNDT{
             return stackedHistogram;
         }
 
-        //Should be called once a new vis is dragged back into the main vis
-        public void DeleteNewVis()
+        /// <summary>
+        /// Run through all DataMarks and get the mean value for each attribute (in each Dataset)
+        /// Create a Bar for each Glyph with the mean value as yPos and a X,Z size slightly bigger then the Glyph and a Y size of 2 percent of the Glyphs Y size
+        /// </summary>
+        private void CreateMeanBar()
         {
+            double[] meanValues = dataEnsemble.GetDerivedAttributeValues(DerivedAttributes.DerivedAttributeCalc.Mean, true);
+            Scale yScale = visContainer.GetAxisScale(Direction.Y);
 
+
+            // Get the mean value for each attribute
+            for (int dataMark = 0; dataMark < visContainer.dataMarkList.Count; dataMark++)
+            {
+                GameObject dataMarkInstance = visContainer.dataMarkList[dataMark].GetDataMarkInstance();
+
+                // Skip drawing if the Glyph is too small
+                if(dataMarkInstance.transform.localScale.y <= 0.0000001f) continue;
+
+                Debug.Log("Mean Value of " + dataMark + ": " + meanValues[dataMark] + "\n Scaled Val: " + (float)yScale.GetScaledValue(meanValues[dataMark]));
+
+                Vector3 meanBarPos = new Vector3(dataMarkInstance.transform.localPosition.x, (float)yScale.GetScaledValue(meanValues[dataMark]), dataMarkInstance.transform.localPosition.z);
+                GameObject meanBar = GameObject.Instantiate(meanBarPrefab, meanBarPos, Quaternion.identity);
+                meanBar.name = "MeanBar_" + dataMark;
+                meanBar.transform.localScale = new Vector3(dataMarkInstance.transform.localScale.x * 1.1f, dataMarkInstance.transform.localScale.y * 0.02f, dataMarkInstance.transform.localScale.z * 1.1f);
+                meanBar.transform.parent = dataMarkInstance.transform;
+                meanBar.GetComponent<MeshRenderer>().material.SetColor("_Color", Color.gray);
+            }
 
         }
+
     }
 }
 

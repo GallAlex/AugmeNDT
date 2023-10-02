@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.microsoft.mixedreality.openxr": "file:MixedReality/com.microsoft.mixedreality.openxr-1.8.1.tgz",
+    "com.microsoft.mixedreality.openxr": "file:MixedReality/com.microsoft.mixedreality.openxr-1.9.0.tgz",
     "com.microsoft.mixedreality.sceneunderstanding": "file:MixedReality/com.microsoft.mixedreality.sceneunderstanding-0.6.0.tgz",
     "com.microsoft.mixedreality.toolkit.examples": "file:MixedReality/com.microsoft.mixedreality.toolkit.examples-2.8.3.tgz",
     "com.microsoft.mixedreality.toolkit.extensions": "file:MixedReality/com.microsoft.mixedreality.toolkit.extensions-2.8.3.tgz",
@@ -10,8 +10,8 @@
     "com.microsoft.mixedreality.toolkit.micstream": "file:MixedReality/com.microsoft.mixedreality.toolkit.micstream-1.0.0.tgz",
     "com.microsoft.mixedreality.toolkit.planefinding": "file:MixedReality/com.microsoft.mixedreality.toolkit.planefinding-1.0.0.tgz",
     "com.microsoft.mixedreality.toolkit.standardassets": "file:MixedReality/com.microsoft.mixedreality.toolkit.standardassets-2.8.3.tgz",
-    "com.microsoft.mixedreality.toolkit.testutilities": "file:MixedReality/com.microsoft.mixedreality.toolkit.testutilities-2.8.2.tgz",
-    "com.microsoft.mixedreality.toolkit.tools": "file:MixedReality/com.microsoft.mixedreality.toolkit.tools-2.8.2.tgz",
+    "com.microsoft.mixedreality.toolkit.testutilities": "file:MixedReality/com.microsoft.mixedreality.toolkit.testutilities-2.8.3.tgz",
+    "com.microsoft.mixedreality.toolkit.tools": "file:MixedReality/com.microsoft.mixedreality.toolkit.tools-2.8.3.tgz",
     "com.microsoft.spatialaudio.spatializer.unity": "file:MixedReality/com.microsoft.spatialaudio.spatializer.unity-2.0.37.tgz",
     "com.microsoft.windows.mixedreality.dotnetwinrt": "file:MixedReality/com.microsoft.windows.mixedreality.dotnetwinrt-0.5.2009.tgz",
     "com.unity.ai.navigation": "1.1.4",

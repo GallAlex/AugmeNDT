@@ -44,7 +44,7 @@ namespace AugmeNDT{
             GameObject colorScalarBarContainer = new GameObject("Color Scale");
             colorScalarBarContainer.transform.parent = visContainerObject.transform;
 
-            ColorScalarBar colorScalarBar = new ColorScalarBar();
+            LegendColorBar colorScalarBar = new LegendColorBar();
 
             GameObject colorBar01 = colorScalarBar.CreateColorScalarBar(visContainerObject.transform.position, channelEncoding[VisChannel.Color].GetName(), channelEncoding[VisChannel.Color].GetMinMaxVal(), 1, colorScheme);
             //colorBar01.transform.parent = colorScalarBarContainer.transform;

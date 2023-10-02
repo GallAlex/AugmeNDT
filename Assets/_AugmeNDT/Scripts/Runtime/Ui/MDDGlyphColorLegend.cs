@@ -2,12 +2,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace AugmeNDT{
+
+    /// <summary>
+    /// Class is responsible to complete the MDD Glyph Color Legend for display and for the execution of the interactions carried out
+    /// </summary>
     public class MDDGlyphColorLegend
     {
         public GameObject colorLegendInstance;
-        public MDDLegend instanceScript;
+        public MDDLegendInteractable instanceScript;
         public GameObject colorLegendPrefab;
-        public GameObject text3DPrefab;
 
         private VisMDDGlyphs mddGlyph;
 
@@ -56,8 +59,7 @@ namespace AugmeNDT{
 
         public MDDGlyphColorLegend(VisMDDGlyphs mddGlyph)
         {
-            text3DPrefab = (GameObject)Resources.Load("Prefabs/Text3D");
-            colorLegendPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/MDDGlyphColorLegend");
+            colorLegendPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Legends/MDDGlyphColorLegend");
 
             this.mddGlyph = mddGlyph;
 
@@ -88,7 +90,7 @@ namespace AugmeNDT{
             detailedViewOn = false;
 
             colorLegendInstance = GameObject.Instantiate(colorLegendPrefab);
-            instanceScript = colorLegendInstance.GetComponent<MDDLegend>();
+            instanceScript = colorLegendInstance.GetComponent<MDDLegendInteractable>();
             instanceScript.SetMDDGlyphColorLegend(this);
             instanceScript.SetColorBarInteraction();
 

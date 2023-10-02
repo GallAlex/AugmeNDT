@@ -260,10 +260,14 @@ namespace AugmeNDT
             return dataSets;
         }
 
+        /// <summary>
+        /// Adds the given color legend to the visContainer.
+        /// </summary>
+        /// <param name="legend"></param>
         public virtual void CreateColorLegend(GameObject legend)
         {
             if (legend == null) Debug.LogError("No Legend GameObject created!");
-            else visContainer.CreateColorLegend(legend);
+            else visContainer.CreateColorLegend(legend, axes);
         }
 
         public void SetChannel(VisChannel visChannel, Attribute attribute, bool normalized)

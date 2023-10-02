@@ -87,11 +87,22 @@ namespace AugmeNDT{
             
             //## 03: Draw all Data Points with the provided Channels 
             visContainer.CreateDataMarks(dataMarkPrefab, new[] { 1, 1, 1 });
-            
-            //DrawDifferenceIndicator();
-            DrawDifferenceIndicatorByArray();
 
-            //## 04: Rescale Chart
+            if (dataEnsemble.GetDataSetCount() > 1)
+            {
+                DrawDifferenceIndicator();
+
+                //## 04: Create Color Scalar Bar
+
+                LegendColorBar colorScalarBar = new LegendColorBar();
+                GameObject colorBar = colorScalarBar.CreateColorScalarBar(visContainerObject.transform.position, "Chi-Squared Difference", minMaxTimeDiff, 1, ColorHelper.redHueValues);
+                //colorBar01.transform.parent = colorScalarBarContainer.transform;
+                CreateColorLegend(colorBar);
+
+            }
+
+
+            //## 05: Rescale Chart
             visContainerObject.transform.localScale = new Vector3(width, height, depth);
 
 
@@ -100,45 +111,8 @@ namespace AugmeNDT{
 
         /// <summary>
         /// Method connects all DataMarks of the same Attribute with a line between their time steps.
-        /// Alsways draws from first timestep  to the next one 
         /// </summary>
         private void DrawDifferenceIndicator()
-        {
-            GameObject lineMark = new GameObject("TimeLines");
-            lineMark.transform.parent = visContainer.dataMarkContainer.transform;
-
-            int attributes = channelEncoding[VisChannel.XPos].GetNumberOfValues();
-
-            for (int dataMark = 0; dataMark < attributes * dataEnsemble.GetDataSetCount(); dataMark++)
-            {
-                // Check only Marks for the same Attribute
-                if (attributes + dataMark > attributes * dataEnsemble.GetDataSetCount()-1) break;
-
-                var currentDataMark = visContainer.dataMarkList[dataMark].GetDataMarkInstance();
-                var nextDataMark = visContainer.dataMarkList[dataMark + attributes].GetDataMarkInstance();
-
-                GameObject line = new GameObject("Line_" + dataMark + "_" + (dataMark + attributes));
-                line.transform.parent = lineMark.transform;
-
-                //TODO: Chamge to MeshTopology.Lines?
-
-                LineRenderer lineRenderer = line.AddComponent<LineRenderer>();
-                lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-                lineRenderer.startColor = Color.green;
-                lineRenderer.endColor = Color.green;
-                lineRenderer.widthMultiplier = CreateDifferenceIndicatorWidth(0.002);
-                lineRenderer.useWorldSpace = false;
-
-
-                // Draw a line between the two points if they share the same x value
-                lineRenderer.SetPosition(0, currentDataMark.transform.localPosition);
-                lineRenderer.SetPosition(1, nextDataMark.transform.localPosition);
-
-            }
-        }
-
-        // Difference to DrawDifferenceIndicator: Run trhough the Array and get back from this to the DataMark
-        private void DrawDifferenceIndicatorByArray()
         {
             GameObject lineMark = new GameObject("TimeLines");
             lineMark.transform.parent = visContainer.dataMarkContainer.transform;
@@ -173,58 +147,6 @@ namespace AugmeNDT{
 
 
             }
-
-
-            /*
-
-            int attrCount = dataEnsemble.GetDataSet(0).attributesCount; // Number of attributes (taken from first dataset 1)
-            double[] summedTimePoints = channelEncoding[VisChannel.YPos].GetNumericalVal();
-
-            Debug.Log("SummedTimePoints values [ " + summedTimePoints.Length  +" ]: " + TablePrint.ToStringRow(summedTimePoints));
-
-            // From Difference [min, max] to [0.0d, 0.009d]
-            lineScale = new ScaleLinear(channelEncoding[VisChannel.YPos].GetMinMaxVal().ToList(),new List<double>(){ 0.0009d, 0.006d });
-            Debug.Log("Min/Max SummedTimePoints: " + TablePrint.ToStringRow(channelEncoding[VisChannel.YPos].GetMinMaxVal()));
-
-            Debug.Log("Time Diff Array: " + TablePrint.ToStringRow(summedTimePoints));
-
-            for (int attr = 0; attr < attrCount; attr++)
-            {
-                for (int dataSet = 0; dataSet < dataEnsemble.GetDataSetCount() - 1; dataSet++)
-                {
-                    int currentDataMarkId = attr + (dataSet * attrCount);
-                    int nextDataMarkId = attr + ((dataSet + 1) * attrCount);
-
-                    // Subtract
-                    double timeDifference = summedTimePoints[nextDataMarkId];
-                    Debug.Log("Current DataMark: " + currentDataMarkId + " | Next DataMark: " + nextDataMarkId + "\n Difference: " + summedTimePoints[nextDataMarkId]);
-
-
-
-                    GameObject currentDataMark = visContainer.dataMarkList[currentDataMarkId].GetDataMarkInstance();
-                    GameObject nextDataMark = visContainer.dataMarkList[nextDataMarkId].GetDataMarkInstance();
-
-                    GameObject line = new GameObject("Line_" + currentDataMarkId + "_" + nextDataMarkId);
-                    line.transform.parent = lineMark.transform;
-
-                    //TODO: Chamge to MeshTopology.Lines?
-                    float lineThickness = CreateDifferenceIndicatorWidth(summedTimePoints[nextDataMarkId]);
-                    Color lineColor = CreateDifferenceIndicatorColor(summedTimePoints[nextDataMarkId]);
-
-                    LineRenderer lineRenderer = line.AddComponent<LineRenderer>();
-                    lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-                    lineRenderer.startColor = lineColor;
-                    lineRenderer.endColor = lineColor;
-                    lineRenderer.startWidth = lineThickness;
-                    lineRenderer.endWidth = lineThickness;
-                    lineRenderer.useWorldSpace = false;
-
-                    // Draw a line between the two points if they share the same x value
-                    lineRenderer.SetPosition(0, currentDataMark.transform.localPosition);
-                    lineRenderer.SetPosition(1, nextDataMark.transform.localPosition);
-                }
-            }
-            */
 
         }
 

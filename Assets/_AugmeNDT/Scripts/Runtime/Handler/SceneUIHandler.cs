@@ -29,8 +29,6 @@ namespace AugmeNDT{
 
         private const int AmountShadertypes = 3;
         private int shaderType = 0;
-        private int ticks = -1;
-        private int attribute = 0;
 
         private void Update()
         {

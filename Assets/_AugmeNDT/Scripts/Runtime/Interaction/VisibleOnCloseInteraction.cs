@@ -12,8 +12,8 @@ namespace AugmeNDT
     {
         //public float visibilityRange = 0.2f; // The range in which hands affect object visibility
         public List<MonoBehaviour> affectedScripts;
-        public bool interactionEnabled = true;
 
+        private bool interactionEnabled = true;
         private Renderer objectRenderer;
         private Collider objectColl;
 
@@ -34,19 +34,16 @@ namespace AugmeNDT
                 // If no hand is in range, set the object invisible
                 if (!leftHandInRange && !rightHandInRange)
                 {
-                    objectRenderer.enabled = false;
                     ToggleScripts(false);
                 }
                 // If only left hand is in range, set the object visible
                 else if (leftHandInRange)
                 {
-                    objectRenderer.enabled = true;
                     ToggleScripts(true);
                 }
                 // If only right hand is in range, set the object visible
                 else if (rightHandInRange)
                 {
-                    objectRenderer.enabled = true;
                     ToggleScripts(true);
                 } 
             }
@@ -59,7 +56,6 @@ namespace AugmeNDT
 
         public void ShowObject(bool show)
         {
-            objectRenderer.enabled = show;
             ToggleScripts(show);
         }
 
@@ -67,23 +63,9 @@ namespace AugmeNDT
         {
             // Get the hand joint position
             MixedRealityPose pose;
-            HandJointUtils.TryGetJointPose(TrackedHandJoint.IndexMiddleJoint, hand, out pose);
+            HandJointUtils.TryGetJointPose(TrackedHandJoint.IndexDistalJoint, hand, out pose);
 
             Vector3 handPosition = pose.Position;
-
-            /*
-            // Calculate the distance between the object's bounds and the hand
-            float distanceToHand = objectBounds.SqrDistance(handPosition);
-
-            // Calculate the scaled visibility range based on the object's bounds size
-            float scaledVisibilityRange = visibilityRange * Mathf.Max(objectBounds.size.x, Mathf.Max(objectBounds.size.y, objectBounds.size.z));
-
-            Debug.Log("Distance to hand: " + distanceToHand + " | Scaled visibility range: " + scaledVisibilityRange);
-            Debug.Log("Distance to hand has to be <= " + (scaledVisibilityRange * scaledVisibilityRange));
-
-            // Check if the hand is within the scaled visibility range of the object's bounds
-            return distanceToHand <= (scaledVisibilityRange * scaledVisibilityRange);
-            */
 
             return objectColl.bounds.Contains(handPosition);
         }
@@ -91,6 +73,8 @@ namespace AugmeNDT
         // Methods enables/disables all scripts/components in the list
         private void ToggleScripts(bool enable)
         {
+            objectRenderer.enabled = enable;
+
             // Run through all scripts in the list and enable/disable them
             foreach (MonoBehaviour script in affectedScripts)
             {
