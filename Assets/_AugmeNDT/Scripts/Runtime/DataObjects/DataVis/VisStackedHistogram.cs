@@ -1,5 +1,6 @@
 using MathNet.Numerics.Distributions;
 using MathNet.Numerics.LinearAlgebra.Factorization;
+using MathNet.Numerics.Random;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static UnityEngine.EventSystems.EventTrigger;
@@ -28,11 +30,13 @@ namespace AugmeNDT
         private Attribute yPos;                     // Stacked bars: Position based on the frequency of the previous bin (for each dataset)
 
 
-        int numberOfBOI = 3; // Number of Bins of Interest (BOI) defines how many bins with the highest change are returned (ranked from most change to less change)
+        int numberOfBOI = 3;                        // Number of Bins of Interest (BOI) defines how many bins with the highest change are returned (ranked from most change to less change)
         private GameObject changeIndicatorPrefab;   // Material for the change indicator
-        private double[] posMinMaxChange;              // Min and Max change for all positive Indicators
-        private double[] negMinMaxChange;              // Min and Max change for all negative Indicators
-
+        
+        private double[] minMaxChange;              // Min and Max change
+        private double[] posMinMaxChange;           // Min and Max change for all positive Indicators
+        private double[] negMinMaxChange;           // Min and Max change for all negative Indicators
+        public GameObject text3DPrefab;
 
         public VisStackedHistogram()
         {
@@ -43,6 +47,7 @@ namespace AugmeNDT
             tickMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Tick");
 
             changeIndicatorPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/ChangeIndicator");
+            text3DPrefab = (GameObject)Resources.Load("Prefabs/Text3D");
         }
 
 
@@ -128,12 +133,12 @@ namespace AugmeNDT
                 //## 04: Create Color Scalar Bar
 
                 LegendColorBar colorScalarBar = new LegendColorBar();
-                GameObject colorBar = colorScalarBar.CreateColorScalarBar(visContainerObject.transform.position, "Frequency Difference", new[] { negMinMaxChange[0], posMinMaxChange[1] }, 1, ColorHelper.divergingValues);
+                GameObject colorBar = colorScalarBar.CreateColorScalarBar(visContainerObject.transform.position, "Frequency Difference", new[] { minMaxChange[0], minMaxChange[1] }, 0.0, 1, ColorHelper.divergingValues);
                 //colorBar01.transform.parent = colorScalarBarContainer.transform;
                 CreateColorLegend(colorBar);
             }
 
-            DrawBinIndicator();
+            DrawBinIndicator(true);
 
             //## 05: Rescale Chart
             visContainerObject.transform.localScale = new Vector3(width, height, depth);
@@ -149,6 +154,7 @@ namespace AugmeNDT
             int index = dataEnsemble.GetDataSet(0).attributeNames.IndexOf(attribute.GetName()); // Index of Attribute
             double[] minMaxValues = dataEnsemble.GetMinMaxAttrVal(0, index, false);             // Start with vals from first dataset
             int maxDataPoints = dataEnsemble.GetAttribute(0, index).GetNumberOfValues();        // Max number of occurencies/data points in a dataset
+            int minDataPoints = dataEnsemble.GetAttribute(0, index).GetNumberOfValues();        // Max number of occurencies/data points in a dataset
 
             // Find min and max val over all datasets for histogram bounds
             for (int dataset = 1; dataset < dataEnsemble.GetDataSetCount(); dataset++)
@@ -162,7 +168,10 @@ namespace AugmeNDT
                 if (currentMinMax[1] > minMaxValues[1]) minMaxValues[1] = currentMinMax[1];
 
                 // Save max number of val over all datasets 
-                if (dataEnsemble.GetAttribute(dataset, index).GetNumberOfValues() > maxDataPoints) maxDataPoints = dataEnsemble.GetAttribute(dataset, index).GetNumberOfValues();
+                int numberOfDataPoints = dataEnsemble.GetAttribute(dataset, index).GetNumberOfValues();
+                if (numberOfDataPoints > maxDataPoints) maxDataPoints = numberOfDataPoints;
+                if (numberOfDataPoints < minDataPoints) minDataPoints = numberOfDataPoints;
+
             }
 
             binCount = DistributionCalc.GetNumberOfBins(maxDataPoints); // Number of bins
@@ -182,11 +191,8 @@ namespace AugmeNDT
             // Create Histogram for all datasets
             for (int dataset = 0; dataset < dataEnsemble.GetDataSetCount(); dataset++)
             {
-
                 histograms[dataset] = new HistogramValues(dataEnsemble.GetAttribute(dataset, index).GetNumericalVal(), binCount, minMaxValues[0], minMaxValues[1]);
 
-                Debug.Log("Values of dataset " + dataset + ": \n" + TablePrint.ToStringRow(dataEnsemble.GetAttribute(dataset, index).GetNumericalVal()));
-                
                 double sumedFrequency = 0;
                 double[] currentFrequency = histograms[dataset].GetBinFrequencies();
                 frequencyList.AddRange(currentFrequency);
@@ -212,17 +218,19 @@ namespace AugmeNDT
             yPos = new Attribute(attribute.GetName(), yPosList.ToArray());
             minMaxYPos = new double[] { 0, maxFrequency };
 
-            Debug.Log("Frequencies per bin: " + frequencies.PrintAttribute());
-
         }
 
         /// <summary>
-        /// Method connects the same bins with a line between their time steps.
-        /// Draws the line/area between the bins which have the highest change.
+        /// Method connects the selected bins (BOI) with a Polygon between their time steps.
+        /// The Polygon spans from the Top of the Bins from one Timstep to the other to the Bottoms of it.
+        /// The color of the Polygon is based on the change in frequency of the bin from one timestep to the other.
         /// </summary>
         private void DrawChangeIndicator()
         {
-            List<Dictionary<int, double>> marksToDraw = GetHighestChange(numberOfBOI);
+            List<Dictionary<int, double>> marksToDraw = null;
+            // Either get the specific amount of ins with highest change or all changes
+            if(numberOfBOI != binCount) marksToDraw = GetHighestChange(numberOfBOI);
+            else marksToDraw = GetAllChanges();
 
             string text = "";
             //Print bins and differences from marksToDraw
@@ -231,7 +239,7 @@ namespace AugmeNDT
                 text += "Marks to draw for dataset " + dataSet + ": \n";
                 foreach (KeyValuePair<int, double> entry in marksToDraw[dataSet])
                 {
-                    text += "Bin " + entry.Key + " with difference " + entry.Value + "\n";
+                    text += "Bin " + entry.Key + " (D" + dataSet + ")" +  " with difference " + entry.Value + "\n";
                 }
             }
             Debug.Log(text);
@@ -256,7 +264,7 @@ namespace AugmeNDT
                     GameObject nextDataMark = visContainer.dataMarkList[nextID].GetDataMarkInstance();
 
                     GameObject indicator = GameObject.Instantiate(changeIndicatorPrefab);
-                    indicator.name = "Line_" + currentID + "_" + nextID;
+                    indicator.name = "DiffIndicator_B" + entry.Key + "_" + dataSet + "_" + (dataSet + 1);
                     indicator.transform.parent = ChangeIndicator.transform;
 
                     //Set Interaction details
@@ -267,6 +275,7 @@ namespace AugmeNDT
                     var meshFilter = indicator.GetComponent<MeshFilter>();
                     var meshCollider = indicator.GetComponent<MeshCollider>();
                     var meshRenderer = indicator.GetComponent<MeshRenderer>();
+
                     meshRenderer.material.color = CreateChangeIndicatorColor(entry.Value);
 
                     //## Create Quad Mesh
@@ -285,6 +294,7 @@ namespace AugmeNDT
                     vertices[6] = AncerPointCalc.GetAncorPoint(nextDataMark.transform, AncerPointCalc.AncorPointX.Left, AncerPointCalc.AncorPointY.Bottom, AncerPointCalc.AncorPointZ.Back);
                     vertices[7] = AncerPointCalc.GetAncorPoint(currentDataMark.transform, AncerPointCalc.AncorPointX.Right, AncerPointCalc.AncorPointY.Bottom, AncerPointCalc.AncorPointZ.Back);
 
+                    Debug.Log("Vertices: \n" + TablePrint.ToStringRow(vertices));
 
                     int[] triangles = {
                         0, 2, 1, //face front
@@ -309,8 +319,12 @@ namespace AugmeNDT
                     mesh.RecalculateNormals();
                     mesh.Optimize();
 
-                    meshCollider.sharedMesh = mesh;
+                    // Check if traingles are coplanar befor adding mesh to collider
+                    // Therefore check if y Scale of the DataMark (bins) is close to zero
+                    if(Math.Abs(currentDataMark.transform.localScale.y - nextDataMark.transform.localScale.y) < 0.0000001) continue;
 
+                    // Add to collider
+                    meshCollider.sharedMesh = mesh;
                 }
 
             }
@@ -328,8 +342,7 @@ namespace AugmeNDT
         private List<Dictionary<int, double>> GetHighestChange(int numberOfBOI)
         {
             List<Dictionary<int, double>> highestChanges = new List<Dictionary<int, double>>(dataEnsemble.GetDataSetCount() - 1);
-            int[] arrKeys = Enumerable.Range(0, binCount).ToArray(); // Indices array from 0 to binCount-1
-
+            
             // Positive and negative changes over all datasets
             List<double> currentPosChangeValues = new List<double>(numberOfBOI * (dataEnsemble.GetDataSetCount() - 1));
             List<double> currentNegChangeValues = new List<double>(numberOfBOI * (dataEnsemble.GetDataSetCount() - 1));
@@ -338,16 +351,18 @@ namespace AugmeNDT
             for (int dataSet = 0; dataSet < dataEnsemble.GetDataSetCount() - 1; dataSet++)
             {
                 Dictionary<int, double> currentHighestChanges = new Dictionary<int, double>(binCount); // Dictionary with the highest changes for the bins of the current dataset to the next one
+                int[] arrKeys = Enumerable.Range(0, binCount).ToArray(); // Indices array from 0 to binCount-1
                 double[] currentDifferences = histograms[dataSet].GetBinFrequencyDifference(histograms[dataSet + 1]);
 
                 // Check for highest absolut changes by sorting the array (and its indices array) (descending order)
                 Array.Sort(currentDifferences, arrKeys, Comparer<double>.Create((x, y) => Math.Abs(y).CompareTo(Math.Abs(x))));
 
                 //Print sorted array
-                Debug.Log("Sorted differences of Dataset " + dataSet + ": \n" + TablePrint.ToStringRow(currentDifferences));
+                //Debug.Log("Sorted differences of Dataset " + dataSet + ": \n" + TablePrint.ToStringRow(currentDifferences));
 
                 for (int boi = 0; boi < numberOfBOI; boi++)
                 {
+                    Debug.Log("Bin " + arrKeys[boi] + " has difference " + currentDifferences[boi] + "\n Boi: " + boi);
                     currentHighestChanges.Add(arrKeys[boi], currentDifferences[boi]);
 
                     // Get the (pos/neg) min max values 
@@ -358,28 +373,53 @@ namespace AugmeNDT
                 highestChanges.Add(currentHighestChanges);
             }
 
-            Debug.Log("Pos Vals: " + TablePrint.ToStringRow(currentPosChangeValues.ToArray()));
-            Debug.Log("Neg Vals: " + TablePrint.ToStringRow(currentNegChangeValues.ToArray()));
-
             // Store Min/Max Value for all positive and negative changes over all Dataset
             if (currentPosChangeValues.Count > 0)
             {
                 posMinMaxChange = new[] { currentPosChangeValues.Min(), currentPosChangeValues.Max() };
-                Debug.Log("posMinMaxChange Vals: " + TablePrint.ToStringRow(posMinMaxChange));
             }
             if (currentNegChangeValues.Count > 0)
             {
                 negMinMaxChange = new[] { currentNegChangeValues.Min(), currentNegChangeValues.Max() };
-                Debug.Log("negMinMaxChange Vals: " + TablePrint.ToStringRow(negMinMaxChange));
             }
             else
             {
                 posMinMaxChange = new[] { 0.0, 0.0 };
                 negMinMaxChange = new[] { 0.0, 0.0 };
-
             }
 
+            minMaxChange = new double[] { negMinMaxChange[0], posMinMaxChange[1] };
+
             return highestChanges;
+        }
+
+        /// <summary>
+        /// Returns the index of the bins with their change in frequency between timesteps.
+        /// </summary>
+        /// <returns></returns>
+        private List<Dictionary<int, double>> GetAllChanges()
+        {
+            List<Dictionary<int, double>> changes = new List<Dictionary<int, double>>(dataEnsemble.GetDataSetCount() - 1);
+            minMaxChange = new double[] { double.MaxValue, double.MinValue };
+            
+            for (int dataSet = 0; dataSet < dataEnsemble.GetDataSetCount() - 1; dataSet++)
+            {
+                Dictionary<int, double> currentChanges = new Dictionary<int, double>(binCount);
+                double[] currentDifferences = histograms[dataSet].GetBinFrequencyDifference(histograms[dataSet + 1]);
+
+                for (int bin = 0; bin < binCount; bin++)
+                {
+                    currentChanges.Add(bin, currentDifferences[bin]);
+
+                    // Fill min max Array
+                    if (currentDifferences[bin] < minMaxChange[0]) minMaxChange[0] = currentDifferences[bin];
+                    if (currentDifferences[bin] > minMaxChange[1]) minMaxChange[1] = currentDifferences[bin];
+                }
+
+                changes.Add(currentChanges);
+            }
+
+            return changes;
         }
 
         /// <summary>
@@ -390,19 +430,16 @@ namespace AugmeNDT
         /// <returns></returns>
         private Color CreateChangeIndicatorColor(double change)
         {
-            return ScaleColor.GetCategoricalColor(change, negMinMaxChange[0], 0, posMinMaxChange[1], ColorHelper.divergingValues);
-
-            if (change < 0) return ScaleColor.GetCategoricalColor(change, negMinMaxChange[0], 0, ColorHelper.blueHueValues);
-            else if (change > 0) return ScaleColor.GetCategoricalColor(change, 0, posMinMaxChange[1], ColorHelper.redHueValues);
-            else return Color.green; // Erorr
-
+            return ScaleColor.GetCategoricalColor(change, minMaxChange[0], 0.0f, minMaxChange[1], ColorHelper.divergingValues);
         }
 
         /// <summary>
         /// Method draws a line between the same bins of different datasets (timesteps).
         /// The Line is always drawn from the top of the bin to the top of the bin in the next timestep.
+        /// If addIntervalLabel is true, the Indicator is extended and the interval label is added to the end of the line.
         /// </summary>
-        private void DrawBinIndicator()
+        /// <param name="addIntervalLabel"></param>
+        private void DrawBinIndicator(bool addIntervalLabel)
         {
             GameObject lineMark = new GameObject("BinConnectors");
             lineMark.transform.parent = visContainer.dataMarkContainer.transform;
@@ -430,10 +467,28 @@ namespace AugmeNDT
                     lineRenderer.endWidth = lineThickness;
                     lineRenderer.widthMultiplier = 1f;
                     lineRenderer.useWorldSpace = false;
-
+                    
                     // Draw a line between the two points if they share the same x value
                     lineRenderer.SetPosition(0, AncerPointCalc.GetAncorPoint(visContainer.dataMarkList[currentDataMark].GetDataMarkInstance().transform, AncerPointCalc.AncorPointX.Right, AncerPointCalc.AncorPointY.Top, AncerPointCalc.AncorPointZ.Front));
                     lineRenderer.SetPosition(1, AncerPointCalc.GetAncorPoint(visContainer.dataMarkList[nextDataMark].GetDataMarkInstance().transform, AncerPointCalc.AncorPointX.Left, AncerPointCalc.AncorPointY.Top, AncerPointCalc.AncorPointZ.Front));
+
+
+                    if (addIntervalLabel && (dataSet + 1 ) == (dataEnsemble.GetDataSetCount() - 1))
+                    {
+                        lineRenderer.positionCount = 4;
+
+                        Vector3 lastPoint = AncerPointCalc.GetAncorPoint(visContainer.dataMarkList[nextDataMark].GetDataMarkInstance().transform, AncerPointCalc.AncorPointX.Left, AncerPointCalc.AncorPointY.Top, AncerPointCalc.AncorPointZ.Front);
+                        // Extend the line with 2 times the width (x) of a DataMark 
+                        Vector3 straightLinePos = lastPoint + new Vector3(visContainer.dataMarkList[nextDataMark].GetDataMarkInstance().transform.localScale.x, 0, 0);
+                        lineRenderer.SetPosition(2, straightLinePos);
+                        // Move it down half the height(y) of a DataMark
+                        Vector3 diagonalLinePos = straightLinePos + new Vector3(visContainer.dataMarkList[nextDataMark].GetDataMarkInstance().transform.localScale.x * 1.5f, -(visContainer.dataMarkList[nextDataMark].GetDataMarkInstance().transform.localScale.y / 2), 0);
+                        lineRenderer.SetPosition(3, diagonalLinePos);
+
+                        string binInterval = histograms[0].GetBinIntervals()[binIndex];
+
+                        CreateValueText((diagonalLinePos), lineRenderer.transform, binInterval);
+                    }
 
                 }
 
@@ -450,6 +505,8 @@ namespace AugmeNDT
             int nextDataSet = Ids[2];
 
             Debug.Log("OnTouchIndicator:\n Bin: " + binIndex + " dataSet: " + dataSet + " nextDataSet: " + nextDataSet);
+            Debug.Log("Bin "+ binIndex + " of Dataset "+ dataSet + " has frequency: " + frequencies.GetNumericalVal()[binIndex + (dataSet * binCount)]);
+            Debug.Log("Bin " + binIndex + " of Dataset " + nextDataSet + " has frequency: " + frequencies.GetNumericalVal()[binIndex + (nextDataSet * binCount)]);
 
             // Get the DataVisGroup of the selected Indicator
             //GetDataVisGroup();
@@ -462,6 +519,15 @@ namespace AugmeNDT
             // Color Polyfibers of selected FiberIds in the respective DataVisGroup
             //visMddGlyphs.GetDataVisGroup().HighlightPolyFibers(selectedFiberIds, Color.white);
 
+        }
+
+        private void CreateValueText(Vector3 position, Transform transform, string text)
+        {
+            GameObject colorBarText = GameObject.Instantiate(text3DPrefab, position, Quaternion.identity, transform);
+            TextMesh barText = colorBarText.GetComponent<TextMesh>();
+            barText.text = text;
+            barText.anchor = TextAnchor.MiddleLeft;
+            barText.fontSize = 50;
         }
 
     }

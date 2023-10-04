@@ -1,5 +1,7 @@
 using System;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
+using UnityEngine.SocialPlatforms;
 
 namespace AugmeNDT{
     public class ScaleColor
@@ -195,5 +197,38 @@ namespace AugmeNDT{
 
             return new double[] { rangeStart, rangeEnd };
         }
+
+        public static double[] GetCategoricalColorValueRange(int colorIndex, double minValue, double midValue, double maxValue, int numberOfColors)
+        {
+            if (numberOfColors % 2 == 0)
+            {
+                Debug.LogError("Not an uneven number of colors specified!");
+            }
+
+            if (colorIndex < 0 || colorIndex >= numberOfColors)
+            {
+                throw new ArgumentOutOfRangeException(nameof(colorIndex), "Invalid color index.");
+            }
+
+            if(colorIndex == numberOfColors / 2) return new double[] { midValue, midValue }; //Return midValue for midColor
+
+            int remainingColors = numberOfColors / 2;
+
+            double rangeStart = 0;
+            double rangeEnd = 0;
+
+            if (colorIndex < remainingColors)
+            {
+                return GetCategoricalColorValueRange(colorIndex, minValue, midValue, remainingColors);
+            }
+            else // (colorIndex > remainingColors)
+            {
+                // Change the index to be between 0 to remainingColors
+                int changedColorIndex = colorIndex - remainingColors - 1;
+                return GetCategoricalColorValueRange(changedColorIndex, midValue, maxValue, remainingColors);
+            }
+
+        }
+
     }
 }
