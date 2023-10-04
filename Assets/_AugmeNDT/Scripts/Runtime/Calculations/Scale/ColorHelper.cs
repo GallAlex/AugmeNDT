@@ -37,8 +37,10 @@ namespace AugmeNDT{
         public static Color[] redHueValues = new[] { ReturnColorFromHex("#fee0d2"), ReturnColorFromHex("#fc9272"), ReturnColorFromHex("#de2d26")};
 
         // Stacked Histogram ChangeIndicator: Diverging Scheme from from green to purple over gray
-        public static Color[] divergingValues = new[] { ReturnColorFromHex("#88d8b0"), ReturnColorFromHex("#2a9d8f"), ReturnColorFromHex("#264653"), ReturnColorFromHex("#808080"), ReturnColorFromHex("#c77dff"), ReturnColorFromHex("#9e00ff"), ReturnColorFromHex("#4a148c") };
+        //public static Color[] divergingValues = new[] { ReturnColorFromHex("#88d8b0"), ReturnColorFromHex("#2a9d8f"), ReturnColorFromHex("#264653"), ReturnColorFromHex("#808080"), ReturnColorFromHex("#c77dff"), ReturnColorFromHex("#9e00ff"), ReturnColorFromHex("#4a148c") };
 
+        // Stacked Histogram ChangeIndicator: Diverging Scheme from from green to purple over (chnaged) darker white (https://colorbrewer2.org/#type=diverging&scheme=PiYG&n=7)
+        public static Color[] divergingValues = new[] { ReturnColorFromHex("#4d9221"), ReturnColorFromHex("#a1d76a"), ReturnColorFromHex("#e6f5d0"), ReturnColorFromHex("#e6e6e6"), ReturnColorFromHex("#fde0ef"), ReturnColorFromHex("#e9a3c9"), ReturnColorFromHex("#c51b7d") };
 
         /// <summary>
         /// Method takes in string with hex value of color and returns color between 0-1
