@@ -17,8 +17,7 @@ namespace AugmeNDT{
         // Stores for each attribute the difference value between first dataset and the next one
         private List<double[]> timeDifference;
 
-        // If more than one dataset is loaded, should the z-Axis be for the other Datasets?
-        private bool use4DData = false;
+        private bool use4DData = false;                     // If more than one dataset is loaded, should the z-Axis be for the other Datasets?
 
         private GameObject meanBarPrefab;
 
@@ -531,6 +530,7 @@ namespace AugmeNDT{
             stackedHistogram.height = 1;
             stackedHistogram.depth = 1;
             stackedHistogram.visInteractor = new VisMDDGlyphInteractor(this);
+            stackedHistogram.multiGroups = multiGroups;
 
             for (int dataSet = 0; dataSet < dataEnsemble.GetDataSetCount(); dataSet++)
             {
@@ -565,8 +565,6 @@ namespace AugmeNDT{
 
                 // Skip drawing if the Glyph is too small
                 if(dataMarkInstance.transform.localScale.y <= 0.0000001f) continue;
-
-                Debug.Log("Mean Value of " + dataMark + ": " + meanValues[dataMark] + "\n Scaled Val: " + (float)yScale.GetScaledValue(meanValues[dataMark]));
 
                 Vector3 meanBarPos = new Vector3(dataMarkInstance.transform.localPosition.x, (float)yScale.GetScaledValue(meanValues[dataMark]), dataMarkInstance.transform.localPosition.z);
                 GameObject meanBar = GameObject.Instantiate(meanBarPrefab, meanBarPos, Quaternion.identity);

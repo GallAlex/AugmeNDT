@@ -70,8 +70,9 @@ namespace AugmeNDT
         // Interactions
         public VisInteractor visInteractor;                             // Interactor for the Vis    
         private DataVisGroup dataVisGroup;                              // Reference to DataVisGroup
+        public Dictionary<int, DataVisGroup> multiGroups;               // If 4D Stores the Group for each Dataset
 
-        
+
 
         public Vis()
         {

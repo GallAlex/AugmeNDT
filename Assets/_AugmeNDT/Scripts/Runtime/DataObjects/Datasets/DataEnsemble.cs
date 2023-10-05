@@ -127,7 +127,7 @@ namespace AugmeNDT
         }
 
         /// <summary>
-        /// Returns the foudn Ids of the given value in the selected attribute for the selected dataset.
+        /// Returns the found Ids of the given value in the selected attribute for the selected dataset.
         /// </summary>
         /// <param name="dataSetId"></param>
         /// <param name="attributeId"></param>
@@ -137,6 +137,11 @@ namespace AugmeNDT
         public List<int> GetIndexOfAttrVal(int dataSetId, int attributeId, double value, bool normalized)
         {
             return abstractDatasets[dataSetId].GetAttribute(attributeId).GetIndexOfValue(value, normalized);
+        }
+
+        public List<int> GetIndexOfAttrValRange(int dataSetId, int attributeId, double[] minMaxValRange, bool normalized)
+        {
+            return abstractDatasets[dataSetId].GetAttribute(attributeId).GetIndexOfValueRange(minMaxValRange, normalized);
         }
 
         //#####################     DERIVED ATTRIBUTE METHODS     #####################
