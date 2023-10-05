@@ -145,6 +145,37 @@ namespace AugmeNDT{
             return indices;
         }
 
+        /// <summary>
+        /// Returns the Index (position in array) of all values of the attribute which lie between the min [0] and max [1] of the Range.
+        /// Returns a List with the index of all occurencies found or a empty List if the value is not found at all.
+        /// </summary>
+        /// <param name="minMaxValRange"></param>
+        /// <param name="normalized"></param>
+        /// <returns></returns>
+        public List<int> GetIndexOfValueRange(double[] minMaxValRange, bool normalized)
+        {
+            List<int> indices = new List<int>();
+
+            Debug.Log("Attribute: " + name);
+
+            for (int i = 0; i < numericalValues.Length; i++)
+            {
+                if (normalized)
+                {
+                    if (numericalValuesNorm[i] >= minMaxValRange[0] && numericalValuesNorm[i] <= minMaxValRange[1])
+                    {
+                        indices.Add(i);
+                    }
+                }
+                else
+                if (numericalValues[i] >= minMaxValRange[0] && numericalValues[i] <= minMaxValRange[1])
+                {
+                    indices.Add(i);
+                }
+            }
+            return indices;
+        }
+
         public DerivedAttributes GetDerivedAttributes()
         {
             if (!numericalType)

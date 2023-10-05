@@ -228,6 +228,7 @@ namespace AugmeNDT{
                 vis.AppendData(group.Value.GetAbstractCsvData());
             }
 
+            vis.multiGroups = multiGroups;
             vis.CreateVis(new GameObject("MultiGroupVis"));
         }
 

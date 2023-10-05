@@ -19,8 +19,7 @@ namespace AugmeNDT
 {
     public class VisStackedHistogram : Vis
     {
-        // If more than one dataset is loaded, should the z-Axis be for the other Datasets?
-        private bool use4DData = false;
+        private bool use4DData = false;                     // If more than one dataset is loaded, should the z-Axis be for the other Datasets?
 
         private HistogramValues[] histograms;       // Histograms with same number of bins and same lower & upper bound for each dataset
         private int binCount;                       // Fixed bin count with fixed bin width
@@ -30,7 +29,7 @@ namespace AugmeNDT
         private Attribute yPos;                     // Stacked bars: Position based on the frequency of the previous bin (for each dataset)
 
 
-        int numberOfBOI = 3;                        // Number of Bins of Interest (BOI) defines how many bins with the highest change are returned (ranked from most change to less change)
+        private int numberOfBOI = 3;                        // Number of Bins of Interest (BOI) defines how many bins with the highest change are returned (ranked from most change to less change)
         private GameObject changeIndicatorPrefab;   // Material for the change indicator
         
         private double[] minMaxChange;              // Min and Max change
@@ -232,18 +231,6 @@ namespace AugmeNDT
             if(numberOfBOI != binCount) marksToDraw = GetHighestChange(numberOfBOI);
             else marksToDraw = GetAllChanges();
 
-            string text = "";
-            //Print bins and differences from marksToDraw
-            for (int dataSet = 0; dataSet < dataEnsemble.GetDataSetCount() - 1; dataSet++)
-            {
-                text += "Marks to draw for dataset " + dataSet + ": \n";
-                foreach (KeyValuePair<int, double> entry in marksToDraw[dataSet])
-                {
-                    text += "Bin " + entry.Key + " (D" + dataSet + ")" +  " with difference " + entry.Value + "\n";
-                }
-            }
-            Debug.Log(text);
-
             GameObject ChangeIndicator = new GameObject("BinDifference Indicator");
             ChangeIndicator.transform.parent = visContainer.dataMarkContainer.transform;
 
@@ -293,8 +280,6 @@ namespace AugmeNDT
                     vertices[5] = AncerPointCalc.GetAncorPoint(nextDataMark.transform, AncerPointCalc.AncorPointX.Left, AncerPointCalc.AncorPointY.Top, AncerPointCalc.AncorPointZ.Back);
                     vertices[6] = AncerPointCalc.GetAncorPoint(nextDataMark.transform, AncerPointCalc.AncorPointX.Left, AncerPointCalc.AncorPointY.Bottom, AncerPointCalc.AncorPointZ.Back);
                     vertices[7] = AncerPointCalc.GetAncorPoint(currentDataMark.transform, AncerPointCalc.AncorPointX.Right, AncerPointCalc.AncorPointY.Bottom, AncerPointCalc.AncorPointZ.Back);
-
-                    Debug.Log("Vertices: \n" + TablePrint.ToStringRow(vertices));
 
                     int[] triangles = {
                         0, 2, 1, //face front
@@ -444,9 +429,15 @@ namespace AugmeNDT
             GameObject lineMark = new GameObject("BinConnectors");
             lineMark.transform.parent = visContainer.dataMarkContainer.transform;
 
+            float ySize = 1.0f;
+            float spacing = ySize / binCount;
+
             // Connect the same bins in all datasets with a line
             for (int binIndex = 0; binIndex < binCount; binIndex++)
             {
+                // Draw the label for StackedHistogram without timesteps
+                //TODO: First line and Label should also be available for StackedHistogram without timesteps
+
                 for (int dataSet = 0; dataSet < dataEnsemble.GetDataSetCount() - 1; dataSet++)
                 {
                     // Get the DataMarks for the same bin in different datasets
@@ -482,7 +473,10 @@ namespace AugmeNDT
                         Vector3 straightLinePos = lastPoint + new Vector3(visContainer.dataMarkList[nextDataMark].GetDataMarkInstance().transform.localScale.x, 0, 0);
                         lineRenderer.SetPosition(2, straightLinePos);
                         // Move it down half the height(y) of a DataMark
-                        Vector3 diagonalLinePos = straightLinePos + new Vector3(visContainer.dataMarkList[nextDataMark].GetDataMarkInstance().transform.localScale.x * 1.5f, -(visContainer.dataMarkList[nextDataMark].GetDataMarkInstance().transform.localScale.y / 2), 0);
+                        //Vector3 diagonalLinePos = straightLinePos + new Vector3(visContainer.dataMarkList[nextDataMark].GetDataMarkInstance().transform.localScale.x * 1.5f, -(visContainer.dataMarkList[nextDataMark].GetDataMarkInstance().transform.localScale.y / 2), 0);
+
+                        // USe Spacing
+                        Vector3 diagonalLinePos = new Vector3(straightLinePos.x + visContainer.dataMarkList[nextDataMark].GetDataMarkInstance().transform.localScale.x * 1.5f, spacing * (binIndex+1), 0);
                         lineRenderer.SetPosition(3, diagonalLinePos);
 
                         string binInterval = histograms[0].GetBinIntervals()[binIndex];
@@ -505,19 +499,33 @@ namespace AugmeNDT
             int nextDataSet = Ids[2];
 
             Debug.Log("OnTouchIndicator:\n Bin: " + binIndex + " dataSet: " + dataSet + " nextDataSet: " + nextDataSet);
-            Debug.Log("Bin "+ binIndex + " of Dataset "+ dataSet + " has frequency: " + frequencies.GetNumericalVal()[binIndex + (dataSet * binCount)]);
+            Debug.Log("Bin " + binIndex + " of Dataset " + dataSet + " has frequency: " + frequencies.GetNumericalVal()[binIndex + (dataSet * binCount)]);
             Debug.Log("Bin " + binIndex + " of Dataset " + nextDataSet + " has frequency: " + frequencies.GetNumericalVal()[binIndex + (nextDataSet * binCount)]);
 
-            // Get the DataVisGroup of the selected Indicator
-            //GetDataVisGroup();
+
+            //TODO search for current attribute
+            // Bin Value Range should be the same for both Datasets !!
+            int attr = 1;
+            double[] valueRangeOfBinInDataset = new[] { histograms[dataSet].GetLowerBinBound(binIndex), histograms[dataSet].GetUpperBinBound(binIndex) };
+            double[] valueRangeOfBinInNextDataset = new[] { histograms[nextDataSet].GetLowerBinBound(binIndex), histograms[nextDataSet].GetUpperBinBound(binIndex) };
+
+            Debug.Log("Bin " + binIndex + " of Dataset " + dataSet + " has value range: " + valueRangeOfBinInDataset[0] + " - " + valueRangeOfBinInDataset[1]);
+            Debug.Log("Bin " + binIndex + " of Dataset " + nextDataSet + " has value range: " + valueRangeOfBinInNextDataset[0] + " - " + valueRangeOfBinInNextDataset[1]);
 
             // Select all values == fibers which are covered by the encoded range in the bins 
             //List<int> selectedFiberIds = visMddGlyphs.GetFiberIDsFromIQRRange(selectedGlyph);
+            List<int> fiberIDsDataset = dataEnsemble.GetIndexOfAttrValRange(dataSet, attr, valueRangeOfBinInDataset, false);
+            List<int> fiberIDsNextDataset = dataEnsemble.GetIndexOfAttrValRange(nextDataSet, attr, valueRangeOfBinInNextDataset, false);
 
-            //Debug.Log("[" + selectedFiberIds.Count + "] Selected Fibers");
+            Debug.Log("Dataset [" + dataSet + "] " + "Selected <" + fiberIDsDataset.Count + "> Fibers");
+            Debug.Log("Dataset [" + nextDataSet + "] " + "Selected <" + fiberIDsNextDataset.Count + "> Fibers");
 
             // Color Polyfibers of selected FiberIds in the respective DataVisGroup
-            //visMddGlyphs.GetDataVisGroup().HighlightPolyFibers(selectedFiberIds, Color.white);
+            var groupDataset = multiGroups.Values.ElementAt(dataSet);
+            var groupNextDataset = multiGroups.Values.ElementAt(nextDataSet);
+
+            groupDataset.HighlightPolyFibers(fiberIDsDataset, Color.red);
+            groupNextDataset.HighlightPolyFibers(fiberIDsNextDataset, Color.yellow);
 
         }
 
@@ -529,6 +537,7 @@ namespace AugmeNDT
             barText.anchor = TextAnchor.MiddleLeft;
             barText.fontSize = 50;
         }
+
 
     }
 }
