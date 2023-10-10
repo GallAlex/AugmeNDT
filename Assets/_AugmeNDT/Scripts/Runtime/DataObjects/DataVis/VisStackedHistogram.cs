@@ -306,7 +306,11 @@ namespace AugmeNDT
 
                     // Check if traingles are coplanar befor adding mesh to collider
                     // Therefore check if y Scale of the DataMark (bins) is close to zero
-                    if(Math.Abs(currentDataMark.transform.localScale.y - nextDataMark.transform.localScale.y) < 0.0000001) continue;
+                    if (currentDataMark.transform.localScale.y <= 0.0000001f  && nextDataMark.transform.localScale.y <= 0.0000001f)
+                    {
+                        continue;
+                    }
+
 
                     // Add to collider
                     meshCollider.sharedMesh = mesh;
@@ -492,33 +496,38 @@ namespace AugmeNDT
 
         public void OnTouchIndicator(string indicatorId)
         {
+            // Resets previous Higlighting of the PolyFibers
+            foreach (var group in multiGroups.Values)
+            {
+                group.ResetPolyFibersHighlight();
+            }
+
             // Check which Indicator is selected
             List<int> Ids = VisInteractor.GetIDNumbers(indicatorId);
             int binIndex = Ids[0];
             int dataSet = Ids[1];
             int nextDataSet = Ids[2];
 
-            Debug.Log("OnTouchIndicator:\n Bin: " + binIndex + " dataSet: " + dataSet + " nextDataSet: " + nextDataSet);
-            Debug.Log("Bin " + binIndex + " of Dataset " + dataSet + " has frequency: " + frequencies.GetNumericalVal()[binIndex + (dataSet * binCount)]);
-            Debug.Log("Bin " + binIndex + " of Dataset " + nextDataSet + " has frequency: " + frequencies.GetNumericalVal()[binIndex + (nextDataSet * binCount)]);
 
+            // Bin Value Range AND Attribute Id should be the same for both Datasets !!
+            int attr = dataEnsemble.GetDataSet(dataSet).attributeNames.IndexOf(channelEncoding[VisChannel.YPos].GetName());
+            //int attrOfNextDataset = dataEnsemble.GetDataSet(nextDataSet).attributeNames.IndexOf(channelEncoding[VisChannel.YPos].GetName());
+            double[] valueRangeOfBin = new[] { histograms[dataSet].GetLowerBinBound(binIndex), histograms[dataSet].GetUpperBinBound(binIndex) };
+            //double[] valueRangeOfBinInDataset = new[] { histograms[dataSet].GetLowerBinBound(binIndex), histograms[dataSet].GetUpperBinBound(binIndex) };
+            //double[] valueRangeOfBinInNextDataset = new[] { histograms[nextDataSet].GetLowerBinBound(binIndex), histograms[nextDataSet].GetUpperBinBound(binIndex) };
 
-            //TODO search for current attribute
-            // Bin Value Range should be the same for both Datasets !!
-            int attr = 1;
-            double[] valueRangeOfBinInDataset = new[] { histograms[dataSet].GetLowerBinBound(binIndex), histograms[dataSet].GetUpperBinBound(binIndex) };
-            double[] valueRangeOfBinInNextDataset = new[] { histograms[nextDataSet].GetLowerBinBound(binIndex), histograms[nextDataSet].GetUpperBinBound(binIndex) };
-
-            Debug.Log("Bin " + binIndex + " of Dataset " + dataSet + " has value range: " + valueRangeOfBinInDataset[0] + " - " + valueRangeOfBinInDataset[1]);
-            Debug.Log("Bin " + binIndex + " of Dataset " + nextDataSet + " has value range: " + valueRangeOfBinInNextDataset[0] + " - " + valueRangeOfBinInNextDataset[1]);
+            string temp = "Bin : " + binIndex + " touched from timeStep: " + dataSet + " to " + nextDataSet + "\n";
+            temp += "Bin " + binIndex + " of Dataset " + dataSet + " has frequency: " + frequencies.GetNumericalVal()[binIndex + (dataSet * binCount)] + "\n";
+            temp += "Bin " + binIndex + " of Dataset " + nextDataSet + " has frequency: " + frequencies.GetNumericalVal()[binIndex + (nextDataSet * binCount)] + "\n";
+            temp += "Bin Range: " + valueRangeOfBin[0] + " - " + valueRangeOfBin[1];
+            Debug.Log(temp);
 
             // Select all values == fibers which are covered by the encoded range in the bins 
             //List<int> selectedFiberIds = visMddGlyphs.GetFiberIDsFromIQRRange(selectedGlyph);
-            List<int> fiberIDsDataset = dataEnsemble.GetIndexOfAttrValRange(dataSet, attr, valueRangeOfBinInDataset, false);
-            List<int> fiberIDsNextDataset = dataEnsemble.GetIndexOfAttrValRange(nextDataSet, attr, valueRangeOfBinInNextDataset, false);
+            List<int> fiberIDsDataset = dataEnsemble.GetIndexOfAttrValRange(dataSet, attr, valueRangeOfBin, false);
+            List<int> fiberIDsNextDataset = dataEnsemble.GetIndexOfAttrValRange(nextDataSet, attr, valueRangeOfBin, false);
 
-            Debug.Log("Dataset [" + dataSet + "] " + "Selected <" + fiberIDsDataset.Count + "> Fibers");
-            Debug.Log("Dataset [" + nextDataSet + "] " + "Selected <" + fiberIDsNextDataset.Count + "> Fibers");
+            Debug.Log("Dataset [" + dataSet + "] " + "Selected <" + fiberIDsDataset.Count + "> Fibers \n" + "Dataset [" + nextDataSet + "] " + "Selected <" + fiberIDsNextDataset.Count + "> Fibers");
 
             // Color Polyfibers of selected FiberIds in the respective DataVisGroup
             var groupDataset = multiGroups.Values.ElementAt(dataSet);

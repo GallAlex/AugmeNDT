@@ -39,7 +39,6 @@ namespace AugmeNDT
     /// <summary>
     /// Base class to create different data visualizations charts
     /// </summary>
-    [Serializable]
     public class Vis
     {
         // Vis container and used Prefabs

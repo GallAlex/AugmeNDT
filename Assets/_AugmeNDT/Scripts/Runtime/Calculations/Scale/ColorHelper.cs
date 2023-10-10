@@ -42,6 +42,9 @@ namespace AugmeNDT{
         // Stacked Histogram ChangeIndicator: Diverging Scheme from from green to purple over (chnaged) darker white (https://colorbrewer2.org/#type=diverging&scheme=PiYG&n=7)
         public static Color[] divergingValues = new[] { ReturnColorFromHex("#4d9221"), ReturnColorFromHex("#a1d76a"), ReturnColorFromHex("#e6f5d0"), ReturnColorFromHex("#e6e6e6"), ReturnColorFromHex("#fde0ef"), ReturnColorFromHex("#e9a3c9"), ReturnColorFromHex("#c51b7d") };
 
+        // Time Scatter Plot (Time Difference): Scheme from darker white to purple
+        public static Color[] whiteToPurpleValues = new[] {ReturnColorFromHex("#e6e6e6"), ReturnColorFromHex("#fde0ef"), ReturnColorFromHex("#e9a3c9"), ReturnColorFromHex("#c51b7d") };
+
         /// <summary>
         /// Method takes in string with hex value of color and returns color between 0-1
         /// Strings have to begin with '#' 

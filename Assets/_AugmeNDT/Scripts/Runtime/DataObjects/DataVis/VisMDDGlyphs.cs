@@ -539,8 +539,8 @@ namespace AugmeNDT{
 
             string axisName = "Datasets\n(" + dataEnsemble.GetAttribute(attribute).GetName() + ")";
 
-            stackedHistogram.SetChannelEncoding(VisChannel.XPos, new Attribute(axisName, dataEnsemble.GetAbstractDataSetNames()));
-            stackedHistogram.SetChannelEncoding(VisChannel.YPos, dataEnsemble.GetAttribute(attribute));
+            stackedHistogram.SetChannelEncoding(VisChannel.XPos, new Attribute(axisName, dataEnsemble.GetAbstractDataSetNames()));  // The Timesteps (Datasets)
+            stackedHistogram.SetChannelEncoding(VisChannel.YPos, dataEnsemble.GetAttribute(attribute)); // The Attribute with its values
 
             stackedHistogram.CreateVis(visContainerObject);
             stackedHistogram.SetVisContainerPosition(pos);

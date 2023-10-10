@@ -156,8 +156,6 @@ namespace AugmeNDT{
         {
             List<int> indices = new List<int>();
 
-            Debug.Log("Attribute: " + name);
-
             for (int i = 0; i < numericalValues.Length; i++)
             {
                 if (normalized)

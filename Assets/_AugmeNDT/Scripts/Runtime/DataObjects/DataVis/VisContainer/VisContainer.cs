@@ -86,9 +86,12 @@ namespace AugmeNDT{
 
         public void DeleteVisContainer()
         {
-            GameObject.Destroy(colorLegendContainer);
-            GameObject.Destroy(visContainer);
+            foreach (Transform child in anchoredContainer.transform)
+            {
+                GameObject.Destroy(child.gameObject);
+            }
             GameObject.Destroy(anchoredContainer);
+            anchoredContainer = null;
         }
 
         public void SetTitle(string title)
