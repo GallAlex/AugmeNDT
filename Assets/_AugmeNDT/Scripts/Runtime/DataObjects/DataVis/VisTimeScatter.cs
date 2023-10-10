@@ -14,6 +14,7 @@ namespace AugmeNDT{
     {
         private ScaleLinear lineScale;      // Scaling for the thickness of the lines
         private double[] minMaxTimeDiff;    // Min/Max Time Difference
+        private Dictionary<int[], double> indicatorsToDraw;
 
         public VisTimeScatter()
         {
@@ -76,10 +77,6 @@ namespace AugmeNDT{
                 dataSetCol = channelEncoding[VisChannel.Color].GetNumericalVal();
             }
 
-            //Debug.Log("HeaderVals: \n" + TablePrint.ToStringRow(headerVals));
-            //Debug.Log("DataSetCol ["+ dataSetCol.Length + "]: \n" + TablePrint.ToStringRow(dataSetCol));
-            //Debug.Log("YPos: \n" + TablePrint.ToStringRow(channelEncoding[VisChannel.YPos].GetNumericalVal()));
-
             //## 02: Set Remaining Vis Channels (Color,...)
             visContainer.SetChannel(VisChannel.XPos, headerVals);
             SetChannel(VisChannel.YPos, channelEncoding[VisChannel.YPos], false);
@@ -91,11 +88,12 @@ namespace AugmeNDT{
             if (dataEnsemble.GetDataSetCount() > 1)
             {
                 DrawDifferenceIndicator();
+                AdjustDataMarkPosition();
 
                 //## 04: Create Color Scalar Bar
 
                 LegendColorBar colorScalarBar = new LegendColorBar();
-                GameObject colorBar = colorScalarBar.CreateColorScalarBar(visContainerObject.transform.position, "Chi-Squared Difference", minMaxTimeDiff, 1, ColorHelper.redHueValues);
+                GameObject colorBar = colorScalarBar.CreateColorScalarBar(visContainerObject.transform.position, "Chi-Squared Difference", minMaxTimeDiff, 1, ColorHelper.whiteToPurpleValues);
                 //colorBar01.transform.parent = colorScalarBarContainer.transform;
                 CreateColorLegend(colorBar);
 
@@ -117,7 +115,7 @@ namespace AugmeNDT{
             GameObject lineMark = new GameObject("TimeLines");
             lineMark.transform.parent = visContainer.dataMarkContainer.transform;
 
-            Dictionary<int[], double> indicatorsToDraw = GetIndividualTimeDifferences();
+            if (indicatorsToDraw == null) indicatorsToDraw = GetIndividualTimeDifferences();
 
             // From Difference [min, max] to [0.0d, 0.009d]
             lineScale = new ScaleLinear(minMaxTimeDiff.ToList(), new List<double>() { 0.0006d, 0.006d });
@@ -145,6 +143,36 @@ namespace AugmeNDT{
                 lineRenderer.SetPosition(0, currentDataMark.transform.localPosition);
                 lineRenderer.SetPosition(1, nextDataMark.transform.localPosition);
 
+
+            }
+
+        }
+
+        /// <summary>
+        /// Method iterates between all DataMark y positions and if they are overlapping (y values too close) shift each of them at half their size to the left/right
+        /// </summary>
+        private void AdjustDataMarkPosition()
+        {
+            if(indicatorsToDraw == null) indicatorsToDraw = GetIndividualTimeDifferences();
+
+            foreach (KeyValuePair<int[], double> entry in indicatorsToDraw)
+            {
+                GameObject currentDataMark = visContainer.dataMarkList[entry.Key[0]].GetDataMarkInstance();
+                GameObject nextDataMark = visContainer.dataMarkList[entry.Key[1]].GetDataMarkInstance();
+
+                // Get Y Position of both DataMarks
+                float currentYPos = currentDataMark.transform.localPosition.y;
+                float nextYPos = nextDataMark.transform.localPosition.y;
+                float ySize = currentDataMark.transform.localScale.y;
+                float halfXSize = currentDataMark.transform.localScale.x / 2.0f;
+
+                // Check if y size is overlapping (should be bigger then half of the bar size)
+                if (Math.Abs(currentYPos - nextYPos) < ySize)
+                {
+                    // Shift both DataMarks to the left/right
+                    currentDataMark.transform.localPosition = new Vector3(currentDataMark.transform.localPosition.x - halfXSize, currentDataMark.transform.localPosition.y, currentDataMark.transform.localPosition.z);
+                    nextDataMark.transform.localPosition = new Vector3(nextDataMark.transform.localPosition.x + halfXSize, nextDataMark.transform.localPosition.y, nextDataMark.transform.localPosition.z);
+                }
 
             }
 
@@ -191,7 +219,7 @@ namespace AugmeNDT{
         private Color CreateDifferenceIndicatorColor(double difference)
         {
 
-            return ScaleColor.GetCategoricalColor(lineScale.GetScaledValue(difference), lineScale.range[0], lineScale.range[1], ColorHelper.redHueValues);
+            return ScaleColor.GetCategoricalColor(lineScale.GetScaledValue(difference), lineScale.range[0], lineScale.range[1], ColorHelper.whiteToPurpleValues);
         }
 
 

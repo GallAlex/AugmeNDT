@@ -11,7 +11,7 @@ namespace AugmeNDT{
         public GameObject colorScalarBarContainer;
         public GameObject colorBarPrefab;
         public GameObject text3DPrefab;
-        public Vector3 containerSize = new Vector3(0.5f, 1f, 0.5f);
+        public Vector3 containerSize = new Vector3(0.5f, 1f, 0.4f);
         public Color[] colorScheme;         // Used Colors
         public int percentOfSpacing = 2;    // 2% of the container size
 

@@ -11,7 +11,6 @@ namespace AugmeNDT
     /// A group can consist of different data files like raw files and spatial & abstract data (csv)
     /// Possible representations include volume renderings, polygonal renderings, as well as data visualizations derived from them 
     /// </summary>
-    [Serializable]
     public class DataVisGroup
     {
         private static int IDCounter = 0;
@@ -308,6 +307,11 @@ namespace AugmeNDT
         public void HighlightPolyFibers(List<int> fiberIDs, Color selectedColor)
         {
             polyFiberRenObj.HighlightFibers(fiberIDs, selectedColor);
+        }
+
+        public void ResetPolyFibersHighlight()
+        {
+            polyFiberRenObj.ResetHighlighting();
         }
 
         //#####################     VIS CHART METHODS   #####################

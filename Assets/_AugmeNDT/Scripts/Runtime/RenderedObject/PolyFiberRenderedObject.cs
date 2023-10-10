@@ -23,10 +23,15 @@ namespace AugmeNDT{
         private MeshManager meshManager;
         private CylinderObjectVis cylinderVis;
 
+        Color defaultCol;                       // Sets the default color of the mesh
+        private List<int> selectedFiberIDs;     // Stores the IDs of selected Fibers (e.g., colored fibers)
+
         public PolyFiberRenderedObject()
         {
             cylinderMaterial = new Material((Material)Resources.Load("Materials/PolyMaterial", typeof(Material)));
             containerPrefab = (GameObject)Resources.Load("Prefabs/PolyModelContainer");
+            defaultCol = cylinderMaterial.color;
+            selectedFiberIDs = new List<int>();
         }
 
         /// <summary>
@@ -153,15 +158,35 @@ namespace AugmeNDT{
             }
         }
 
+        /// <summary>
+        /// The Method iterates through all selected fibers and highlights them.
+        /// Sets the selected parts of the mesh to selection color and the other parts to default color.
+        /// </summary>
+        /// <param name="selectedFiberIDs"></param>
+        /// <param name="selectionColor"></param>
         public void HighlightFibers(List<int> selectedFiberIDs, Color selectionColor)
         {
-            Color defaultCol = cylinderMaterial.color;
+            //TODO: Add new selection to the still stored one?
+            this.selectedFiberIDs = selectedFiberIDs;
 
             foreach (var fiberID in selectedFiberIDs)
             {
                 MeshInteractions.ColorMesh(meshManager.GetCombinedMesh(meshManager.GetIndexOfCombinedMesh(fiberID)), meshManager.GetMeshVerticeIndices(fiberID), new Color[] { selectionColor, defaultCol });
             }
 
+        }
+
+        /// <summary>
+        /// The Method iterates through all selected fibers and resets their highlighting (sets the mesh to default color)
+        /// </summary>
+        public void ResetHighlighting()
+        {
+            foreach (var fiberID in selectedFiberIDs)
+            {
+                MeshInteractions.ColorMesh(meshManager.GetCombinedMesh(meshManager.GetIndexOfCombinedMesh(fiberID)), meshManager.GetMeshVerticeIndices(fiberID), new Color[] { defaultCol, defaultCol });
+            }
+
+            selectedFiberIDs.Clear();    // Clear selected Fiber IDs
         }
 
         public void TranslateFibers(List<int> selectedFiberIDs, Vector3 translation)
