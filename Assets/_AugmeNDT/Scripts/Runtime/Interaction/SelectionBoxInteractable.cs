@@ -43,16 +43,16 @@ namespace AugmeNDT{
 
         public void OnGrab()
         {
-            Debug.Log("Grabbed Box: " + this.selectionBoxID);
+            //Debug.Log("Grabbed Box: " + this.selectionBoxID);
             visibleOnCloseInteractionScript.EnableInteraction(false);
             visibleOnCloseInteractionScript.ShowObject(true);
         }
 
         public void OnGrabRelease()
         {
-            Debug.Log("Released Grab: " + this.selectionBoxID);
+            //Debug.Log("Released Grab: " + this.selectionBoxID);
             var check = CheckDraggedDistanceReached(this.transform.localPosition);
-            Debug.Log("CheckDraggedDistanceReached: " + check);
+            //Debug.Log("CheckDraggedDistanceReached: " + check);
 
             if (!check)
             {

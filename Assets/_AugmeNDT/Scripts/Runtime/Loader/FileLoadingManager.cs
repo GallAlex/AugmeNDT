@@ -199,6 +199,11 @@ namespace AugmeNDT
             return dataVisGroup;
         }
 
+        public void SetFilePath(string filePath)
+        {
+            this.filePath = filePath;
+        }
+
 
         #region FilePickerMethods
 

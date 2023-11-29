@@ -158,7 +158,7 @@ namespace AugmeNDT
             // Find min and max val over all datasets for histogram bounds
             for (int dataset = 1; dataset < dataEnsemble.GetDataSetCount(); dataset++)
             {
-                Debug.Log("Dataset " + dataset + " of " + dataEnsemble.GetDataSetCount());
+                //Debug.Log("Dataset " + dataset + " of " + dataEnsemble.GetDataSetCount());
 
                 double[] currentMinMax = dataEnsemble.GetMinMaxAttrVal(dataset, index, false);
 
@@ -209,8 +209,8 @@ namespace AugmeNDT
                 if (sumedFrequency > maxFrequency) maxFrequency = sumedFrequency;
             }
 
-            Debug.Log("VisStackedHistogram: maxFrequency: " + maxFrequency);
-            Debug.Log("VisStackedHistogram: yPos : " + TablePrint.ToStringRow(yPosList.ToArray()));
+            //Debug.Log("VisStackedHistogram: maxFrequency: " + maxFrequency);
+            //Debug.Log("VisStackedHistogram: yPos : " + TablePrint.ToStringRow(yPosList.ToArray()));
 
             // Finish drawable values
             frequencies = new Attribute("Frequencies", frequencyList.ToArray());
@@ -308,6 +308,7 @@ namespace AugmeNDT
                     // Therefore check if y Scale of the DataMark (bins) is close to zero
                     if (currentDataMark.transform.localScale.y <= 0.0000001f  && nextDataMark.transform.localScale.y <= 0.0000001f)
                     {
+                        meshCollider.enabled = false;
                         continue;
                     }
 

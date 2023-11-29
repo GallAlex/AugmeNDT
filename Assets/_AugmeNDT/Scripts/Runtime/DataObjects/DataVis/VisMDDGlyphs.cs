@@ -205,10 +205,9 @@ namespace AugmeNDT{
                         }
 
                     }
-
                 }
 
-                Debug.Log(temp);
+                //Debug.Log(temp);
 
                 // Normalize
                 timeDifference = new List<double[]>(dataSets[0].attributesCount);
@@ -266,7 +265,7 @@ namespace AugmeNDT{
             
             //## 04: Create Data Marks
             visContainer.CreateDataMarks(dataMarkPrefab, new []{1, 0, 1});
-            CreateMeanBar(); 
+            CreateMedianBar(); 
 
             //## 05: Create Color Scalar Bar
             colorLegend = legend.GetColorLegend();
@@ -298,7 +297,7 @@ namespace AugmeNDT{
 
         public override void ChangeDataMarks()
         {
-            Debug.Log("Change MDDGlyph");
+            //Debug.Log("Change MDDGlyph");
             visContainer.ChangeDataMarks();
         }
 
@@ -306,7 +305,7 @@ namespace AugmeNDT{
         public void CreateMDDGlyphColors(MDDGlyphColorLegend legend)
         {
 
-            Debug.Log(">> Create NEW MDDGlyph Colors");
+            //Debug.Log(">> Create NEW MDDGlyph Colors");
 
             int numberOfAttributes = dataEnsemble.GetDataSet(0).attributesCount;
             int numberOfDatasets = dataEnsemble.GetDataSetCount();
@@ -437,7 +436,7 @@ namespace AugmeNDT{
                     }
                     
                 }
-                Debug.Log(timeDiffString);
+                //Debug.Log(timeDiffString);
 
                 for (int dataSet = 0; dataSet < dataEnsemble.GetDataSetCount(); dataSet++)
                 {
@@ -449,8 +448,8 @@ namespace AugmeNDT{
                 timeScatter.SetChannelEncoding(VisChannel.YPos, timeDiffAttr);
                 timeScatter.SetChannelEncoding(VisChannel.Color, new Attribute("Datasets", dataEnsemble.GetAbstractDataSetNames()));
 
-                Debug.Log(dataSets[0].GetHeader().PrintAttribute());
-                Debug.Log(timeDiffAttr.PrintAttribute());
+                //Debug.Log(dataSets[0].GetHeader().PrintAttribute());
+                //Debug.Log(timeDiffAttr.PrintAttribute());
 
                 //timeDataset.PrintDatasetValues(true);
 
@@ -552,9 +551,9 @@ namespace AugmeNDT{
         /// Run through all DataMarks and get the mean value for each attribute (in each Dataset)
         /// Create a Bar for each Glyph with the mean value as yPos and a X,Z size slightly bigger then the Glyph and a Y size of 2 percent of the Glyphs Y size
         /// </summary>
-        private void CreateMeanBar()
+        private void CreateMedianBar()
         {
-            double[] meanValues = dataEnsemble.GetDerivedAttributeValues(DerivedAttributes.DerivedAttributeCalc.Mean, true);
+            double[] medianValues = dataEnsemble.GetDerivedAttributeValues(DerivedAttributes.DerivedAttributeCalc.Median, true);
             Scale yScale = visContainer.GetAxisScale(Direction.Y);
 
 
@@ -566,8 +565,8 @@ namespace AugmeNDT{
                 // Skip drawing if the Glyph is too small
                 if(dataMarkInstance.transform.localScale.y <= 0.0000001f) continue;
 
-                Vector3 meanBarPos = new Vector3(dataMarkInstance.transform.localPosition.x, (float)yScale.GetScaledValue(meanValues[dataMark]), dataMarkInstance.transform.localPosition.z);
-                GameObject meanBar = GameObject.Instantiate(meanBarPrefab, meanBarPos, Quaternion.identity);
+                Vector3 medianBarPos = new Vector3(dataMarkInstance.transform.localPosition.x, (float)yScale.GetScaledValue(medianValues[dataMark]), dataMarkInstance.transform.localPosition.z);
+                GameObject meanBar = GameObject.Instantiate(meanBarPrefab, medianBarPos, Quaternion.identity);
                 meanBar.name = "MeanBar_" + dataMark;
                 meanBar.transform.localScale = new Vector3(dataMarkInstance.transform.localScale.x * 1.1f, dataMarkInstance.transform.localScale.y * 0.02f, dataMarkInstance.transform.localScale.z * 1.1f);
                 meanBar.transform.parent = dataMarkInstance.transform;
