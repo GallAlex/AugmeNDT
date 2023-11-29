@@ -95,7 +95,7 @@
       }
     },
     "com.microsoft.spatialaudio.spatializer.unity": {
-      "version": "file:MixedReality/com.microsoft.spatialaudio.spatializer.unity-2.0.37.tgz",
+      "version": "file:MixedReality/com.microsoft.spatialaudio.spatializer.unity-2.0.47.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {}
@@ -160,7 +160,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.visualstudio": {
-      "version": "2.0.21",
+      "version": "2.0.22",
       "depth": 0,
       "source": "registry",
       "dependencies": {
