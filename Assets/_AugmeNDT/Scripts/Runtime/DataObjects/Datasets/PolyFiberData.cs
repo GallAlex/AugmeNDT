@@ -229,7 +229,13 @@ namespace AugmeNDT{
 
         public AbstractDataset ExportForDataVis()
         {
-            return new AbstractDataset(dataSetName, data.Keys.ToList(), data);
+            //TODO: Make specific method to remove entries from file
+            Dictionary<string, double[]> reducedData = data; //Used for Vis
+            reducedData.Remove("Label");
+            reducedData.Remove("Seperated Fibre");
+            reducedData.Remove("Curved Fibre");
+
+            return new AbstractDataset(dataSetName, reducedData.Keys.ToList(), reducedData);
         }
 
         public override string ToString()

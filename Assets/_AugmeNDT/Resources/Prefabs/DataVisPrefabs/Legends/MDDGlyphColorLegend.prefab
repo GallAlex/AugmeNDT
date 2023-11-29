@@ -4701,7 +4701,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5342307304356645759, guid: c3c4d69281a847240b3507de85f7c06a, type: 3}
       propertyPath: m_Text
-      value: 2 >
+      value: '? >'
       objectReference: {fileID: 0}
     - target: {fileID: 5342307304356645759, guid: c3c4d69281a847240b3507de85f7c06a, type: 3}
       propertyPath: m_Anchor
@@ -4863,7 +4863,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5342307304356645759, guid: c3c4d69281a847240b3507de85f7c06a, type: 3}
       propertyPath: m_Text
-      value: '> -2'
+      value: '> ?'
       objectReference: {fileID: 0}
     - target: {fileID: 5342307304356645759, guid: c3c4d69281a847240b3507de85f7c06a, type: 3}
       propertyPath: m_Anchor
@@ -4946,7 +4946,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5342307304356645759, guid: c3c4d69281a847240b3507de85f7c06a, type: 3}
       propertyPath: m_Text
-      value: < 2
+      value: < ?
       objectReference: {fileID: 0}
     - target: {fileID: 5342307304356645759, guid: c3c4d69281a847240b3507de85f7c06a, type: 3}
       propertyPath: m_Anchor
@@ -5029,7 +5029,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5342307304356645759, guid: c3c4d69281a847240b3507de85f7c06a, type: 3}
       propertyPath: m_Text
-      value: 0
+      value: '?'
       objectReference: {fileID: 0}
     - target: {fileID: 5342307304356645759, guid: c3c4d69281a847240b3507de85f7c06a, type: 3}
       propertyPath: m_Anchor
@@ -5108,7 +5108,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5342307304356645759, guid: c3c4d69281a847240b3507de85f7c06a, type: 3}
       propertyPath: m_Text
-      value: -2 <
+      value: '? <'
       objectReference: {fileID: 0}
     - target: {fileID: 5342307304356645759, guid: c3c4d69281a847240b3507de85f7c06a, type: 3}
       propertyPath: m_Anchor
@@ -5187,7 +5187,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5342307304356645759, guid: c3c4d69281a847240b3507de85f7c06a, type: 3}
       propertyPath: m_Text
-      value: 0
+      value: '?'
       objectReference: {fileID: 0}
     - target: {fileID: 5342307304356645759, guid: c3c4d69281a847240b3507de85f7c06a, type: 3}
       propertyPath: m_Anchor

@@ -34,10 +34,14 @@ namespace AugmeNDT{
 
             SetVisParams();
 
+            /*
+            //Debug Prints
+
             for (int i = 0; i < dataEnsemble.GetDataSetCount(); i++)
             {
                 dataEnsemble.GetDataSet(i).PrintDatasetValues(false); 
             }
+            */
 
             //## 01:  Create Axes and Grids
 

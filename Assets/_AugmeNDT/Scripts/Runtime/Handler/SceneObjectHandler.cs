@@ -111,6 +111,41 @@ namespace AugmeNDT{
         }
 
         /// <summary>
+        /// Loads a file based on a predefined path and renders all possible representations
+        /// </summary>
+        /// <returns></returns>
+        public async Task<string> LoadPreSelectedObject(string filePath)
+        {
+            fileLoadingManager.SetFilePath(filePath);
+            bool loadingSucceded = await fileLoadingManager.LoadDataset();
+
+            //## Wait for Loadings to finish ##
+            if (!loadingSucceded)
+            {
+                Debug.LogError("Loading aborted!");
+                return null;
+            }
+
+            Debug.Log("> Adding DataVis Group");
+
+            // Add Group
+            dataVisGroups.Add(fileLoadingManager.GetDataVisGroup());
+            int lastIndex = dataVisGroups.Count - 1;
+
+            // Render all representations (whose data is available)
+            dataVisGroups[lastIndex].RenderAll(VisType.MDDGlyphs);
+
+
+            dataVisGroups[lastIndex].ArrangeObjectsSpatially();
+
+            // Add Group to sceneObjectsContainer container
+            dataVisGroups[lastIndex].GetGroupContainer().transform.parent = sceneObjectsContainer.transform;
+            ArrangeGroupsSpatially();
+
+            return filePath;
+        }
+
+        /// <summary>
         /// Method iterates through all selected groups and adds them to the multiGroups dictionary (if found in the dataVisGroups list).
         /// </summary>
         /// <param name="selectedGroups"></param>

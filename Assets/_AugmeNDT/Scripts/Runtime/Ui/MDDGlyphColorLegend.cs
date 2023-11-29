@@ -26,14 +26,14 @@ namespace AugmeNDT{
          * Field, A. (2009). Discovering statistics using SPSS. London: SAGE.
          */
         // Skewness Thresholds
-        private const double leftSkewedThreshold = -2.0;      // min skewness
+        private const double leftSkewedThreshold = -0.05;      // min skewness
         private const double symmetricThreshold = 0.0;
-        private const double rightSkewedThreshold = 2.0;      // max skewness
+        private const double rightSkewedThreshold = 0.05;      // max skewness
 
         // Kurtosis Thresholds
-        private const double platykurticThreshold = -2.0;     // min kurtosis
+        private const double platykurticThreshold = -0.05;     // min kurtosis
         private const double mesokurticThreshold = 0.0;
-        private const double leptokurticThreshold = 2.0;      // max kurtosis
+        private const double leptokurticThreshold = 0.05;      // max kurtosis
 
         // Threshold Offset
         private const double thresholdOffset = 0.000000;
@@ -83,6 +83,7 @@ namespace AugmeNDT{
             extendedColorSchemeList.Add(new List<Color[]>() { ColorHelper.redSingleHueValues01, ColorHelper.redSingleHueValues02, ColorHelper.redSingleHueValues03 });
 
             CreateColorLegend();
+            SetCategoricView(0); // Default view: Sets the correct text for the labels
         }
 
         private void CreateColorLegend()

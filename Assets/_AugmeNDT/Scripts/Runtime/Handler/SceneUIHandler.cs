@@ -98,7 +98,7 @@ namespace AugmeNDT{
             //Currently add every loaded group into the selection and create a multigroup
             for (int groupID = 0; groupID < sceneObjectHandler.GetAmountOfDataVisGroups(); groupID++)
             {
-                Debug.Log("Adding Group: " + groupID);
+                //Debug.Log("Adding Group: " + groupID);
                 selectedGroups.Add(groupID);
             }
 

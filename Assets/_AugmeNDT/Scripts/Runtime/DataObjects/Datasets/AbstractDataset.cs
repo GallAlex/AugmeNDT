@@ -258,6 +258,20 @@ namespace AugmeNDT{
             return new Attribute(name, value);
         }
 
+        public void RemoveAttribute(int attrId)
+        {
+            // Check if Id is valid
+            if (attrId < 0 || attrId >= attributesCount)
+            {
+                throw new IndexOutOfRangeException("Attribute Id [" + attrId + "] does not exit in the dataset");
+            }
+
+            Debug.Log("Removing Attribute [" + attributeNames[attrId] + "] from Dataset [" + datasetName + "]");
+            attributeValues.RemoveAt(attrId);
+            attributeNames.RemoveAt(attrId);
+            attributesCount--;
+        }
+
 
         public void PrintDatasetValues(bool normalizedVals)
         {
