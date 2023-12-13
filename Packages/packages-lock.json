@@ -106,6 +106,14 @@
       "source": "local-tarball",
       "dependencies": {}
     },
+    "com.ptc.vuforia.engine": {
+      "version": "file:com.ptc.vuforia.engine-10.19.3.tgz",
+      "depth": 0,
+      "source": "local-tarball",
+      "dependencies": {
+        "com.unity.ugui": "1.0.0"
+      }
+    },
     "com.unity.ai.navigation": {
       "version": "1.1.4",
       "depth": 0,

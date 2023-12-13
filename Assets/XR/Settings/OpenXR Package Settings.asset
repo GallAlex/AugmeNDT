@@ -579,7 +579,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f34c86d1a130cc45a438373e1e8a4fc, type: 3}
   m_Name: PlayModeRemotingPlugin Standalone
   m_EditorClassIdentifier: 
-  m_enabled: 1
+  m_enabled: 0
   nameUi: Holographic Remoting for Play Mode
   version: 1.9.0
   featureIdInternal: com.microsoft.openxr.feature.playmoderemoting
@@ -826,7 +826,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d2e2731103cdda44af77955a0b4814c, type: 3}
   m_Name: AppRemotingPlugin WSA
   m_EditorClassIdentifier: 
-  m_enabled: 1
+  m_enabled: 0
   nameUi: Holographic Remoting remote app
   version: 1.9.0
   featureIdInternal: com.microsoft.openxr.feature.appremoting
@@ -869,6 +869,7 @@ MonoBehaviour:
   m_Name: Standalone
   m_EditorClassIdentifier: 
   features:
+  - {fileID: -5580156769760375174}
   - {fileID: -7474214476045398147}
   - {fileID: -1207166016680514939}
   - {fileID: 4506115142551491340}
@@ -887,10 +888,9 @@ MonoBehaviour:
   - {fileID: -1039549972285169596}
   - {fileID: -5145436728603230572}
   - {fileID: -4123358572876961422}
+  - {fileID: 2033770850648709270}
   - {fileID: -1658455980808443290}
   - {fileID: 7420516933650918781}
-  - {fileID: 2033770850648709270}
-  - {fileID: -5580156769760375174}
   m_renderMode: 1
   m_depthSubmissionMode: 2
 --- !u!114 &6128864114158003058
