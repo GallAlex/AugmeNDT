@@ -7,7 +7,7 @@ namespace AugmeNDT{
         public VisBarChart()
         {
             title = "Basic Bar Chart";                                  
-            axes = 3;
+            axes = 2;
 
             dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Bar");
             tickMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Tick");
@@ -20,20 +20,37 @@ namespace AugmeNDT{
 
             SetVisParams();
 
-            //## 01: Create Axes and Grids
+            xyzTicks = new[] { channelEncoding[VisChannel.XPos].GetNumberOfValues(), 10, 10 };
+            visContainer.SetAxisTickNumber(xyzTicks);
 
-            for (int currAxis = 0; currAxis < axes; currAxis++)
+            //## 01: Create Axes and Grids
+            if (axes <= 2)
             {
-                //encodedAttribute.Add(currAxis);
-                int nextDim = (currAxis + 1) % axes;
-                CreateAxis(channelEncoding[(VisChannel) currAxis], false, (Direction)currAxis);
-                visContainer.CreateGrid((Direction)currAxis, (Direction)nextDim);
+                //X Axis
+                CreateAxis(channelEncoding[VisChannel.XPos], false, Direction.X);
+                visContainer.CreateGrid(Direction.X, Direction.Y);
+
+                // Y Axis
+                if (channelEncoding.ContainsKey(VisChannel.YPos))
+                {
+                    visContainer.CreateAxis(channelEncoding[VisChannel.YSize].GetName(), new double[]{ channelEncoding[VisChannel.YPos].GetMinMaxVal()[0], channelEncoding[VisChannel.YSize].GetMinMaxVal()[1] }, Direction.Y);
+                }
+                else
+                {
+                    CreateAxis(channelEncoding[VisChannel.YSize], false, Direction.Y);
+                }
+            }
+            if (axes > 2)
+            {
+                CreateAxis(channelEncoding[VisChannel.ZPos], false, Direction.Z);
+                visContainer.CreateGrid(Direction.Z, Direction.Y);
             }
 
             //## 02: Set Remaining Vis Channels (Color,...)
             SetChannel(VisChannel.XPos, channelEncoding[VisChannel.XPos], false);
-            SetChannel(VisChannel.YSize, channelEncoding[VisChannel.YPos], false);
+            SetChannel(VisChannel.YSize, channelEncoding[VisChannel.YSize], false);
             if (axes == 3) SetChannel(VisChannel.ZPos, channelEncoding[VisChannel.ZPos], false);
+
 
             visContainer.SetChannel(VisChannel.Color, channelEncoding[VisChannel.Color].GetNumericalVal());
 

@@ -10,6 +10,7 @@ namespace AugmeNDT
     public enum VisType
     {
         BarChart,
+        DensityPlot,
         Histogram,
         Scatterplot,
         TimeScatter,
@@ -342,6 +343,8 @@ namespace AugmeNDT
                 default:
                 case VisType.BarChart:
                     return new VisBarChart();
+                case VisType.DensityPlot:
+                    return new VisDistributionPlot();
                 case VisType.Histogram:
                     return new VisHistogram();
                 case VisType.Scatterplot:

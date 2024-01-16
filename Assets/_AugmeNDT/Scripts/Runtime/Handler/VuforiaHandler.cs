@@ -12,6 +12,16 @@ namespace AugmeNDT
     {
         public bool vuforiaState = true;
 
+        void Start()
+        {
+            SetVuforiaActive(vuforiaState);
+        }
+
+        void Update()
+        {
+            SetVuforiaActive(vuforiaState);
+        }
+
         public void SetVuforiaActive(bool vuforiaState)
         {
             VuforiaBehaviour.Instance.enabled = vuforiaState;

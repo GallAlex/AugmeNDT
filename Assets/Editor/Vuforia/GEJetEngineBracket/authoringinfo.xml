@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<QCARInfo>
+    <TargetSet version="36.0" toolVersion="v6.2.3">
+        <ModelTarget name="GEJetEngineBracket" targetId="9ce59efeeda14a1fb00b0e1e79404885" version="13.0" toolVersion="v6.2.3" bbox="-0.092071 -0.000087 -0.015319 0.086004 0.062574 0.092795" trackingMode="car" upVector="0.0 1.0 0.0" optimizeTrackingFor="low_feature_objects" realisticTextures="no" />
+    </TargetSet>
+    <Assembly name="GEJetEngineBracket" assemblyId="8361710dcd8e41caa622c8b3e07fb738">
+        <Part name="GEJetEngineBracket" translation="0 0 0" rotation="AD: 0 0 1 0" />
+        <EntryPoint name="(none)" trained="yes" />
+    </Assembly>
+</QCARInfo>

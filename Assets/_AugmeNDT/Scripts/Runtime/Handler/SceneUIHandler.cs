@@ -82,12 +82,99 @@ namespace AugmeNDT{
         {
             AbstractDataset abstractDataset = sceneObjectHandler.GetAbstractDataset(0);
 
-            for (int i = 1; i < abstractDataset.attributesCount; i++)
+            //for (int i = 1; i < abstractDataset.attributesCount; i++)
+            //{
+            //    Dictionary<VisChannel, Attribute> setChannels = new Dictionary<VisChannel, Attribute>();
+            //    setChannels.Add(VisChannel.XPos, abstractDataset.GetAttribute(i));
+            //    sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, setChannels);
+            //}
+
+            Debug.Log(TablePrint.ToStringRow(abstractDataset.headerValues.GetTextualVal()));
+
+            // Example
+            Dictionary<VisChannel, Attribute> setChannels = new Dictionary<VisChannel, Attribute>();
+            setChannels.Add(VisChannel.XPos, abstractDataset.GetAttribute(1));
+            sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, setChannels);
+
+            setChannels = new Dictionary<VisChannel, Attribute>();
+            setChannels.Add(VisChannel.XPos, abstractDataset.GetAttribute(3));
+            sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, setChannels);
+
+
+            string[] labelVal = new string[]{ "Below Average", "Above Average" };
+            double[] sumVal = new double[2];
+
+            for (int i = 0; i < abstractDataset.GetAttribute(6).GetNumberOfValues(); i++)
             {
-                Dictionary<VisChannel, Attribute> setChannels = new Dictionary<VisChannel, Attribute>();
-                setChannels.Add(VisChannel.XPos, abstractDataset.GetAttribute(i));
-                sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, setChannels);
+                // Check if Value is below or above average
+                if (abstractDataset.GetAttribute(6).GetNumericalVal()[i] < abstractDataset.GetAttribute(6).GetDerivedValue(DerivedAttributes.DerivedAttributeCalc.Mean,false))
+                {
+                    sumVal[0] += 1;
+                }
+                else
+                {
+                    sumVal[1] += 1;
+                }
             }
+            Debug.Log("SumVal: " + sumVal[0] + " " + sumVal[1]);
+
+            setChannels = new Dictionary<VisChannel, Attribute>();
+            setChannels.Add(VisChannel.XPos, new Attribute("Label", labelVal));
+            setChannels.Add(VisChannel.YPos, new Attribute("Min", new double[]{0,0}));
+            setChannels.Add(VisChannel.YSize, new Attribute("Sum", sumVal));
+            sceneObjectHandler.AddAbstractVisObject(0, VisType.BarChart, setChannels);
+
+            //Scatterplot
+            setChannels = new Dictionary<VisChannel, Attribute>();
+            setChannels.Add(VisChannel.XPos, abstractDataset.GetAttribute(0));
+            setChannels.Add(VisChannel.YPos, abstractDataset.GetAttribute(1));
+            setChannels.Add(VisChannel.ZPos, abstractDataset.GetAttribute(2));
+            setChannels.Add(VisChannel.Color, abstractDataset.GetAttribute(10));
+            sceneObjectHandler.AddAbstractVisObject(0, VisType.Scatterplot, setChannels);
+
+            // Density Plot
+            setChannels = new Dictionary<VisChannel, Attribute>();
+            setChannels.Add(VisChannel.XPos, abstractDataset.GetAttribute(7));
+            sceneObjectHandler.AddAbstractVisObject(0, VisType.DensityPlot, setChannels);
+
+
+            // Use Case
+            /*
+
+            Dictionary<VisChannel, Attribute> setChannels = new Dictionary<VisChannel, Attribute>();
+            setChannels.Add(VisChannel.XPos, abstractDataset.GetAttribute(6));
+            sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, setChannels);
+
+            setChannels = new Dictionary<VisChannel, Attribute>();
+            setChannels.Add(VisChannel.XPos, abstractDataset.GetAttribute(7));
+            sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, setChannels);
+
+            setChannels = new Dictionary<VisChannel, Attribute>();
+            setChannels.Add(VisChannel.XPos, abstractDataset.GetAttribute(10));
+            sceneObjectHandler.AddAbstractVisObject(0, VisType.Histogram, setChannels);
+
+            setChannels = new Dictionary<VisChannel, Attribute>();
+            setChannels.Add(VisChannel.XPos, abstractDataset.GetAttribute(8));
+            setChannels.Add(VisChannel.YPos, abstractDataset.GetAttribute(9));
+            setChannels.Add(VisChannel.ZPos, abstractDataset.GetAttribute(6));
+            setChannels.Add(VisChannel.Color, abstractDataset.GetAttribute(10));
+            sceneObjectHandler.AddAbstractVisObject(0, VisType.Scatterplot, setChannels);
+
+            // Density Plot
+            setChannels = new Dictionary<VisChannel, Attribute>();
+            setChannels.Add(VisChannel.XPos, abstractDataset.GetAttribute(6));
+            sceneObjectHandler.AddAbstractVisObject(0, VisType.DensityPlot, setChannels);
+            
+             */
+
+            //setChannels = new Dictionary<VisChannel, Attribute>();
+            //setChannels.Add(VisChannel.XPos, abstractDataset.GetAttribute(3));
+            //setChannels.Add(VisChannel.YPos, abstractDataset.GetAttribute(4));
+            //setChannels.Add(VisChannel.ZPos, abstractDataset.GetAttribute(5));
+            //setChannels.Add(VisChannel.Color, abstractDataset.GetAttribute(7));
+            //sceneObjectHandler.AddAbstractVisObject(0, VisType.Scatterplot, setChannels);
+
+
 
         }
 

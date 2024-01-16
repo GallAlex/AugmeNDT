@@ -28,6 +28,11 @@ namespace AugmeNDT{
         private double[] volume;
         private int[] seperatedFibre;
         private int[] curvedFibre;
+        private double[] phi;
+        private double[] theta;
+        private double[] a11;
+        private double[] a22;
+        private double[] a33;
 
         #region Getter/Setter
 
@@ -175,18 +180,21 @@ namespace AugmeNDT{
                         break;
                     case "CurvedLength [µm]":
                         curvedLength = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
+                        data.Add("CurvedLength [µm]", curvedLength);
                         break;
                     case "Diameter [µm]":
                         diameter = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
                         data.Add("Diameter [µm]", diameter);
                         break;
+                    case "SurfaceArea [µm2]":
                     case "SurfaceArea [µm]µm2]":
                         surfaceArea = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
-                        data.Add("SurfaceArea [µm]µm2]", surfaceArea);
+                        data.Add("SurfaceArea [µm2]", surfaceArea);
                         break;
+                    case "Volume [µm3]":
                     case "Volume [µm]µm3]":
                         volume = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
-                        data.Add("Volume [µm]µm3]", volume);
+                        data.Add("Volume [µm3]", volume);
                         break;
                     case "Seperated Fibre":
                         seperatedFibre = Array.ConvertAll(valuesWithoutHeader, int.Parse);
@@ -195,6 +203,26 @@ namespace AugmeNDT{
                     case "Curved Fibre":
                         curvedFibre = Array.ConvertAll(valuesWithoutHeader, int.Parse);
                         data.Add("Curved Fibre", Array.ConvertAll(valuesWithoutHeader, double.Parse));
+                        break;
+                    case "Phi[°]":
+                        phi = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
+                        data.Add("Phi[°]", phi);
+                        break;
+                    case "Theta[°]":
+                        theta = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
+                        data.Add("Theta[°]", theta);
+                        break;
+                    case "a11":
+                        a11 = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
+                        data.Add("a11", a11);
+                        break;
+                    case "a22":
+                        a22 = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
+                        data.Add("a22", a22);
+                        break;
+                    case "a33":
+                        a33 = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
+                        data.Add("a33", a33);
                         break;
                 }
             }
@@ -254,6 +282,11 @@ namespace AugmeNDT{
             values += "volume = " + string.Join("\t", volume) + "\n";
             values += "seperatedFibre = " + string.Join("\t", seperatedFibre) + "\n";
             values += "curvedFibre = " + string.Join("\t", curvedFibre) + "\n";
+            values += "phi = " + string.Join("\t", phi) + "\n";
+            values += "theta = " + string.Join("\t", theta) + "\n";
+            values += "a11 = " + string.Join("\t", a11) + "\n";
+            values += "a22 = " + string.Join("\t", a22) + "\n";
+            values += "a33 = " + string.Join("\t", a33) + "\n";
 
             return base.ToString() + values;
         }

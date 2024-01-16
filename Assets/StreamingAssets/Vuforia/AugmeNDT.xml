@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig>
+    <Tracking>
+        <ImageTarget name="Material01.Front" size="0.130000 0.024984"/>
+        <ImageTarget name="Material01.Back" size="0.130000 0.024984"/>
+        <MultiTarget name="Material01">
+            <Part name="Material01.Front" translation="0 0 0.0010000000474974513" rotation="AD: 1 0 0 0"/>
+            <Part name="Material01.Back" translation="0 0 -0.0010000000474974513" rotation="AD: 0 1 0 180"/>
+        </MultiTarget>
+    </Tracking>
+</QCARConfig>
