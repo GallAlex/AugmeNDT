@@ -31,9 +31,11 @@ namespace AugmeNDT
                 }
 
                 GameObject registeObject = GameObject.Find("DataVisGroup_0").transform.Find("FiberModel").gameObject;
-                registeObject.transform.position = Vector3.zero;
                 
                 registeObject.transform.parent = registeredObjectContainer.transform;
+                registeObject.transform.localPosition = Vector3.zero;
+                registeObject.transform.rotation = Quaternion.identity;
+
                 loaded = true; 
             }
         }

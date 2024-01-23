@@ -10,22 +10,63 @@ namespace AugmeNDT
     /// </summary>
     public class VuforiaHandler : MonoBehaviour
     {
-        public bool vuforiaState = true;
+        //TODO: Check if Vuforia delayed initialization is active!
+        public VuforiaBehaviour vuforiaBehaviour; // VuforiaBehaviour at Main Camera
+
+        public bool vuforiaActive = false;
 
         void Start()
         {
-            SetVuforiaActive(vuforiaState);
+            SetVuforiaActive(vuforiaActive);
         }
 
         void Update()
         {
-            SetVuforiaActive(vuforiaState);
+            SetVuforiaActive(vuforiaActive);
         }
 
-        public void SetVuforiaActive(bool vuforiaState)
+        public void SetVuforiaActive(bool state)
         {
-            VuforiaBehaviour.Instance.enabled = vuforiaState;
-            vuforiaState = vuforiaState;
+            
+            if (state)
+            {
+                StartVuforia();
+            }
+            else
+            {
+                StopVuforia();
+            }
+
+        }
+
+        private void StartVuforia()
+        {
+            // If Vuforia is not initialized, initialize it
+            if (!VuforiaApplication.Instance.IsInitialized)
+            {
+                VuforiaApplication.Instance.Initialize();
+            }
+
+            // Start Vuforia
+            if (!vuforiaBehaviour != null)
+            {
+                vuforiaBehaviour.enabled = true;
+            }
+        }
+
+        private void StopVuforia()
+        {
+            // Stop Vuforia
+            if (!vuforiaBehaviour != null)
+            {
+                vuforiaBehaviour.enabled = false;
+            }
+
+            // If Vuforia is initialized, deinitialize it
+            if (VuforiaApplication.Instance.IsInitialized)
+            {
+                VuforiaApplication.Instance.Deinit();
+            }
         }
 
     }
