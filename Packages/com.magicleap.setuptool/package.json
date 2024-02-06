@@ -1,0 +1,24 @@
+{
+  "version": "2.0.5",
+  "description": "A tool to configure your Unity project to build for Magic Leap 2.",
+  "displayName": "Magic Leap Setup Tool",
+  "keywords": [
+    "MagicLeap",
+    "Magic",
+    "Leap"
+  ],
+  "dependencies": {
+    "com.unity.xr.magicleap": "7.0.0"
+  },
+  "contributors": [
+    {
+      "name": "Adrian Babilinski",
+      "email": "ababilinski@magicleap.com",
+      "url": "https://forum.magicleap.cloud/u/ababilinski/"
+    }
+  ],
+  "category": "XR",
+  "licensesUrl": "https://www.magicleap.com/software-license-agreement-ml2",
+  "name": "com.magicleap.setuptool",
+  "unity": "2022.2"
+}
