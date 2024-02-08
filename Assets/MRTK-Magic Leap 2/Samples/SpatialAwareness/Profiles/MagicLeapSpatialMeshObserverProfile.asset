@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91ebdf1f6fd57f94f97e46b51529f7e3, type: 3}
+  m_Name: MagicLeapSpatialMeshObserverProfile
+  m_EditorClassIdentifier: 
+  isCustomProfile: 1
+  startupBehavior: 0
+  isStationaryObserver: 0
+  observationExtents: {x: 3, y: 3, z: 3}
+  observerVolumeType: 1
+  updateInterval: 3.5
+  meshPhysicsLayer: 31
+  levelOfDetail: 0
+  trianglesPerCubicMeter: 0
+  recalculateNormals: 1
+  displayOption: 1
+  visibleMaterial: {fileID: 0}
+  occlusionMaterial: {fileID: 0}
+  physicsMaterial: {fileID: 0}
+  runtimeSpatialMeshPrefab: {fileID: 0}
+  MeshPrefab: {fileID: 7060039518517116321, guid: 387aeba9faeb703429e0ebe7426d59a7,
+    type: 3}
+  Follow: 1
+  ComputeNormals: 1
+  Density: 1
+  MeshType: 0
+  FillHoleLength: 1
+  Planarize: 0
+  DisconnectedComponentArea: 0.25
+  MeshQueueSize: 4
+  PollingRate: 0.25
+  BatchSize: 16
+  RequestVertexConfidence: 0
+  RemoveMeshSkirt: 0
+  IsBounded: 0
+  BoundedExtentsSize: {x: 2, y: 2, z: 2}
+  BoundlessExtentsSize: {x: 10, y: 10, z: 10}
+  UseGeneralRendering: 1
+  GeneralRenderMode: 1
+  GeneralOcclusionMaterial: {fileID: 2100000, guid: af32c7fbdda78a5469bf62748ff86617,
+    type: 2}
+  GeneralColoredMaterial: {fileID: 2100000, guid: 5d3a98caf158d9e4fa77a225b6a16475,
+    type: 2}
+  GeneralPointCloudMaterial: {fileID: 2100000, guid: b4997e008d006864b9de1a42692de83f,
+    type: 2}
+  GeneralWireframeMaterial: {fileID: 2100000, guid: a128703779773fb43a26a28e45c9f7ba,
+    type: 2}
