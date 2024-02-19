@@ -9,3 +9,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 194780
+  packageName: Magic Leap Setup Tool
+  packageVersion: 2.0.6
+  assetPath: Packages/com.magicleap.setuptool/Editor/SetupProcess/SetupSteps/UpdateManifestSetupStep.cs
+  uploadId: 643826

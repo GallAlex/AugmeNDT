@@ -1,3 +1,10 @@
 fileFormatVersion: 2
 guid: bde9b3c6fa3645788777e907f2145a2b
 timeCreated: 1687725107
+AssetOrigin:
+  serializedVersion: 1
+  productId: 194780
+  packageName: Magic Leap Setup Tool
+  packageVersion: 2.0.6
+  assetPath: Packages/com.magicleap.setuptool/Editor/SetupProcess/SetupSteps/SetMinimumAndroidApiLevelStep.cs
+  uploadId: 643826

@@ -6,11 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.5] - 2024-01-22
 ### Added
-- Adds Unity Magic Leap Package dependency
-
-### Fixed
+- Add Unity Magic Leap Package dependency 
 - Fixes check for required steps before auto opening window
-- Fixes package version check and update step
 
 ## [2.0.4] - 2023-12-10
 ### Added

@@ -1,3 +1,10 @@
 ﻿fileFormatVersion: 2
 guid: d65be55eab2d4c8b89cbd5aed4c9fc88
 timeCreated: 1658514419
+AssetOrigin:
+  serializedVersion: 1
+  productId: 194780
+  packageName: Magic Leap Setup Tool
+  packageVersion: 2.0.6
+  assetPath: Packages/com.magicleap.setuptool/Editor/SetupProcess/Utilities/Manifest/ModifyUnityAndroidAppManifest.cs
+  uploadId: 643826

@@ -1,3 +1,10 @@
 ﻿fileFormatVersion: 2
 guid: f63c432f31b741d6864ef7c3f3d4ea44
 timeCreated: 1659637995
+AssetOrigin:
+  serializedVersion: 1
+  productId: 194780
+  packageName: Magic Leap Setup Tool
+  packageVersion: 2.0.6
+  assetPath: Packages/com.magicleap.setuptool/Editor/SetupProcess/SetupSteps/SetDefaultTextureCompressionStep.cs
+  uploadId: 643826

@@ -21,59 +21,8 @@ namespace MagicLeap.SetupTool.Editor.Utilities
         private static ListRequest _listInstalledPackagesRequest;
         private static readonly List<string> _packageNamesToCheck = new List<string>();
         private static readonly List<Action<bool, bool>> _checkRequestFinished = new List<Action<bool, bool>>();
-        private static Queue<string> _installPackageQueue;
-        private static HashSet<string> _packagesToCheck;
-        
-        /// <summary>
-        /// Adds a package dependency to the Project. This is the equivalent of installing a package.
-        /// <para>--- To install the latest compatible version of a package, specify only the package.</para>
-        /// <para>--- To install a git package, specify a git url</para>
-        /// <para> --- To install a local package, specify a value in the format "file:pathtopackagefolder".</para>
-        /// <para>--- To install a local tarball package, specify a value in the format "file:pathto/package-file.tgz".</para>
-        /// <para>ArgumentException is thrown if identifier is null or empty.</para>
-        /// </summary>
-        /// <param name="names"></param>
-        /// <param name="success"> returns true or false based on if the package installation was successful</param>
-        public static void AddPackages(string[] names, Action<bool> success)
-        {
-            AddRequest addRequestCache;
-            foreach (var name in names)
-            {
-                _installPackageQueue.Enqueue(name);
-            }
 
-            void InstallPackageQueue()
-            {
-                if (!_installPackageQueue.Any())
-                {
-                    HasPackages(names,success);
-                }
-                else
-                {
-                    EditorApplication.delayCall += () =>
-                    {
-                        addRequestCache = Client.Add(_installPackageQueue.Dequeue());
-                        EditorApplication.update += AddPackageProgress;
-                    };
 
-                }
-               
-            }
-            
-            void AddPackageProgress()
-            {
-                if (addRequestCache.IsCompleted)
-                {
-                    if (addRequestCache.Status >= StatusCode.Failure)
-                    {
-                        Debug.LogError(addRequestCache.Error.message);
-                    }
-
-                    InstallPackageQueue();
-                    EditorApplication.update -= AddPackageProgress;
-                }
-            }
-        }
         /// <summary>
         /// Adds a package dependency to the Project. This is the equivalent of installing a package.
         /// <para>--- To install the latest compatible version of a package, specify only the package.</para>
@@ -246,63 +195,6 @@ namespace MagicLeap.SetupTool.Editor.Utilities
             }
         }
 
-        /// <summary>
-        /// Checks if packages exists in the current project
-        /// </summary>
-        /// <param name="packageName"></param>
-        /// <param name="success"></param>
-        public static void HasPackages(string[] packageNames, Action<bool> success)
-        {
-            
-            if (_listInstalledPackagesRequest == null || _listInstalledPackagesRequest.IsCompleted)
-            {
-                _listInstalledPackagesRequest = Client.List(true);
-                EditorApplication.update += CheckForAddedPackageProgress;
-            }
-            else
-            {
-                Debug.LogWarning("Client is busy...");
-                foreach (var packageName in packageNames)
-                {
-                    _packagesToCheck.Add(packageName);
-                }
-            }
-
-            void CheckForAddedPackageProgress()
-            {
-                
-                if (_listInstalledPackagesRequest.IsCompleted)
-                {
-                    if (_listInstalledPackagesRequest.Status == StatusCode.Success)
-                    {
-                        
-                        foreach (var package in _listInstalledPackagesRequest.Result)
-                            // Only retrieve packages that are currently installed in the
-                            // project (and are neither Built-In nor already Embedded)
-                            if (package.isDirectDependency
-                                && package.source
-                                != PackageSource.BuiltIn)
-                                if ( _packagesToCheck.Contains(package.name))
-                                {
-                                    _packagesToCheck.Remove(package.name);
-                                }
-
-                        if (!_packagesToCheck.Any())
-                            success.Invoke(true);
-                        else
-                            success.Invoke(false);
-                    }
-                    else
-                    {
-                        Debug.LogError(_listInstalledPackagesRequest.Error.message);
-                        success.Invoke(false);
-                    }
-
-                    EditorApplication.update -= CheckForAddedPackageProgress;
-                }
-            }
-        }
-        
         private static ListRequest _listRequest;
         /// <summary>
         /// Checks if packages exists in the current project

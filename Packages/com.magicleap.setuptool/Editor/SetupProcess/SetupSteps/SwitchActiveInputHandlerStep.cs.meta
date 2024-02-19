@@ -1,3 +1,10 @@
 fileFormatVersion: 2
 guid: c62dcf768c564046bb0e3f15d384eb43
 timeCreated: 1664922023
+AssetOrigin:
+  serializedVersion: 1
+  productId: 194780
+  packageName: Magic Leap Setup Tool
+  packageVersion: 2.0.6
+  assetPath: Packages/com.magicleap.setuptool/Editor/SetupProcess/SetupSteps/SwitchActiveInputHandlerStep.cs
+  uploadId: 643826

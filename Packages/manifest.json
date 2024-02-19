@@ -11,7 +11,7 @@
   "dependencies": {
     "com.github-glitchenzo.nugetforunity": "https://github.com/GlitchEnzo/NuGetForUnity.git?path=/src/NuGetForUnity",
     "com.magicleap.appsim": "file:C:/Users/anugu/MagicLeap/tools/app_sim_unity/v3.8.0.20231208/com.magicleap.appsim.tgz",
-    "com.magicleap.unitysdk": "2.0.0",
+    "com.magicleap.unitysdk": "file:C:/Users/anugu/MagicLeap/tools/unity/v2.0.0/com.magicleap.unitysdk.tgz",
     "com.microsoft.mixedreality.openxr": "file:MixedReality/com.microsoft.mixedreality.openxr-1.9.0.tgz",
     "com.microsoft.mixedreality.sceneunderstanding": "file:MixedReality/com.microsoft.mixedreality.sceneunderstanding-0.6.0.tgz",
     "com.microsoft.mixedreality.toolkit.examples": "file:MixedReality/com.microsoft.mixedreality.toolkit.examples-2.8.3.tgz",

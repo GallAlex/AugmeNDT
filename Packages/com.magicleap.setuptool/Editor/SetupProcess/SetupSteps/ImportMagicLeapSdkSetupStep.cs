@@ -21,7 +21,6 @@ namespace MagicLeap.SetupTool.Editor.Setup
         private const string IMPORT_MAGIC_LEAP_SDK = "Import the Magic Leap SDK";
         private const string IMPORT_MAGIC_LEAP_SDK_BUTTON = "Import package";
         private const string CHANGE_MAGIC_LEAP_SDK_BUTTON = "Change";
-        private const string UPDATE_MAGIC_LEAP_SDK_BUTTON = "Update";
         private const string CONDITION_MET_LABEL = "Done";
         private const string UPDATE_PACKAGE_TOOLTIP = "Current Version: [v{0}]. Update to [{1}]";
         private const string CURRENT_PACKAGE_VERSION_TOOLTIP = "Current Version: v{0}";
@@ -71,7 +70,6 @@ namespace MagicLeap.SetupTool.Editor.Setup
         private static string _sdkPackageVersion;
         private static bool _packageNotInstalled;
         private static bool _embedded;
-        private static bool _isCurrent;
         private static bool _installedFromRegistry;
         private static string _currentVersion;
         private static bool _checkingPackage;
@@ -92,10 +90,9 @@ namespace MagicLeap.SetupTool.Editor.Setup
 
 
 
-                 void ObtainedPackageInfo(UnityEditor.PackageManager.PackageInfo info)
+          void ObtainedPackageInfo(UnityEditor.PackageManager.PackageInfo info)
           {
           
-              
               if (info == null)
               {
                
@@ -109,40 +106,29 @@ namespace MagicLeap.SetupTool.Editor.Setup
 
               _embedded = info.source == PackageSource.Embedded;
               _installedFromRegistry= info.source == PackageSource.Registry;
-              if (_installedFromRegistry)
+              var latestSDKPath = MagicLeapPackageUtility.GetLatestUnityPackagePath();
+    
+              var directoryInfo = new DirectoryInfo(latestSDKPath).Parent;
+ 
+              if (directoryInfo != null)
               {
                   var versionComparer = new MagicLeapPackageUtility.VersionComparer();
-                  var latestVersion = info.versions.latest;
-                  var isCurrentVersion = versionComparer.Compare(info.versions.latest,info.version) <=0;
-                  _isCurrent = isCurrentVersion;
+                  var isCurrentVersion = versionComparer.Compare(directoryInfo.Name,info.version) <=0;
                   if ((!isCurrentVersion))
                   {
-                      _sdkPackageVersion = string.Format(UPDATE_PACKAGE_TOOLTIP, info.version, latestVersion);
+                      _sdkPackageVersion = string.Format(UPDATE_PACKAGE_TOOLTIP, info.version, directoryInfo.Name);
                       return;
                   }
               }
-              else
-              {
-                  var latestSDKPath = MagicLeapPackageUtility.GetLatestUnityPackagePath();
-                  var directoryInfo = new DirectoryInfo(latestSDKPath).Parent;
- 
-                  if (directoryInfo != null)
-                  {
-                      var versionComparer = new MagicLeapPackageUtility.VersionComparer();
-                      var isCurrentVersion = versionComparer.Compare(directoryInfo.Name,info.version) <=0;
-                      _isCurrent = isCurrentVersion;
-                      if ((!isCurrentVersion))
-                      {
-                          _sdkPackageVersion = string.Format(UPDATE_PACKAGE_TOOLTIP, info.version, directoryInfo.Name);
-                          return;
-                      }
-                  }
-              }
-              
+            
+
               _sdkPackageVersion = string.Format(CURRENT_PACKAGE_VERSION_TOOLTIP, info.version);
 
+
+
+
           }
-           
+          
         }
 
   
@@ -158,7 +144,7 @@ namespace MagicLeap.SetupTool.Editor.Setup
             GUI.enabled = EnableGUI();
 
 
-            if (_packageNotInstalled)
+            if (_packageNotInstalled || _installedFromRegistry)
             {
                 if (CustomGuiContent.CustomButtons.DrawConditionButton(new GUIContent(IMPORT_MAGIC_LEAP_SDK),
                                                                        HasMagicLeapSdkInPackageManager, new GUIContent(CONDITION_MET_LABEL, _sdkPackageVersion),
@@ -172,25 +158,11 @@ namespace MagicLeap.SetupTool.Editor.Setup
             else
             {
              
-                if (_installedFromRegistry)
+                if (CustomGuiContent.CustomButtons.DrawButton(new GUIContent(IMPORT_MAGIC_LEAP_SDK), new GUIContent(CHANGE_MAGIC_LEAP_SDK_BUTTON, string.Format(CURRENT_VERSION_HINT_FORMAT, _currentVersion)), Styles.FixButtonStyle))
                 {
-                    if (CustomGuiContent.CustomButtons.DrawConditionButton(new GUIContent(IMPORT_MAGIC_LEAP_SDK),
-                            _isCurrent, new GUIContent(CONDITION_MET_LABEL, _sdkPackageVersion),
-                            new GUIContent(UPDATE_MAGIC_LEAP_SDK_BUTTON, _sdkPackageVersion), Styles.FixButtonStyle, true,null, Color.green,Color.green))
-                    {
-                
-                        DeleteAndExecute();
-                        return true;
-                    }
-                }
-                else
-                {
-                    if (CustomGuiContent.CustomButtons.DrawButton(new GUIContent(IMPORT_MAGIC_LEAP_SDK), new GUIContent(CHANGE_MAGIC_LEAP_SDK_BUTTON, string.Format(CURRENT_VERSION_HINT_FORMAT, _currentVersion)), Styles.FixButtonStyle))
-                    {
 
-                        DeleteAndExecute();
-                        return true;
-                    }
+                    DeleteAndExecute();
+                    return true;
                 }
             }
 
