@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.MixedReality.Toolkit.UI;
+//using Microsoft.MixedReality.Toolkit.UI;
 using TMPro;
 using UnityEngine;
 
@@ -13,7 +13,7 @@ namespace AugmeNDT{
     {
         [SerializeField]
         private GameObject indicatorObject;
-        private IProgressIndicator indicator;
+        //private IProgressIndicator indicator;
 
         [SerializeField]
         public TMP_Text textLabel;
@@ -174,17 +174,17 @@ namespace AugmeNDT{
 
         private async void StartProgressIndicator(Task trackedTask)
         {
-            indicator.Message = "Opening File...";
-            await indicator.OpenAsync();
+        //    indicator.Message = "Opening File...";
+        //    await indicator.OpenAsync();
 
-            indicator.Message = "Waiting for loading to complete...";
-            while (!trackedTask.IsCompleted)
-            {
-                await Task.Yield();
-            }
+        //    indicator.Message = "Waiting for loading to complete...";
+        //    while (!trackedTask.IsCompleted)
+        //    {
+        //        await Task.Yield();
+        //    }
 
-            indicator.Message = "Loading File completed!";
-            await indicator.CloseAsync();
+        //    indicator.Message = "Loading File completed!";
+        //    await indicator.CloseAsync();
         }
 
 

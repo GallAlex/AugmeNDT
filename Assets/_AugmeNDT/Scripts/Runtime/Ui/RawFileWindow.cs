@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.MixedReality.Toolkit.Experimental.UI;
+//using MixedReality.Toolkit.Experimental.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,15 +15,15 @@ namespace AugmeNDT{
         [SerializeField] 
         private GameObject window;
 
-        [SerializeField]
-        private MRTKUGUIInputField xDimField;
-        [SerializeField]
-        private MRTKUGUIInputField yDimField;
-        [SerializeField]
-        private MRTKUGUIInputField zDimField;
-        [SerializeField]
-        private MRTKUGUIInputField bytesToSkipField;
-        [SerializeField]
+       // [SerializeField]
+       // private MRTKUGUIInputField xDimField;
+       // [SerializeField]
+       // private MRTKUGUIInputField yDimField;
+       // [SerializeField]
+       // //private MRTKUGUIInputField zDimField;
+       // [SerializeField]
+       //// private MRTKUGUIInputField bytesToSkipField;
+       // [SerializeField]
         private TMP_Dropdown dataFormatDropdown;
         [SerializeField]
         private TMP_Dropdown endiannessDropdown;
@@ -61,29 +61,29 @@ namespace AugmeNDT{
             dropdown.AddOptions(newOptions);//Add new options
         }
 
-        public int XDim
-        {
-            get => int.Parse(xDimField.text);
-            set => xDimField.text = value.ToString();
-        }
+        //public int XDim
+        //{
+        //    //get => int.Parse(xDimField.text);
+        //    //set => xDimField.text = value.ToString();
+        //}
 
-        public int YDim
-        {
-            get => int.Parse(yDimField.text);
-            set => yDimField.text = value.ToString();
-        }
+        //public int YDim
+        //{
+        //    //get => int.Parse(yDimField.text);
+        //    //set => yDimField.text = value.ToString();
+        //}
 
-        public int ZDim
-        {
-            get => int.Parse(zDimField.text);
-            set => zDimField.text = value.ToString();
-        }
+        //public int ZDim
+        //{
+        //    //get => int.Parse(zDimField.text);
+        //    //set => zDimField.text = value.ToString();
+        //}
 
-        public int BytesToSkip
-        {
-            get => int.Parse(bytesToSkipField.text);
-            set => bytesToSkipField.text = value.ToString();
-        }
+        //public int BytesToSkip
+        //{
+        //    //get => int.Parse(bytesToSkipField.text);
+        //    //set => bytesToSkipField.text = value.ToString();
+        //}
 
         public DataContentFormat DataFormat
         {

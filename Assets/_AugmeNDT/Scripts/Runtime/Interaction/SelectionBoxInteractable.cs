@@ -1,5 +1,5 @@
-using Microsoft.MixedReality.Toolkit.Input;
-using Microsoft.MixedReality.Toolkit.UI;
+using MixedReality.Toolkit.Input;
+using MixedReality.Toolkit;
 using System;
 using UnityEngine;
 
@@ -8,7 +8,7 @@ namespace AugmeNDT{
     public class SelectionBoxInteractable : MonoBehaviour
     {
         public VisibleOnCloseInteraction visibleOnCloseInteractionScript;
-        public Interactable interactable;
+        public MRTKBaseInteractable interactable;
 
         public VisMDDGlyphs refToMDDGlyph;
         public Bounds chartArea;
@@ -22,12 +22,12 @@ namespace AugmeNDT{
 
         void Start()
         {
-            var onGrabReceiver = interactable.AddReceiver<InteractableOnGrabReceiver>();
+          //  var onGrabReceiver = interactable.AddReceiver<InteractableOnGrabReceiver>();
             initalSelectionBoxPos = this.transform.localPosition;
             initalSelectionBoxRot = this.transform.localRotation;
 
-            onGrabReceiver.OnGrab.AddListener(() => OnGrab());
-            onGrabReceiver.OnRelease.AddListener(() => OnGrabRelease());
+            //onGrabReceiver.OnGrab.AddListener(() => OnGrab());
+            //onGrabReceiver.OnRelease.AddListener(() => OnGrabRelease());
         }
 
         void Update()
@@ -44,8 +44,8 @@ namespace AugmeNDT{
         public void OnGrab()
         {
             //Debug.Log("Grabbed Box: " + this.selectionBoxID);
-            visibleOnCloseInteractionScript.EnableInteraction(false);
-            visibleOnCloseInteractionScript.ShowObject(true);
+           // visibleOnCloseInteractionScript.EnableInteraction(false);
+            //visibleOnCloseInteractionScript.ShowObject(true);
         }
 
         public void OnGrabRelease()
@@ -59,8 +59,8 @@ namespace AugmeNDT{
                 //Reset Selection Box
                 this.transform.localPosition = initalSelectionBoxPos;
                 this.transform.localRotation = initalSelectionBoxRot;
-                visibleOnCloseInteractionScript.EnableInteraction(true);
-                visibleOnCloseInteractionScript.ShowObject(false);
+               // visibleOnCloseInteractionScript.EnableInteraction(true);
+                //visibleOnCloseInteractionScript.ShowObject(false);
             }
             else
             {
@@ -68,8 +68,8 @@ namespace AugmeNDT{
                 Vector3 newPos = new Vector3(this.transform.localPosition.x, this.transform.localPosition.y - 0.5f, this.transform.localPosition.z - 0.5f);
 
                 // Hide selection box
-                visibleOnCloseInteractionScript.EnableInteraction(false);
-                visibleOnCloseInteractionScript.ShowObject(false);
+                //visibleOnCloseInteractionScript.EnableInteraction(false);
+                //visibleOnCloseInteractionScript.ShowObject(false);
 
                 refToVis = refToMDDGlyph.CreateNewVis(selectionBoxID, newPos);
             }
@@ -100,8 +100,8 @@ namespace AugmeNDT{
             }
 
             // Show selection box
-            visibleOnCloseInteractionScript.EnableInteraction(true);
-            visibleOnCloseInteractionScript.ShowObject(true);
+           // visibleOnCloseInteractionScript.EnableInteraction(true);
+            //visibleOnCloseInteractionScript.ShowObject(true);
 
             this.transform.localPosition = initalSelectionBoxPos;
             this.transform.localRotation = initalSelectionBoxRot;

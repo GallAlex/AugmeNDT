@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.MixedReality.Toolkit.Utilities;
+//using Microsoft.MixedReality.Toolkit.Utilities;
 using UnityEngine;
 
 namespace AugmeNDT
@@ -278,9 +278,9 @@ namespace AugmeNDT
         /// <summary>
         /// Arranges all representations of the group in a [2 by n] grid and moves it to the best initial start position
         /// </summary>
-        public void ArrangeObjectsSpatially()
-        {
-            GridObjectCollection gridColl = dataVisGroupContainer.AddComponent<GridObjectCollection>();
+    //    public void ArrangeObjectsSpatially()
+        /*{
+           // GridObjectCollection gridColl = dataVisGroupContainer.AddComponent<GridObjectCollection>();
             gridColl.CellWidth = 0.30f;     //Todo: Use biggest dimension of all representations
             gridColl.CellHeight = 0.30f;    //Todo: Use biggest dimension of all representations
             gridColl.SortType = CollationOrder.ChildOrder;
@@ -293,7 +293,7 @@ namespace AugmeNDT
 
             GlobalScaleAndPos.SetToBestInitialStartPos(dataVisGroupContainer.transform);
         }
-
+*/
 
         //#####################     VOLUME METHODS      #####################
 

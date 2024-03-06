@@ -1,13 +1,14 @@
-using Microsoft.MixedReality.Toolkit.UI;
+using MixedReality.Toolkit;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
 
 namespace AugmeNDT
 {
     public class ChangeIndicatorInteractable : MonoBehaviour
     {
-        public Interactable interactable;
+        public MRTKBaseInteractable interactable;
         public VisStackedHistogram refToClass;
 
         public string indicatorID = "Bin_Dataset1_Dataset2";
@@ -15,12 +16,13 @@ namespace AugmeNDT
         // Start is called before the first frame update
         void Awake()
         {
-            interactable = GetComponent<Interactable>();
+            interactable = GetComponent<MRTKBaseInteractable>();
         }
         void Start()
         {
-            var onTouchReceiver = interactable.AddReceiver<InteractableOnTouchReceiver>();
-            onTouchReceiver.OnTouchStart.AddListener(() => refToClass.OnTouchIndicator(indicatorID)); ;
+            //var onTouchReceiver = interactable.
+                //AddReceiver<InteractableSelectMode>();
+         //   onTouchReceiver.OnTouchStart.AddListener(() => refToClass.OnTouchIndicator(indicatorID)); ;
         }
 
     }

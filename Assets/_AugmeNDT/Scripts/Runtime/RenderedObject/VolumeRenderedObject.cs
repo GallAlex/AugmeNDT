@@ -1,4 +1,4 @@
-using Microsoft.MixedReality.Toolkit.UI.BoundsControl;
+using MixedReality.Toolkit.SpatialManipulation;
 using System.Threading.Tasks;
 using UnityEngine;
 

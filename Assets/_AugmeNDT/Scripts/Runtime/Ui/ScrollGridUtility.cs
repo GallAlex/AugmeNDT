@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using Microsoft.MixedReality.Toolkit.UI;
-using Microsoft.MixedReality.Toolkit.Utilities;
+//using Microsoft.MixedReality.Toolkit.UI;
+using MixedReality.Toolkit;
 using TMPro;
 using UnityEngine;
 
@@ -11,16 +11,16 @@ namespace AugmeNDT{
     public class ScrollGridUtility : MonoBehaviour
     {
 
-        public GameObject buttonPrefab;
-        public ScrollingObjectCollection scrollingObjectColl;
-        public GridObjectCollection gridObjectColl;
-        public GameObject gridObjectContainer;
-        public ClippingBox clippingBox;
+       //TODO //public GameObject buttonPrefab;
+        //public ScrollingObjectCollection scrollingObjectColl;
+        //public GridObjectCollection gridObjectColl;
+        //public GameObject gridObjectContainer;
+        //public ClippingBox clippingBox;
 
         void Start()
         {
             // Load Button Prefab
-            if (buttonPrefab == null) buttonPrefab = (GameObject)Resources.Load("Prefabs/Button_32x96");
+            //if (buttonPrefab == null) buttonPrefab = (GameObject)Resources.Load("Prefabs/Button_32x96");
         }
 
         // Fills the Grid with Buttons with specific Text and Event
@@ -33,18 +33,18 @@ namespace AugmeNDT{
             // Create Buttons for each Letter and add them to the Grid
             for (int bID = 0; bID < buttonNames.Count; bID++)
             {
-                GameObject buttonInstance = Instantiate(buttonPrefab, gridObjectContainer.transform);
-                buttonInstance.name = buttonNames[bID];
-                buttonInstance.transform.SetParent(gridObjectContainer.transform, false);
-                buttonInstance.GetComponentInChildren<TextMeshPro>().text = buttonNames[bID];
-                buttonInstance.GetComponentInChildren<ButtonConfigHelper>().OnClick.AddListener(() => ReturnButtonId(bID));
+                //GameObject buttonInstance = Instantiate(buttonPrefab, gridObjectContainer.transform);
+                //buttonInstance.name = buttonNames[bID];
+                //buttonInstance.transform.SetParent(gridObjectContainer.transform, false);
+                //buttonInstance.GetComponentInChildren<TextMeshPro>().text = buttonNames[bID];
+                //buttonInstance.GetComponentInChildren<ButtonConfigHelper>().OnClick.AddListener(() => ReturnButtonId(bID));
             }
 
             // Add all the element's renderers to the clipping box
-            Renderer[] renderersToClip = gridObjectContainer.GetComponentsInChildren<Renderer>();
-            for (int i = 0; i < renderersToClip.Length; i++)
+           // Renderer[] renderersToClip = gridObjectContainer.GetComponentsInChildren<Renderer>();
+          //  for (int i = 0; i < renderersToClip.Length; i++)
             {
-                clippingBox.AddRenderer(renderersToClip[i]);
+             //   clippingBox.AddRenderer(renderersToClip[i]);
             }
 
             UpdateScrollGridGrid();
@@ -53,8 +53,8 @@ namespace AugmeNDT{
         // Updates the Grid and ScrollingObjectCollection
         public void UpdateScrollGridGrid()
         {
-            gridObjectColl.UpdateCollection();
-            scrollingObjectColl.UpdateContent();
+         //   gridObjectColl.UpdateCollection();
+          //  scrollingObjectColl.UpdateContent();
         }
 
         public int ReturnButtonId(int buttonId)

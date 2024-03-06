@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.MixedReality.Toolkit.Utilities;
+using MixedReality.Toolkit;
 using UnityEngine;
 
 namespace AugmeNDT{
@@ -18,7 +18,7 @@ namespace AugmeNDT{
         [SerializeField]
         private GameObject sceneObjectsContainer;
         // GridObjectCollection used to arrange all DataVisGroups in the scene
-        private GridObjectCollection gridColl;
+        //private GridObjectCollection gridColl;
 
         // Stores all loaded data & its derived representations
         [SerializeField]
@@ -101,7 +101,7 @@ namespace AugmeNDT{
             dataVisGroups[lastIndex].RenderAll(VisType.MDDGlyphs);
 
 
-            dataVisGroups[lastIndex].ArrangeObjectsSpatially();
+           // dataVisGroups[lastIndex].ArrangeObjectsSpatially();
 
             // Add Group to sceneObjectsContainer container
             dataVisGroups[lastIndex].GetGroupContainer().transform.parent = sceneObjectsContainer.transform;
@@ -136,7 +136,7 @@ namespace AugmeNDT{
             dataVisGroups[lastIndex].RenderAll(VisType.MDDGlyphs);
 
 
-            dataVisGroups[lastIndex].ArrangeObjectsSpatially();
+           // dataVisGroups[lastIndex].ArrangeObjectsSpatially();
 
             // Add Group to sceneObjectsContainer container
             dataVisGroups[lastIndex].GetGroupContainer().transform.parent = sceneObjectsContainer.transform;
@@ -170,24 +170,24 @@ namespace AugmeNDT{
                 // First arrange all individual groups again
                 foreach (var group in dataVisGroups)
                 {
-                    group.ArrangeObjectsSpatially();
+                    //group.ArrangeObjectsSpatially();
                 }
             }
 
-            if (gridColl == null)
-            {
-                gridColl = sceneObjectsContainer.AddComponent<GridObjectCollection>();
-                //gridColl.SurfaceType = ObjectOrientationSurfaceType.Cylinder;
-                gridColl.CellWidth = 0.60f; //Todo: Use twice the biggest size of the individual grids in the groups
-                gridColl.CellHeight = 0.3f; //Todo: Use twice the biggest size of the individual grids in the groups
-                gridColl.SortType = CollationOrder.ChildOrder;
-                gridColl.Layout = LayoutOrder.ColumnThenRow;
-                gridColl.Columns = 2;
-                gridColl.Anchor = LayoutAnchor.BottomLeft;
-                gridColl.AnchorAlongAxis = true;
-            }
+            //if (gridColl == null)
+            //{
+            //    gridColl = sceneObjectsContainer.AddComponent<GridObjectCollection>();
+            //    //gridColl.SurfaceType = ObjectOrientationSurfaceType.Cylinder;
+            //    gridColl.CellWidth = 0.60f; //Todo: Use twice the biggest size of the individual grids in the groups
+            //    gridColl.CellHeight = 0.3f; //Todo: Use twice the biggest size of the individual grids in the groups
+            //    gridColl.SortType = CollationOrder.ChildOrder;
+            //    gridColl.Layout = LayoutOrder.ColumnThenRow;
+            //    gridColl.Columns = 2;
+            //    gridColl.Anchor = LayoutAnchor.BottomLeft;
+            //    gridColl.AnchorAlongAxis = true;
+            //}
 
-            gridColl.UpdateCollection();
+            //gridColl.UpdateCollection();
 
             GlobalScaleAndPos.SetToBestInitialStartPos(sceneObjectsContainer.transform);
         }
@@ -233,7 +233,7 @@ namespace AugmeNDT{
         {
             dataVisGroups[selectedGroup].RenderAbstractVisObject(visType);
             //Arrange Vis objects
-            dataVisGroups[selectedGroup].ArrangeObjectsSpatially();
+           // dataVisGroups[selectedGroup].ArrangeObjectsSpatially();
         }
 
         /// <summary>
@@ -245,7 +245,7 @@ namespace AugmeNDT{
         {
             dataVisGroups[selectedGroup].RenderAbstractVisObject(visType, setChannels);
             //Arrange Vis objects
-            dataVisGroups[selectedGroup].ArrangeObjectsSpatially();
+           // dataVisGroups[selectedGroup].ArrangeObjectsSpatially();
         }
 
         /// <summary>

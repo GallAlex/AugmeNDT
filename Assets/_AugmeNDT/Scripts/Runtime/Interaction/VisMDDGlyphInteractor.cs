@@ -23,10 +23,10 @@ namespace AugmeNDT{
             var glyphObject = dataMark.GetDataMarkInstance();
 
             // Add Outline Component if not already present
-            var outline = glyphObject.GetComponent<Outline>() != null ? glyphObject.GetComponent<Outline>() : glyphObject.AddComponent<Outline>();
-            outline.OutlineMode = Outline.Mode.OutlineAll;
-            outline.OutlineColor = Color.green;
-            outline.OutlineWidth = 3f;
+           // var outline = glyphObject.GetComponent<Outline>() != null ? glyphObject.GetComponent<UnityEngine.UI.Outline>() : glyphObject.AddComponent<UnityEngine.UI.Outline>();
+           // outline.OutlineMode = Outline.Mode.OutlineAll;
+           // outline.OutlineColor = Color.green;
+           // outline.OutlineWidth = 3f;
         
             // Select all values == fibers which are covered by the encoded range in this Glyph 
             // As Glyphs are numbered by Order of Attributes, selectedGlyph ID equals Attribute ID
@@ -40,7 +40,7 @@ namespace AugmeNDT{
             if (dataMark.selected)
             {
                 dataMark.selected = false;
-                outline.enabled = false;
+                //outline.enabled = false;
             
                 // Call Method of DataVisGroup Interactor
                 // Color Polyfibers of selected FiberIds
@@ -49,7 +49,7 @@ namespace AugmeNDT{
             // If not selected Highlight
             else
             {
-                outline.enabled = true;
+                //outline.enabled = true;
                 dataMark.selected = true;
 
                 // Call Method of DataVisGroup Interactor

@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Microsoft.MixedReality.Toolkit.UI;
+using MixedReality.Toolkit;
 using UnityEngine;
 
 namespace AugmeNDT{
@@ -28,8 +28,8 @@ namespace AugmeNDT{
             for (int i = 0; i < colorBars.Count; i++)
             {
                 var id = i;
-                var onTouchReceiver = colorBars[id].GetComponent<Interactable>().AddReceiver<InteractableOnTouchReceiver>();
-                onTouchReceiver.OnTouchStart.AddListener(() => mddGlyphColorLegend.ChangeView(id));
+             //TODO   var onTouchReceiver = colorBars[id].GetComponent<MRTKBaseInteractable>().AddReceiver<InteractableOnTouchReceiver>();
+              //  onTouchReceiver.OnTouchStart.AddListener(() => mddGlyphColorLegend.ChangeView(id));
             }
 
         }

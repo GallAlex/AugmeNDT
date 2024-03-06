@@ -1,4 +1,4 @@
-using Microsoft.MixedReality.Toolkit.UI;
+//using Microsoft.MixedReality.Toolkit.UI;
 using TMPro;
 using UnityEngine;
 
@@ -148,8 +148,8 @@ namespace AugmeNDT{
 
         private void ConnectAttributeButton()
         {
-            ButtonConfigHelper button = axisInstance.GetComponentInChildren(typeof(ButtonConfigHelper)) as ButtonConfigHelper;
-            button.OnClick.AddListener(() => { Debug.Log("Axis " + (int)axisDirection + "pressed"); });
+         //   ButtonConfigHelper button = axisInstance.GetComponentInChildren(typeof(ButtonConfigHelper)) as ButtonConfigHelper;
+           // button.OnClick.AddListener(() => { Debug.Log("Axis " + (int)axisDirection + "pressed"); });
         }
     }
 }
