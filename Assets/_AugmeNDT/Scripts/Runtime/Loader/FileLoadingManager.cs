@@ -221,6 +221,11 @@ namespace AugmeNDT
         return await FilePicker_Win();
 #endif
 
+#if UNITY_ANDROID
+            Debug.Log("UNITY_Android PICKER");
+
+#endif
+
         }
 
 
@@ -268,7 +273,7 @@ namespace AugmeNDT
 
 
 #if UNITY_EDITOR
-    private async Task<String> FilePicker_Win()
+        private async Task<String> FilePicker_Win()
     {
 
         string path = EditorUtility.OpenFilePanel("Open File...", "", "");

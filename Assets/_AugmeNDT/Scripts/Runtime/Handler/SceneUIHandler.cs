@@ -40,6 +40,12 @@ namespace AugmeNDT{
             //    Debug.Log($"looking at {obj.name}", this);
             //}
         }
+        public void LogMessage()
+        {
+
+          Debug.Log("Helluuuuuu");
+            
+        }
 
         /// <summary>
         /// Sets a reference to the sceneVisHandler

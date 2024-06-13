@@ -1,0 +1,14 @@
+Font: Sedan  Style: Italic
+Point Size: 50   Padding: -1073741824   SP/PD Ratio: -2147484000.0%
+
+Characters included: 97/99
+Missing characters: 2
+Excluded characters: 0
+
+Characters missing from font file:
+----------------------------------------
+ID: 8203	Hex: 200B	Char [​]
+ID: 9633	Hex: 25A1	Char [□]
+
+Characters excluded from packing:
+----------------------------------------

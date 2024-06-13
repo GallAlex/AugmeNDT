@@ -40,7 +40,7 @@ namespace AugmeNDT{
 
         public override async Task LoadData(string filePath)
         {
-            await ReadCsv(filePath);
+           //todo await ReadCsv(filePath);
 
             this.filePath = filePath;
             fileName = Path.GetFileNameWithoutExtension(filePath);
@@ -63,6 +63,7 @@ namespace AugmeNDT{
 
         }
 
+    #if UNITY_ANDROID
         private async Task ReadCsv(string filePath)
         {
             Task<StreamReader> streamReaderTask = GetStreamReader(filePath);
@@ -122,6 +123,8 @@ namespace AugmeNDT{
             csvFile = new CsvFileType(csvValues);
             //PrintCsv();
         }
+
+    #endif
 
         /// <summary>
         /// Checks if the file has abstract or spatial values and sets how many rows to skip
