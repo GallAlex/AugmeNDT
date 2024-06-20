@@ -13,6 +13,13 @@ namespace AugmeNDT
     /// </summary>
     public class DataVisGroup
     {
+        public VoxelDataset voxelDataset;
+        public PolyFiberData polyFiberData;
+        public AbstractDataset abstractDataset;
+
+        private DataVisGroup dataVisGroup;
+      //  public CaptureScreenshot captureScreenshot;
+
         private static int IDCounter = 0;
 
         // Unique number which explicitly identifies the data and its representations. 
@@ -63,6 +70,25 @@ namespace AugmeNDT
         /// <summary>
         /// Generates a new DataVis group with continuous increasing ID
         /// </summary>
+        /// void Start()
+
+
+
+        //public SavePreview()
+        //{
+        //    dataVisGroup = new DataVisGroup();
+
+        //    dataVisGroup.SetVoxelData(voxelDataset);
+        //    dataVisGroup.SetPolyData(polyFiberData);
+        //    dataVisGroup.SetAbstractCsvData(abstractDataset);
+
+        //    dataVisGroup.RenderVolumeObject();
+        //    dataVisGroup.RenderPolyObject();
+        //    dataVisGroup.RenderAbstractVisObject(VisType.BarChart);
+
+        //    // Capture the preview after rendering
+        //    captureScreenshot.CapturePreview();
+        //}
         public DataVisGroup()
         {
             ID = IDCounter++;

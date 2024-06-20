@@ -79,13 +79,13 @@ namespace AugmeNDT
         {
             print("close book clicked in open book");
 
-            gameObject.SetActive(true);
-            openedBook.SetActive(false);
-            insideBackCover.SetActive(true);
-            isCloseClicked = true;
-            startTime = DateTime.Now;
-            rotationVector = new Vector3(0, -180, 0);
-            PlaySound();
+            //gameObject.SetActive(true);
+            //openedBook.SetActive(false);
+            //insideBackCover.SetActive(true);
+            //isCloseClicked = true;
+            //startTime = DateTime.Now;
+            //rotationVector = new Vector3(0, -180, 0);
+            //PlaySound();
 
        
         }
