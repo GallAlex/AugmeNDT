@@ -1,7 +1,13 @@
 {
   "dependencies": {
+    "com.microsoft.mixedreality.input": {
+      "version": "file:MixedReality/com.microsoft.mixedreality.input-0.9.2006.tgz",
+      "depth": 0,
+      "source": "local-tarball",
+      "dependencies": {}
+    },
     "com.microsoft.mixedreality.openxr": {
-      "version": "file:MixedReality/com.microsoft.mixedreality.openxr-1.9.0.tgz",
+      "version": "file:MixedReality/com.microsoft.mixedreality.openxr-1.10.1.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {
@@ -262,7 +268,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.textmeshpro": {
-      "version": "3.0.6",
+      "version": "3.0.9",
       "depth": 0,
       "source": "registry",
       "dependencies": {

@@ -6,7 +6,7 @@ Currently tested with the Microsoft Hololens 2.
 Dependencies and versions utilized:
 | Name                                                                    | Version  |
 | ----------------------------------------------------------------------- | -------- |
-| Unity                                                                   | 2022.3.8f1 |
+| Unity                                                                   | 2021.3.30f1 |
 | C#                                                                      | 9.0      |
 | .NET Standard                                                  | 2.1      |
 | .NET Framework                                             | 4.8      |
