@@ -20,6 +20,9 @@
 # Example Samples
 /[Aa]ssets/[Ss]amples*
 
+# Vuforia Packages
+/[Pp]ackages/com.ptc.vuforia.engine-*
+
 # Uncomment this line if you wish to ignore the asset store tools plugin
 # /[Aa]ssets/AssetStoreTools*
 
