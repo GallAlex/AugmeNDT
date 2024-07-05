@@ -20,8 +20,9 @@
 # Example Samples
 /[Aa]ssets/[Ss]amples*
 
-# Vuforia Packages
-/[Pp]ackages/com.ptc.vuforia.engine-*
+# Big Packages
+/[Pp]ackages/*.tgz
+/[Pp]ackages/MixedReality
 
 # Uncomment this line if you wish to ignore the asset store tools plugin
 # /[Aa]ssets/AssetStoreTools*
