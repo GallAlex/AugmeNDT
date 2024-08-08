@@ -31,7 +31,7 @@ namespace AugmeNDT
         [SerializeField] AudioClip flipPage;
         [SerializeField] GameObject indexPage;
 
-
+        public string folderpath;
 
         private int currentPageIndex = -1;
         private List<GameObject> pages = new List<GameObject>();
@@ -45,7 +45,7 @@ namespace AugmeNDT
         private DateTime startTime;
         private DateTime endTime;
         // Start is called before the first frame update
-        void Start()
+        public void Start()
         {
             pagePopulator = GetComponent<PagePopulator>();
 
@@ -54,7 +54,7 @@ namespace AugmeNDT
                 Debug.LogError("PagePopulator component not found!");
                 return;
             }
-            pagePopulator.PopulatePages();
+            pagePopulator.PopulatePages(folderpath);
             pages = pagePopulator.GetPages();
             //if (pages.Count == 0)
             //{
@@ -209,7 +209,12 @@ namespace AugmeNDT
         {
             AppEvent.CloseBookFunction();
         }
-    
+        public void SetFolderPath(string path)
+        {
+            folderpath = path;
+            //Debug.Log("folder path set to");
+        }
+
     }
 
 }

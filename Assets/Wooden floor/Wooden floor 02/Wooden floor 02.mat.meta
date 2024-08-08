@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 909ba812e840a4c4399dd2bf9ed67a3d
+labels:
+- Architecture
+- Tile
+- Wood
+- Old
+- Aged
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 13213
+  packageName: Wooden floor textures pack
+  packageVersion: 1.0
+  assetPath: Assets/Wooden floor/Wooden floor 02/Wooden floor 02.mat
+  uploadId: 15

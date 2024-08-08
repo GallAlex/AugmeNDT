@@ -7,21 +7,23 @@ using TMPro;
 
 namespace AugmeNDT
 {
-   
+
     public class PopulateIndexPage : MonoBehaviour
     {
         public GameObject datasetPrefab; // Prefab for the dataset UI element
         public Transform contentPanel; // Panel where the dataset UI elements will be instantiated
-        public string folderPath = "C:/Users/anugu/Downloads/WorkingDirectory"; // Path to the folder containing dataset files
+        public string folderPath; // Path to the folder containing dataset files
 
         // Start is called before the first frame update
         void Start()
         {
-            PopulatePage();
-
+            PopulatePage(folderPath);
         }
-
-        void PopulatePage()
+        public void setFolderPath(string path)
+        {
+            folderPath = path;
+        }
+        void PopulatePage(string folderPath)
         {
             // Check if the folder exists
             if (!Directory.Exists(folderPath))

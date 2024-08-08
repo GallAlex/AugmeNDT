@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: 1db0e90b9a3b07943b75591b4e452a96
+labels:
+- Architecture
+- Floor
+- Pattern
+- Plank
+- Tile
+- Wood
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 13213
+  packageName: Wooden floor textures pack
+  packageVersion: 1.0
+  assetPath: Assets/Wooden floor/Wooden floor 10/Wooden floor 10.mat
+  uploadId: 15

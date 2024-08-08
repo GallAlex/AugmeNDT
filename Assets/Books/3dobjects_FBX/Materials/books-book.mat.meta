@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f3d87070dc9fb4246b3a788982ab59e8
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 3356
+  packageName: Books
+  packageVersion: 1.2
+  assetPath: Assets/Books/3dobjects_FBX/Materials/books-book.mat
+  uploadId: 533379

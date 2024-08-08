@@ -1,0 +1,20 @@
+fileFormatVersion: 2
+guid: 18a35e570e04b5e4bbbe952c545bf56d
+labels:
+- Architecture
+- Tile
+- Wood
+- Dark
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 13213
+  packageName: Wooden floor textures pack
+  packageVersion: 1.0
+  assetPath: Assets/Wooden floor/Wooden floor 07/Wooden floor 07.mat
+  uploadId: 15

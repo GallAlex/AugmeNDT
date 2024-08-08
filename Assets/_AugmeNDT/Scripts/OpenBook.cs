@@ -23,7 +23,8 @@ namespace AugmeNDT
         private bool isOpenClicked;
         private DateTime startTime;
         private DateTime endTime;
-        // Start is called before the first frame update
+
+       
         void Start()
         {
             if (openBtn != null)
@@ -33,7 +34,7 @@ namespace AugmeNDT
             AppEvent.CloseBook += new EventHandler(closeBook_Click);
         }
 
-        // Update is called once per frame
+     
         void Update()
         {
             if (isOpenClicked || isCloseClicked)
@@ -65,7 +66,7 @@ namespace AugmeNDT
             }
         }
 
-        private void openBtn_Click()
+        public void openBtn_Click()
         {
             isOpenClicked = true;
             startTime = DateTime.Now;
@@ -75,7 +76,7 @@ namespace AugmeNDT
         }
 
      
-        private void closeBook_Click(object sender, EventArgs e)
+        public void closeBook_Click(object sender, EventArgs e)
         {
             print("close book clicked in open book");
 

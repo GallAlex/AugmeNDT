@@ -8,20 +8,22 @@ namespace AugmeNDT
 {
     public class PagePopulator : MonoBehaviour
     {
+
         public GameObject pagePrefab;
          // Prefab for the page layout
         public Transform contentPanel; // Panel where the pages will be instantiated
-        public string folderPath = "C:/Users/anugu/Downloads/WorkingDirectory"; // Path to the folder containing files
+        private string FPath;
         private List<GameObject> pages = new List<GameObject>(); // List to store the created pages
 
 
 
-        public void PopulatePages()
+        public void PopulatePages(string folderPath)
         {
+            FPath = folderPath;
             // Check if the folder exists
             if (!Directory.Exists(folderPath))
             {
-                Debug.LogError("Folder does not exist: " + folderPath);
+                Debug.LogError("Folder does not exist: pagepopulator " + folderPath);
                 return;
             }
 
@@ -57,9 +59,9 @@ namespace AugmeNDT
         public void GetFileInfoAtIndex(int index)
         {
             // Get all files in the folder
-            string[] files = Directory.GetFiles(folderPath);
+            string[] files = Directory.GetFiles(FPath);
 
-           
+            Debug.LogError("Getfileinfoatindex");
             FileInfo fileInfo = new FileInfo(files[index]);
             string fileName = Path.GetFileName(files[index]);
             string fileType = Path.GetExtension(files[index]);
