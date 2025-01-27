@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.MixedReality.Toolkit;
 using Microsoft.MixedReality.Toolkit.UI;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace AugmeNDT{
     /// <summary>
@@ -13,6 +15,7 @@ namespace AugmeNDT{
     {
         [SerializeField]
         private GameObject indicatorObject;
+        private GameObject dataLoadingMenu;
         private IProgressIndicator indicator;
 
         [SerializeField]
@@ -26,13 +29,20 @@ namespace AugmeNDT{
 
 
         private SceneObjectHandler sceneObjectHandler;
+        private string activeScene;
 
         private const int AmountShadertypes = 3;
         private int shaderType = 0;
 
+        private void Start()
+        {
+            activeScene = SceneManager.GetActiveScene().name;
+            Debug.Log("Active Scene: " + activeScene);
+            dataLoadingMenu = GameObject.Find("DataLoadingMenu");
+        }
+
         private void Update()
         {
-        
             //if (Physics.Raycast(mainCamera.transform.position, transform.forward, out var hit, Mathf.Infinity))
             //{
             //    var obj = hit.collider.gameObject;
@@ -65,7 +75,7 @@ namespace AugmeNDT{
         public async void OpenFile()
         {
             Debug.Log("Started loading file with ...");
-        
+
             Task<string> asyncLoadingTask = sceneObjectHandler.LoadObject();
 
             textLabel.text = "Loading ...";
@@ -76,6 +86,18 @@ namespace AugmeNDT{
 
             string path = await asyncLoadingTask;
             textLabel.text = path;
+
+            if (activeScene == "TopologicalAnalysisScene"
+                && !string.IsNullOrEmpty(path)
+                && dataLoadingMenu != null)
+            {
+                dataLoadingMenu.SetActive(false);
+                Debug.Log("DataLoadingMenu is hidden.");
+
+                UIButtonManager.Instance.CreateButton("New Feature",new Vector2(100, -100),
+                    () => Debug.Log("Button works!"));
+            }
+
         }
 
         public void CreateVisualization()
@@ -105,7 +127,7 @@ namespace AugmeNDT{
             //Creates a MultiGroup
             sceneObjectHandler.CreateMultiGroup(selectedGroups);
             sceneObjectHandler.RenderAbstractVisObjectForMultiGroup();
-        
+
         }
 
         public void FillGridObject()
