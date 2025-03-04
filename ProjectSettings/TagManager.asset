@@ -9,6 +9,10 @@ TagManager:
   - DataMark
   - VisLabel
   - Container
+  - InteractiveCriticalPoint
+  - Triangle1
+  - Triangle2
+  - 2DMovingSphere
   layers:
   - Default
   - TransparentFX
