@@ -62,6 +62,5 @@ namespace AugmeNDT
             Debug.Log("Gaussian Kernel Smoothing completed.");
             return smoothedGradientPoints;
         }
-
     }
 }

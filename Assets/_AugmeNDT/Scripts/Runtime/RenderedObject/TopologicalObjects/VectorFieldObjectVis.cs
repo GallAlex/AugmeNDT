@@ -13,7 +13,6 @@ namespace AugmeNDT
     /// </summary>
     public class VectorFieldObjectVis : MonoBehaviour
     {
-        public GameObject arrowPrefab; // Prefab for the arrow representation of vectors
         public static VectorFieldObjectVis Instance; // Singleton instance
 
         private TopologicalDataObject topologicalDataInstance; // Reference to the topological data instance containing gradient data
@@ -24,7 +23,7 @@ namespace AugmeNDT
         // Flags to check if arrows are already created and if they are currently hidden
         private bool arrowscalculated = false;
         private bool arrowshidden = false;
-        private static ArrowObjectVis arrowObjectVisInstance;
+        private static VectorObjectVis arrowObjectVisInstance;
 
         private void Awake()
         {
@@ -38,7 +37,7 @@ namespace AugmeNDT
                 topologicalDataInstance = TopologicalDataObject.Instance;
 
             if (arrowObjectVisInstance == null)
-                arrowObjectVisInstance = ArrowObjectVis.Instance;
+                arrowObjectVisInstance = VectorObjectVis.Instance;
             container = new GameObject("GeneralVectorFieldArrows").transform;
         }
 
@@ -56,7 +55,7 @@ namespace AugmeNDT
             }
             else
             {
-                arrows = arrowObjectVisInstance.CreateArrows(topologicalDataInstance.gradientList, arrowPrefab, container);
+                arrows = arrowObjectVisInstance.CreateArrows(topologicalDataInstance.gradientList, container);
                 arrowscalculated = true;
                 arrowshidden = false;
             }

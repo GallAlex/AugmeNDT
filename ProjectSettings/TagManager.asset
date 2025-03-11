@@ -13,6 +13,10 @@ TagManager:
   - Triangle1
   - Triangle2
   - 2DMovingSphere
+  - MovingSphere
+  - BoxWireframeLine
+  - Moving3DSphere
+  - Rectangle2D
   layers:
   - Default
   - TransparentFX
