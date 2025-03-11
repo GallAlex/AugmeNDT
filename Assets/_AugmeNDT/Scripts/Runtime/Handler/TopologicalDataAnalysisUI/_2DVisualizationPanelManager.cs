@@ -1,5 +1,7 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UI;
+using static UnityEngine.UI.GridLayoutGroup;
 
 namespace AugmeNDT
 {
@@ -9,114 +11,105 @@ namespace AugmeNDT
     /// </summary>
     public class _2DVisualizationPanelManager : MonoBehaviour
     {
-        public Toggle interactiveObjectDisplayed;
-
-        public Button showVectorForce;
-        public Button hideVectorForce;
-
-        public Button showStreamLine;
-        public Button hideStreamLine;
-
-        public Button showFlow;
-        public Button hideFlow;
-
-        public Button back;
-
-        // Static instances of visualization components
-        private static Detailed2DVectorFieldObjectVis detailed2DVectorFieldObjectInstance;
-        private static InteractiveIntersectionPointVis interactiveIntersectionPointVisInstance;
+        // References to singleton instances of visualization objects
+        private static Glyph2DVectorField detailed2DVectorFieldObjectInstance;
         private static StreamLine2D streamLine2DInstance;
-        private static FlowAnimation2D flowAnimation2DInstance;
+        private static FlowObject2DManager flowAnimation2DInstance;
+        private static RectangleManager rectangleManager;
+
+        // Toggle states for each visualization type
+        private bool showArrows = false;
+        private bool showStreamline = false;
+        private bool showFlows = false;
+        private bool showRectangle = false;
+
         private void Start()
         {
-            detailed2DVectorFieldObjectInstance = Detailed2DVectorFieldObjectVis.Instance;
-            interactiveIntersectionPointVisInstance = InteractiveIntersectionPointVis.Instance;
+            // Initialize references to all manager instances
+            detailed2DVectorFieldObjectInstance = Glyph2DVectorField.Instance;
             streamLine2DInstance = StreamLine2D.Instance;
-            flowAnimation2DInstance = FlowAnimation2D.Instance;
+            flowAnimation2DInstance = FlowObject2DManager.Instance;
+            rectangleManager = RectangleManager.rectangleManager;
 
-            interactiveObjectDisplayed.onValueChanged.AddListener(InteractiveObjectDisplayed);
-            
-            showVectorForce.onClick.AddListener(ShowVectorForceOnField);
-            hideVectorForce.onClick.AddListener(HideVectorForceOnField);
-            
-            showStreamLine.onClick.AddListener(ShowStreamLineOnField);
-            hideStreamLine.onClick.AddListener(HideStreamLineOnField);
-
-            showFlow.onClick.AddListener(ShowFlows);
-            hideFlow.onClick.AddListener(HideFlows);
-
-            back.onClick.AddListener(BackToMainMenu);
-
-            // Display 2D intersection points by default
-            interactiveIntersectionPointVisInstance.Show2DSpheres();
+            // Automatically toggle the rectangle once on startup
+            InteractiveRectangleDisplayed();
         }
+
         /// <summary>
-        /// Toggles the visibility of interactive intersection objects in the visualization.
+        /// Toggles the visibility of the interactive rectangle in the 2D view.
         /// </summary>
-        /// <param name="isOn">True to display, False to hide.</param>
-        private void InteractiveObjectDisplayed(bool isOn)
+        public void InteractiveRectangleDisplayed()
         {
-            if (isOn)
-                interactiveIntersectionPointVisInstance.Show2DSpheres();
+            if (!showRectangle)
+            {
+                rectangleManager.ShowRectangle();
+                showRectangle = true;
+            }
             else
-                interactiveIntersectionPointVisInstance.Hide2DSpheres();
+            {
+                rectangleManager.HideRectangle();
+                showRectangle = false;
+            }
         }
 
         /// <summary>
-        /// Displays vector forces on the field by visualizing gradient points.
+        /// Toggles the display of vector force arrows using gradient data.
         /// </summary>
-        private void ShowVectorForceOnField()
+        public void ShowHideVectorForceOnField()
         {
-            detailed2DVectorFieldObjectInstance.VisualizePoints();
+            if (!showArrows)
+            {
+                detailed2DVectorFieldObjectInstance.VisualizePoints(); // First time draw
+                showArrows = true;
+            }
+            else
+            {
+                showArrows = false;
+                detailed2DVectorFieldObjectInstance.ShowHideArrows(showArrows); // Toggle visibility
+            }
         }
 
         /// <summary>
-        /// Hides vector force arrows from the field.
+        /// Toggles the rendering of streamlines in the 2D field.
         /// </summary>
-        private void HideVectorForceOnField()
+        public void ShowHideStreamLineOnField()
         {
-            detailed2DVectorFieldObjectInstance.ShowHideArrows(showArrows: false);
+            if (!showStreamline)
+            {
+                streamLine2DInstance.ShowStreamLines(); // Draw streamlines
+                showStreamline = true;
+            }
+            else
+            {
+                streamLine2DInstance.HideStreamLines(); // Remove streamlines
+                showStreamline = false;
+            }
         }
 
         /// <summary>
-        /// Draws streamlines in the 2D field.
+        /// Toggles animated flow object visualization in the 2D field.
         /// </summary>
-        private void ShowStreamLineOnField()
+        public void ShowHideFlows()
         {
-            streamLine2DInstance.ShowStreamLines();
+            if (!showFlows)
+            {
+                flowAnimation2DInstance.StartFlowObject(); // Start moving particles/objects
+                showFlows = true;
+            }
+            else
+            {
+                flowAnimation2DInstance.PauseFlowObject(); // Pause the animation
+                showFlows = false;
+            }
         }
 
         /// <summary>
-        /// Hides the drawn streamlines.
+        /// Returns to the main menu by disabling this panel and enabling the main menu panel.
         /// </summary>
-        private void HideStreamLineOnField()
+        public void BackToMainMenu()
         {
-            streamLine2DInstance.HideStreamLines();
-        }
-
-        /// <summary>
-        /// Starts flow visualization in the 2D field.
-        /// </summary>
-        private void ShowFlows()
-        {
-            flowAnimation2DInstance.StartFlowObject();
-        }
-
-        /// <summary>
-        /// Pauses the flow visualization.
-        /// </summary>
-        private void HideFlows()
-        {
-            flowAnimation2DInstance.PauseFlowObject();
-        }
-
-        /// <summary>
-        /// Closes the current panel and returns to the main menu.
-        /// </summary>
-        private void BackToMainMenu()
-        {
-            gameObject.SetActive(false); // Deactivate the current UI panel
-            TDAMainMenu.Instance.ShowMainMenu(); // Activate the main menu
+            gameObject.SetActive(false); // Hide the current UI panel
+            MainManager.Instance.ShowMainMenu(); // Show the main menu UI
         }
     }
 }

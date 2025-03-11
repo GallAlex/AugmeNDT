@@ -10,17 +10,9 @@ namespace AugmeNDT
     /// </summary>
     public class CriticalPointPanelManager : MonoBehaviour
     {
-        public Button backButton; // Button to return to the main menu
-        public TMP_Text infoText; // UI Text to display selected critical point details
-
         public static CriticalPointPanelManager Instance;
         private static CriticalPointObjectVis criticalPointObjectVisInstance;
-        
-        // UI toggles to filter different types of critical points
-        public Toggle minimumToggle;
-        public Toggle saddle1Toggle;
-        public Toggle saddle2Toggle;
-        public Toggle maximumToggle;
+        private bool showHideAllPoints = false;
 
         /// <summary>
         /// Implements Singleton pattern to ensure only one instance exists.
@@ -36,12 +28,6 @@ namespace AugmeNDT
         /// </summary>
         private void Start()
         {
-            backButton.onClick.AddListener(BackToMainMenu);
-            minimumToggle.onValueChanged.AddListener(delegate { FilterCriticalPointsByType(0, minimumToggle.isOn); });
-            saddle1Toggle.onValueChanged.AddListener(delegate { FilterCriticalPointsByType(1, saddle1Toggle.isOn); });
-            saddle2Toggle.onValueChanged.AddListener(delegate { FilterCriticalPointsByType(2, saddle2Toggle.isOn); });
-            maximumToggle.onValueChanged.AddListener(delegate { FilterCriticalPointsByType(3, maximumToggle.isOn); });
-
             criticalPointObjectVisInstance = CriticalPointObjectVis.Instance;
             criticalPointObjectVisInstance.Visualize();
 
@@ -50,10 +36,10 @@ namespace AugmeNDT
         /// <summary>
         /// Closes the Critical Point panel and returns to the main menu.
         /// </summary>
-        private void BackToMainMenu()
+        public void BackToMainMenu()
         {
             gameObject.SetActive(false); // Hide panel
-            TDAMainMenu.Instance.ShowMainMenu(); // Show main menu
+            MainManager.Instance.ShowMainMenu(); // Show main menu
         }
 
         /// <summary>
@@ -65,7 +51,7 @@ namespace AugmeNDT
         public void ShowPointInfo(int id, int type, Vector3 position)
         {
             string typeName = GetCriticalTypeName(type);
-            infoText.text = $"ID: {id}\nType: {typeName}\nPosition: {position}";
+            //infoText.text = $"ID: {id}\nType: {typeName}\nPosition: {position}";
         }
 
         /// <summary>
@@ -73,18 +59,53 @@ namespace AugmeNDT
         /// </summary>
         /// <param name="type">Integer ID of the critical point type</param>
         /// <returns>String representation of the critical point type</returns>
-        private string GetCriticalTypeName(int type)
+        public string GetCriticalTypeName(int type)
         {
             switch (type)
             {
-                case 0: return "Minimum";
+                case 0: return "Sink";
                 case 1: return "1-Saddle";
                 case 2: return "2-Saddle";
-                case 3: return "Maximum";
-                case 4: return "Degenerate";
-                case 5: return "Regular";
+                case 3: return "Source";
                 default: return "Unknown";
             }
+        }
+
+        public void ShowHideAllPoints()
+        {
+            if (!showHideAllPoints)
+            {
+                showHideAllPoints = true;
+                ShowSink(showHideAllPoints);
+                ShowSaddle1(showHideAllPoints); 
+                ShowSaddle2(showHideAllPoints); 
+                ShowSource(showHideAllPoints);
+            }
+            else
+            {
+                showHideAllPoints = false;
+                ShowSink(showHideAllPoints);
+                ShowSaddle1(showHideAllPoints);
+                ShowSaddle2(showHideAllPoints);
+                ShowSource(showHideAllPoints);
+            }
+        }
+
+        public void ShowSink(bool isOn)
+        {
+            FilterCriticalPointsByType(0,isOn);
+        }
+        public void ShowSaddle1(bool isOn)
+        {
+            FilterCriticalPointsByType(1, isOn);
+        }
+        public void ShowSaddle2(bool isOn)
+        {
+            FilterCriticalPointsByType(2, isOn);
+        }
+        public void ShowSource(bool isOn)
+        {
+            FilterCriticalPointsByType(3, isOn);
         }
 
         /// <summary>
@@ -92,7 +113,7 @@ namespace AugmeNDT
         /// </summary>
         /// <param name="type">Type ID of the critical point</param>
         /// <param name="state">True to show, False to hide</param>
-        public void FilterCriticalPointsByType(int type, bool state)
+        private void FilterCriticalPointsByType(int type, bool state)
         {
             if (criticalPointObjectVisInstance.criticalPointDictionary.ContainsKey(type))
             {

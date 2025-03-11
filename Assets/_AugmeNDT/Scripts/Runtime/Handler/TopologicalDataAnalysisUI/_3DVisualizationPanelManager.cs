@@ -5,118 +5,127 @@ namespace AugmeNDT
 {
     /// <summary>
     /// Manages the 3D visualization panel UI, handling user interactions 
-    /// such as toggling vector fields, streamlines, and flow visualization in 3D space.
+    /// such as toggling vector fields, streamlines, flow objects, and critical points.
     /// </summary>
-    public class _3DVisualizationPanelManager :MonoBehaviour
+    public class _3DVisualizationPanelManager : MonoBehaviour
     {
-        public Toggle interactiveObjectDisplayed;
-
-        public Button showVectorForce;
-        public Button hideVectorForce;
-
-        public Button showStreamLine;
-        public Button hideStreamLine;
-
-        public Button showFlow;
-        public Button hideFlow;
-
-        public Button back;
-
-        // Static instances of visualization components
-        private static Detailed3DVectorFieldObjectVis detailed3DVectorFieldObjectInstance;
-        private static InteractiveIntersectionPointVis interactiveIntersectionPointVisInstance;
+        // Instances of the 3D visualization managers
+        private static Glyph3DVectorField detailed3DVectorFieldObjectInstance;
+        private static FlowObject3DManager flowObject3DManagerInstance;
         private static StreamLine3D streamLine3DInstance;
+        private static Rectangle3DManager rectangle3DManager;
+
+        // Toggle states for each visualization feature
+        private bool showHideVectorForce = false;
+        private bool showHideCriticalPoints = false;
+        private bool showHideStreamLine = false;
+        private bool showHideFlows = false;
+        private bool interactiveObjectDisplayed = false;
 
         private void Start()
         {
-            detailed3DVectorFieldObjectInstance = Detailed3DVectorFieldObjectVis.Instance;
-            interactiveIntersectionPointVisInstance = InteractiveIntersectionPointVis.Instance;
+            // Get singleton instances
+            detailed3DVectorFieldObjectInstance = Glyph3DVectorField.instance;
+            flowObject3DManagerInstance = FlowObject3DManager.Instance;
             streamLine3DInstance = StreamLine3D.Instance;
+            rectangle3DManager = Rectangle3DManager.rectangle3DManager;
 
-            interactiveObjectDisplayed.onValueChanged.AddListener(InteractiveObjectDisplayed);
-
-            showVectorForce.onClick.AddListener(ShowVectorForceOnField);
-            hideVectorForce.onClick.AddListener(HideVectorForceOnField);
-
-            showStreamLine.onClick.AddListener(ShowStreamLineOnField);
-            hideStreamLine.onClick.AddListener(HideStreamLineOnField);
-
-            showFlow.onClick.AddListener(ShowFlows);
-            hideFlow.onClick.AddListener(HideFlows);
-
-            back.onClick.AddListener(BackToMainMenu);
-
-            // Display 3D intersection points by default
-            interactiveIntersectionPointVisInstance.Show3DSpheres();
+            // Show the interactive rectangle on startup
+            InteractiveObjectDisplayed();
         }
 
         /// <summary>
-        /// Toggles the visibility of interactive intersection objects in the 3D visualization.
+        /// Toggles the visibility of the interactive rectangle in 3D space.
         /// </summary>
-        /// <param name="isOn">True to display, False to hide.</param>
-        private void InteractiveObjectDisplayed(bool isOn)
+        public void InteractiveObjectDisplayed()
         {
-            if (isOn)
-                interactiveIntersectionPointVisInstance.Show3DSpheres();
+            if (!interactiveObjectDisplayed)
+            {
+                rectangle3DManager.ShowRectangle();
+                interactiveObjectDisplayed = true;
+            }
             else
-                interactiveIntersectionPointVisInstance.Hide3DSpheres();
+            {
+                rectangle3DManager.HideRectangle();
+                interactiveObjectDisplayed = false;
+            }
         }
 
         /// <summary>
-        /// Displays vector forces on the 3D field by visualizing gradient points.
+        /// Toggles the visibility of 3D vector field arrows (glyphs).
         /// </summary>
-        private void ShowVectorForceOnField()
+        public void ShowHideVectorForceOnField()
         {
-            detailed3DVectorFieldObjectInstance.VisualizePoints();
+            if (!showHideVectorForce)
+            {
+                detailed3DVectorFieldObjectInstance.ShowVectorField();
+                showHideVectorForce = true;
+            }
+            else
+            {
+                detailed3DVectorFieldObjectInstance.HideVectorField();
+                showHideVectorForce = false;
+            }
         }
 
         /// <summary>
-        /// Hides vector force arrows from the 3D field.
+        /// Toggles visibility of critical points (e.g. sinks, sources, saddles).
         /// </summary>
-        private void HideVectorForceOnField()
+        public void ShowHideCriticalPoints()
         {
-            detailed3DVectorFieldObjectInstance.ShowHideArrows(showArrows: false);
+            if (!showHideCriticalPoints)
+            {
+                detailed3DVectorFieldObjectInstance.ShowCriticalPoints();
+                showHideCriticalPoints = true;
+            }
+            else
+            {
+                detailed3DVectorFieldObjectInstance.HideCriticalPoints();
+                showHideCriticalPoints = false;
+            }
         }
 
         /// <summary>
-        /// Draws streamlines in the 3D field.
+        /// Toggles the display of streamlines in 3D space.
         /// </summary>
-        private void ShowStreamLineOnField()
+        public void ShowHideStreamLineOnField()
         {
-            streamLine3DInstance.DrawStreamlines();
+            if (!showHideStreamLine)
+            {
+                streamLine3DInstance.ShowStreamLines();
+                showHideStreamLine = true;
+            }
+            else
+            {
+                streamLine3DInstance.HideStreamLines();
+                showHideStreamLine = false;
+            }
         }
 
         /// <summary>
-        /// Hides the drawn streamlines in the 3D field.
+        /// Starts or pauses flow animation in the 3D field.
         /// </summary>
-        private void HideStreamLineOnField()
+        public void ShowHideFlows()
         {
-            streamLine3DInstance.HideStreamLines();
+            if (!showHideFlows)
+            {
+                flowObject3DManagerInstance.StartFlowObject();
+                showHideFlows = true;
+            }
+            else
+            {
+                flowObject3DManagerInstance.PauseFlowObject();
+                showHideFlows = false;
+            }
         }
 
         /// <summary>
-        /// Starts flow visualization in the 3D field.
+        /// Closes the current panel and navigates back to the main menu UI.
         /// </summary>
-        private void ShowFlows()
+        public void BackToMainMenu()
         {
-            streamLine3DInstance.StartFlowObject();
-        }
-
-        /// <summary>
-        /// Pauses the flow visualization.
-        /// </summary>
-        private void HideFlows()
-        {
-            streamLine3DInstance.PauseFlowObject();
-        }
-
-        /// <summary>
-        /// Closes the current panel and returns to the main menu.
-        /// </summary>
-        private void BackToMainMenu()
-        {
-            gameObject.SetActive(false); // Deactivate the current UI panel
-            TDAMainMenu.Instance.ShowMainMenu(); // Activate the main menu
+            gameObject.SetActive(false); // Hide this panel
+            MainManager.Instance.ShowMainMenu(); // Show main menu
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.MixedReality.Toolkit.UI;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace AugmeNDT{
     /// <summary>
@@ -76,6 +77,13 @@ namespace AugmeNDT{
 
             string path = await asyncLoadingTask;
             textLabel.text = path;
+            
+            if (SceneManager.GetActiveScene().name == "TopologicalDataAnalysisScene")
+            {
+                GameObject dataLoadingMenu = GameObject.Find("DataLoadingMenu");
+                dataLoadingMenu.SetActive(false);
+                TDAMenu.instance.ActivateTDAInfoPanel();
+            }
         }
 
         public void CreateVisualization()

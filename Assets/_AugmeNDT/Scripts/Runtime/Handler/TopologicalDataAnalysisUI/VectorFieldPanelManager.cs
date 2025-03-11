@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using UnityEngine;
 
 namespace AugmeNDT
 {
@@ -14,43 +8,42 @@ namespace AugmeNDT
     /// </summary>
     public class VectorFieldPanelManager : MonoBehaviour
     {
-        // UI elements
-        public Button backButton;   // Button to go back to the main menu
-        public Toggle showToggle;   // Toggle to show/hide the vector field (default: true)
-
-        private VectorFieldObjectVis vectorFieldObjectVis; // Instance for managing vector field visualization
+        private VectorFieldObjectVis vectorFieldObjectVis; // Reference to the vector field visualization manager
+        public bool showHideVectorField = false; // Current visibility state
 
         /// <summary>
-        /// Initializes UI button listeners and start visualizing the vector field
+        /// Initializes the vector field visualization and toggles its default state on start.
         /// </summary>
         private void Start()
         {
-            backButton.onClick.AddListener(BackToMainMenu);
-            showToggle.onValueChanged.AddListener(ShowVectorField);
-
             vectorFieldObjectVis = VectorFieldObjectVis.Instance;
-            vectorFieldObjectVis.Visualize();
+            ShowHideVectorField(); // Start by showing it once (default behavior)
         }
 
         /// <summary>
-        /// Closes the Vector Field panel and returns to the main menu.
+        /// Toggles the visibility of the vector field.
         /// </summary>
-        private void BackToMainMenu()
+        public void ShowHideVectorField()
         {
-            gameObject.SetActive(false); // Hide the panel
-            TDAMainMenu.Instance.ShowMainMenu(); // Show main menu
-        }
-
-        /// <summary>
-        /// Toggles the visibility of the vector field without recalculating it.
-        /// </summary>
-        /// <param name="isOn">True to show, False to hide</param>
-        private void ShowVectorField(bool isOn)
-        {
-            if (isOn)
-                vectorFieldObjectVis.ShowVectorField();
+            if (!showHideVectorField)
+            {
+                vectorFieldObjectVis.Visualize(); // Enable the vector field
+                showHideVectorField = true;
+            }
             else
-                vectorFieldObjectVis.HideVectorField();
+            {
+                vectorFieldObjectVis.HideVectorField(); // Disable the vector field
+                showHideVectorField = false;
+            }
+        }
+
+        /// <summary>
+        /// Closes the vector field panel and returns to the main menu UI.
+        /// </summary>
+        public void BackToMainMenu()
+        {
+            gameObject.SetActive(false); // Hide this panel
+            MainManager.Instance.ShowMainMenu(); // Show main menu panel
         }
     }
 }
