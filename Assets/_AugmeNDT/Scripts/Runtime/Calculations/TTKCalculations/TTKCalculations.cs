@@ -12,7 +12,8 @@ namespace AugmeNDT
     public static class TTKCalculations
     {
         // Paths for input/output and scripts
-        private static string mhdPath = @"C:/Users/ozdag/OneDrive/Desktop/SourceForUnity/new_mhd_files/fibers.mhd";
+        private static string mhdPath = @"C:/Users/ozdag/OneDrive/Desktop/ThesisAll/new_Studies/Volume_Fibers/fiber_volumes.mhd";
+        //private static string mhdPath = @"C:/Users/ozdag/OneDrive/Desktop/SourceForUnity/new_mhd_files/fibers.mhd";
         private static string ttkScripts = Application.streamingAssetsPath + @"/TTKScripts/";
         private static string ttkResults = Application.streamingAssetsPath + @"/TTKResults/";
         private static CultureInfo culture = new CultureInfo("en-US");

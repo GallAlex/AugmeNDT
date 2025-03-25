@@ -42,7 +42,7 @@ namespace AugmeNDT
                 rectangleManager = RectangleManager.rectangleManager;
 
             if (arrowObjectVisInstance == null)
-                arrowObjectVisInstance = VectorObjectVis.Instance;
+                arrowObjectVisInstance = VectorObjectVis.instance;
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace AugmeNDT
             {
                 generatedGradientPoints = rectangleManager.GetGradientPoints();
                 DestroyArrows();
-                arrows = arrowObjectVisInstance.CreateArrows(generatedGradientPoints, container, 0.6f);
+                arrows = arrowObjectVisInstance.CreateArrows(generatedGradientPoints, container);
             }
             else
                 ShowHideArrows(true);

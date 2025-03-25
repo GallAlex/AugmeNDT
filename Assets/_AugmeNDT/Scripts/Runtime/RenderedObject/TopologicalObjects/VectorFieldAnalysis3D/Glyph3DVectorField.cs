@@ -55,7 +55,7 @@ namespace AugmeNDT
             {
                 ClearArrows();
                 Initialize();
-                arrows = VectorObjectVis.Instance.CreateArrows(gradientPoints, container);
+                arrows = VectorObjectVis.instance.CreateArrows(gradientPoints, container);
             }
             else
             {

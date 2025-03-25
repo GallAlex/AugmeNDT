@@ -16,7 +16,7 @@ namespace AugmeNDT
         /// </summary>
         private void Start()
         {
-            vectorFieldObjectVis = VectorFieldObjectVis.Instance;
+            vectorFieldObjectVis = VectorFieldObjectVis.instance;
             ShowHideVectorField(); // Start by showing it once (default behavior)
         }
 

@@ -35,7 +35,7 @@ namespace AugmeNDT
         private void Start()
         {
             // Get reference to topological data object
-            topologicalDataObjectInstance = TopologicalDataObject.Instance;
+            topologicalDataObjectInstance = TopologicalDataObject.instance;
         }
 
         /// <summary>
@@ -198,7 +198,7 @@ namespace AugmeNDT
                 }
 
                 // Filter data inside the cube
-                foreach (var data in topologicalDataObjectInstance.gradientList)
+                foreach (var data in topologicalDataObjectInstance.GetGradientList())
                 {
                     if (cubeBounds.Contains(data.Position))
                     {
@@ -243,7 +243,7 @@ namespace AugmeNDT
                 }
 
                 // Filter data inside the cube
-                foreach (var data in topologicalDataObjectInstance.criticalPointList)
+                foreach (var data in topologicalDataObjectInstance.GetCriticalPointList())
                 {
                     // Get the cube's boundaries
                     Bounds cubeBounds = GetWireframeCubeBounds();
