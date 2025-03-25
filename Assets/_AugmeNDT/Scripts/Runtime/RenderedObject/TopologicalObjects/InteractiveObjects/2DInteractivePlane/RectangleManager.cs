@@ -45,7 +45,7 @@
         {
             // Get reference to topological data object
             if (topologicalDataObjectInstance == null)
-                topologicalDataObjectInstance = TopologicalDataObject.Instance;
+                topologicalDataObjectInstance = TopologicalDataObject.instance;
         }
 
         /// <summary>
@@ -208,7 +208,7 @@
         {
             gradientPoints.Clear();
             bool tkkGradientUsed = false;
-            List<GradientDataset> sourceGradientPoints = topologicalDataObjectInstance.gradientList;
+            List<GradientDataset> sourceGradientPoints = topologicalDataObjectInstance.GetGradientList();
 
             if (supportedByTTK)
             {

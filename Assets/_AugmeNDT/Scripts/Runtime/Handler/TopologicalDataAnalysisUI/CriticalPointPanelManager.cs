@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -28,9 +29,9 @@ namespace AugmeNDT
         /// </summary>
         private void Start()
         {
-            criticalPointObjectVisInstance = CriticalPointObjectVis.Instance;
+            criticalPointObjectVisInstance = CriticalPointObjectVis.instance;
             criticalPointObjectVisInstance.Visualize();
-
+            CreateLegendColorBar();
         }
 
         /// <summary>
@@ -107,6 +108,47 @@ namespace AugmeNDT
         {
             FilterCriticalPointsByType(3, isOn);
         }
+
+        /// <summary>
+        /// Creates and places the color legend bar that explains critical point types with corresponding colors and labels.
+        /// </summary>
+        private void CreateLegendColorBar()
+        {
+            // Get the color scheme used for different types of critical points
+            Dictionary<int, Color> typeColors = criticalPointObjectVisInstance.typeColors;
+
+            // Define text labels for each critical point type
+            string[] labels = { "Minimum", "1-Saddle", "2-Saddle", "Maximum" };
+
+            // Extract colors from the dictionary into a color array (ordered by key)
+            Color[] colors = new Color[typeColors.Count];
+            for (int i = 0; i < typeColors.Count; i++)
+            {
+                colors[i] = typeColors[i];
+            }
+
+            // Create an instance of the LegendColorBar class to generate the visual legend
+            LegendColorBar legend = new LegendColorBar();
+
+            // Generate the color bar using the new method that places labels on all sides
+            GameObject legendObject = legend.CreateColorScalarBar(
+                new Vector3(0f, 0f, 0f),   // World position where the legend will appear
+                "Critical Points",         // Title of the legend
+                labels,                    // Labels to display for each color segment
+                colors,                    // Corresponding colors for each label
+                2                          // Percentage spacing between blocks
+            );
+
+            // Attach the legend under the main container so it moves/scales with the data visualization
+            legendObject.transform.parent = criticalPointObjectVisInstance.container;
+            legendObject.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+
+            // Make it interactable in immersive systems
+            legendObject.AddComponent<BoxCollider>();
+            legendObject.AddComponent<Microsoft.MixedReality.Toolkit.UI.ObjectManipulator>();
+            legendObject.AddComponent<Microsoft.MixedReality.Toolkit.Input.NearInteractionGrabbable>();
+        }
+
 
         /// <summary>
         /// Filters critical points based on type and user selection.

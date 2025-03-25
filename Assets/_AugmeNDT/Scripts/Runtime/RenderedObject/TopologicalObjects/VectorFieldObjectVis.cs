@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace AugmeNDT
@@ -13,7 +9,7 @@ namespace AugmeNDT
     /// </summary>
     public class VectorFieldObjectVis : MonoBehaviour
     {
-        public static VectorFieldObjectVis Instance; // Singleton instance
+        public static VectorFieldObjectVis instance; // Singleton instance
 
         private TopologicalDataObject topologicalDataInstance; // Reference to the topological data instance containing gradient data
         private List<GameObject> arrows = new List<GameObject>(); // List to store all created arrows for toggling visibility
@@ -27,18 +23,17 @@ namespace AugmeNDT
 
         private void Awake()
         {
-            if (Instance == null)
-                Instance = this;
+            if (instance == null)
+                instance = this;
         }
 
         void Start()
         {
             if (topologicalDataInstance == null)
-                topologicalDataInstance = TopologicalDataObject.Instance;
+                topologicalDataInstance = TopologicalDataObject.instance;
 
             if (arrowObjectVisInstance == null)
-                arrowObjectVisInstance = VectorObjectVis.Instance;
-            container = new GameObject("GeneralVectorFieldArrows").transform;
+                arrowObjectVisInstance = VectorObjectVis.instance;
         }
 
         /// <summary>
@@ -48,17 +43,33 @@ namespace AugmeNDT
         /// </summary>
         public void Visualize()
         {
-
             if (arrowscalculated)
             {
                 ShowVectorField();
             }
             else
             {
-                arrows = arrowObjectVisInstance.CreateArrows(topologicalDataInstance.gradientList, container);
+                if (container == null)
+                    SetContainer();
+
+                arrows = arrowObjectVisInstance.CreateArrows(topologicalDataInstance.GetGradientList(), container);
                 arrowscalculated = true;
                 arrowshidden = false;
             }
+        }
+
+        private void SetContainer()
+        {
+            Transform fibers = GameObject.Find("DataVisGroup_0/fibers.raw").transform;
+
+            GameObject generalVectorFieldArrows = new GameObject("GeneralVectorFieldArrows");
+            container = generalVectorFieldArrows.transform;
+            container.SetParent(fibers);
+
+            // Reset transform to align with parent
+            container.localPosition = Vector3.zero;
+            container.localRotation = Quaternion.identity;
+            container.localScale = Vector3.one;
         }
 
         /// <summary>

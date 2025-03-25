@@ -2,6 +2,10 @@
 {
     using UnityEngine;
 
+    /// <summary>
+    /// Responsible for creating a 3D vector arrow consisting of a cylinder (line) and a pyramid-like head.
+    /// Allows setting position and direction for visualization in 3D space.
+    /// </summary>
     public class VectorCreator3D : MonoBehaviour
     {
         [Header("Vector Settings")]
@@ -11,160 +15,134 @@
         [Tooltip("Position of the vector's center")]
         public Vector3 position = Vector3.zero;
 
-        [Tooltip("Scale factor for the vector length")]
-        public float vectorLength = 0.5f;
+        [Tooltip("Constant length for all vectors")]
+        public float vectorLength = 0.02f;
 
         [Tooltip("Width of the vector line")]
-        public float lineWidth = 0.1f;
+        public float lineWidth = 0.008f;
 
         [Tooltip("Size of the arrow head")]
-        public float arrowHeadSize = 0.2f;
+        public float arrowHeadSize = 0.009f;
 
-        [Header("Magnitude Color Mapping")]
-        [Tooltip("Maximum magnitude reference value")]
-        public float maxMagnitude = 1.0f;
-
-        [Tooltip("Current vector magnitude (for color mapping)")]
-        public float vectorMagnitude = 0.5f;
-
-        [Tooltip("Color at minimum magnitude (0)")]
-        public Color minColor = Color.blue;
-
-        [Tooltip("Color at middle magnitude (maxMagnitude/2)")]
-        public Color midColor = Color.white;
-
-        [Tooltip("Color at maximum magnitude")]
-        public Color maxColor = Color.red;
-
-        [Tooltip("Override automatic color with this color (leave transparent to use magnitude coloring)")]
-        public Color overrideColor = new Color(0, 0, 0, 0);
+        [Tooltip("Line portion of the vector (0-1)")]
+        [Range(0f, 1f)]
+        public float linePortion = 0.7f;  // The percentage of the vector dedicated to the line (rest is arrow head)
 
         private GameObject lineObject;
         private GameObject arrowHeadObject;
-        private Material lineMaterial;
-        private Material arrowMaterial;
-        private Mesh mesh;
 
+        /// <summary>
+        /// Initializes the vector's visual components based on the position and direction.
+        /// </summary>
         private void CreateVector()
         {
-            // Clear previous objects if they exist
+            // Clear previous vector components if they exist
             if (lineObject != null) Destroy(lineObject);
             if (arrowHeadObject != null) Destroy(arrowHeadObject);
 
-            // Make sure we have a valid direction
-            if (direction == Vector3.zero)
-            {
-                direction = Vector3.forward;
-            }
+            // Calculate proportional lengths for the line and the arrow head
+            float lineLength = vectorLength * linePortion;
+            float arrowLength = vectorLength * (1 - linePortion);
 
-            // Normalize direction and apply length
-            Vector3 normalizedDirection = direction.normalized * vectorLength;
+            Vector3 normalizedDirection = direction.normalized;
 
-            // Set main object position
-            transform.position = position;
+            // Calculate start and end positions relative to the center (position)
+            Vector3 vectorStart = position - (normalizedDirection * vectorLength / 2f);
+            Vector3 lineEnd = vectorStart + (normalizedDirection * lineLength);
 
-            // Create cylinder rod
+            // Calculate local positioning and scaling for the line object
+            Vector3 localPosition = vectorStart + (normalizedDirection * lineLength / 2f);
+            Vector3 localScale = new Vector3(lineWidth, lineLength / 2f, lineWidth);
+
+            CreateLineObject(normalizedDirection, localPosition, localScale);  // Create cylinder
+            CreateVectorHead(normalizedDirection, lineEnd);                    // Create arrow head
+
+            SetColor(); // Apply color to the vector parts
+        }
+
+        /// <summary>
+        /// Creates the cylindrical line part of the vector.
+        /// </summary>
+        private void CreateLineObject(Vector3 normalizedDirection, Vector3 localPosition, Vector3 localScale)
+        {
             lineObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             lineObject.transform.SetParent(transform);
             lineObject.name = "VectorLine";
 
-            // Position and scale the rod
-            float lineLength = normalizedDirection.magnitude * 0.9f; // Leave space for arrow head
-            lineObject.transform.localScale = new Vector3(lineWidth, lineLength / 2, lineWidth);
-            lineObject.transform.localPosition = normalizedDirection / 2 * 0.9f;
+            // Position and orient the cylinder in local space
+            lineObject.transform.localPosition = localPosition;
+            lineObject.transform.localScale = localScale;
 
-            // Rotate rod according to direction
+            // Align the cylinder's Y-axis with the vector direction
             lineObject.transform.up = normalizedDirection;
+        }
 
-            // Create arrow head (pyramid from cube)
+        /// <summary>
+        /// Creates the arrow head using a cube modified to appear as a pyramid.
+        /// </summary>
+        private void CreateVectorHead(Vector3 normalizedDirection, Vector3 lineEnd)
+        {
             arrowHeadObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
             arrowHeadObject.transform.SetParent(transform);
             arrowHeadObject.name = "VectorArrowHead";
 
-            // Position and scale the arrow head
+            arrowHeadObject.transform.localPosition = lineEnd;
             arrowHeadObject.transform.localScale = new Vector3(arrowHeadSize, arrowHeadSize, arrowHeadSize);
-            arrowHeadObject.transform.localPosition = normalizedDirection;
 
-            // Transform cube into pyramid shape
+            // Morph cube into a pyramid by manipulating vertices
             MeshFilter meshFilter = arrowHeadObject.GetComponent<MeshFilter>();
             if (meshFilter != null && meshFilter.mesh != null)
             {
-                mesh = meshFilter.mesh;
+                Mesh mesh = meshFilter.mesh;
                 Vector3[] vertices = mesh.vertices;
 
-                // Find vertices on the top face (+y direction)
-                // and move them to create a point facing forward
                 for (int i = 0; i < vertices.Length; i++)
                 {
                     if (vertices[i].y > 0)
                     {
-                        // Move top vertices to create a single point
+                        // Collapse top face vertices into a single point (makes it pointy)
                         vertices[i] = new Vector3(0, vertices[i].y * 2, 0);
                     }
                 }
 
-                // Apply modified vertices
+                // Update mesh with new geometry
                 mesh.vertices = vertices;
                 mesh.RecalculateNormals();
                 mesh.RecalculateBounds();
             }
 
-            // Rotate arrow head according to direction
+            // Orient the arrow head in the correct direction
             arrowHeadObject.transform.up = normalizedDirection;
+        }
 
-            // Determine color based on magnitude
-            Color vectorColor = GetColorByMagnitude(vectorMagnitude, maxMagnitude);
+        /// <summary>
+        /// Assigns a standard blue material to both the line and arrow head.
+        /// </summary>
+        private void SetColor()
+        {
+            Material lineMaterial = new Material(Shader.Find("Standard"));
+            Material arrowMaterial = new Material(Shader.Find("Standard"));
 
-            // Apply color to both objects
+            lineMaterial.color = Color.blue;
+            arrowMaterial.color = Color.blue;
+
             Renderer lineRenderer = lineObject.GetComponent<Renderer>();
             Renderer arrowRenderer = arrowHeadObject.GetComponent<Renderer>();
-
-            lineMaterial = new Material(Shader.Find("Standard"));
-            lineMaterial.color = vectorColor;
-
-            arrowMaterial = new Material(Shader.Find("Standard"));
-            arrowMaterial.color = vectorColor;
 
             lineRenderer.material = lineMaterial;
             arrowRenderer.material = arrowMaterial;
         }
 
-        // Get color based on magnitude
-        private Color GetColorByMagnitude(float magnitude, float maxMag)
-        {
-            // If override color is set (alpha > 0), use it instead of calculation
-            if (overrideColor.a > 0)
-            {
-                return overrideColor;
-            }
-
-            // Clamp magnitude to 0-maxMag range
-            magnitude = Mathf.Clamp(magnitude, 0, maxMag);
-
-            // Normalize magnitude to 0-1 range
-            float normalizedMagnitude = magnitude / maxMag;
-
-            // Determine color based on magnitude
-            if (normalizedMagnitude <= 0.5f)
-            {
-                // Interpolate between minColor and midColor
-                return Color.Lerp(minColor, midColor, normalizedMagnitude * 2);
-            }
-            else
-            {
-                // Interpolate between midColor and maxColor
-                return Color.Lerp(midColor, maxColor, (normalizedMagnitude - 0.5f) * 2);
-            }
-        }
-
-        // Programmatically update the vector
-        public void SetVector(Vector3 newPosition, Vector3 directionVector, float vectorMag, float maxMag)
+        /// <summary>
+        /// Public method to set the vector's position and direction, then (re)create its visuals.
+        /// </summary>
+        /// <param name="newPosition">Center position of the vector</param>
+        /// <param name="directionVector">Direction in which the vector points</param>
+        public void SetVector(Vector3 newPosition, Vector3 directionVector)
         {
             position = newPosition;
             direction = directionVector;
-            vectorMagnitude = vectorMag;
-            maxMagnitude = maxMag;
-            CreateVector();
+            CreateVector(); // Trigger creation or update of the arrow
         }
     }
 }
