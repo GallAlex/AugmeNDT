@@ -5,6 +5,7 @@
     using System.Linq;
     using Assets.Scripts.DataStructure;
     using System;
+    using UnityEngine.UIElements;
 
     /// <summary>
     /// Manages the 2D rectangle for visualization and analysis of vector field data on a plane
@@ -14,16 +15,12 @@
         public static RectangleManager rectangleManager;
         public static bool supportedByTTK = false; // TTK PARAVIEW API ERROR
 
-        private Material handleMaterial;
-        private float handleRadius = 0.25f;
-        private InteractiveRectangle rectangle;
-        List<Vector3> defaultCorners = new List<Vector3>() {
-                new Vector3(10f, 9f, 22f),
-                new Vector3(8f, 9f, 13f),
-                new Vector3(18f, 10f, 10f),
-                new Vector3(20f, 10f, 19f)
-            };
+        public float defaultInterval;
+        public float localScaleRateTo2DVectorVisualize;
+        public float localScaleRateTo2DStreamLineVisualize;
+        public float scaleRateToCalculation;
 
+        private InteractiveRectangle rectangle;
 
         // TDA
         private List<GradientDataset> gradientPoints = new List<GradientDataset>();
@@ -39,6 +36,12 @@
         {
             // Initialize singleton instance
             rectangleManager = this;
+
+            // config
+            localScaleRateTo2DVectorVisualize = 0.2f; //default
+            localScaleRateTo2DStreamLineVisualize = 0.02f; //default
+            defaultInterval = 0.3f; //default
+            scaleRateToCalculation = 0.02f; //default
         }
 
         private void Start()
@@ -55,7 +58,7 @@
         {
             if (rectangle == null || rectangle.gameObject == null)
             {
-                CreateRectangle(defaultCorners);
+                CreateRectangle();
             }
             else
             {
@@ -141,11 +144,11 @@
         }
 
         /// <summary>
-        /// Returns a grid of points on the rectangle surface with 0.5 unit interval
+        /// Returns a grid of points on the rectangle surface with interval
         /// </summary>
         /// <param name="interval">Interval between points (default: 0.5)</param>
         /// <returns>List of gradient data points on the rectangle surface</returns>
-        private List<GradientDataset> GetRectangleGridPoints(float interval = 0.5f)
+        private List<GradientDataset> GetRectangleGridPoints(float interval)
         {
             List<GradientDataset> gridPoints = new List<GradientDataset>();
 
@@ -201,6 +204,15 @@
             return gridPoints;
         }
 
+        private GameObject TEST(Vector3 position)
+        {
+            // Create and configure sphere object
+            GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            sphere.transform.position = position;
+            sphere.transform.localScale = Vector3.one * 0.003f;
+            return sphere;
+        }
+
         /// <summary>
         /// Calculates gradient points on the rectangle plane
         /// </summary>
@@ -223,12 +235,18 @@
                 }
             }
 
-            gradientPoints = GradientUtils.AssignNewGradientValues(GetRectangleGridPoints(), sourceGradientPoints);
+            List<GradientDataset> pointsOnSurface = GetRectangleGridPoints(defaultInterval * scaleRateToCalculation);
+            gradientPoints = GradientUtils.AssignNewGradientValues(pointsOnSurface, sourceGradientPoints);
 
             if (!tkkGradientUsed)
                 gradientPoints = GradientUtils.NormalizeGradientsToRectangle(gradientPoints, rectangle.GetCornerPositions());
 
-            gradientPoints = GaussianFilterUtils.ApplyGaussianSmoothing(gradientPoints, 0.5f);
+            gradientPoints = GaussianFilterUtils.ApplyGaussianSmoothing(gradientPoints, defaultInterval, scaleRateToCalculation);
+
+            //gradientPoints.ForEach(x =>
+            //{
+            //    TEST(x.Position);
+            //});
         }
 
         /// <summary>
@@ -304,16 +322,52 @@
         /// Creates a new interactive rectangle with the given corner positions
         /// </summary>
         /// <param name="corners">List of corner positions (should have 4 elements)</param>
-        private void CreateRectangle(List<Vector3> corners)
+        private void CreateRectangle()
         {
+            GameObject volumetricObject = GameObject.Find("DataVisGroup_0/fibers.raw");
+            if (volumetricObject == null)
+            {
+                Debug.LogError("volumetricObject not found on the scene!");
+                return;
+            }
+
+            // Get the BoxCollider component
+            BoxCollider boxCollider = volumetricObject.GetComponent<BoxCollider>();
+            if (boxCollider == null)
+            {
+                Debug.LogError("BoxCollider not found on the volumetric object!");
+                return;
+            }
+
+            // Get the world-space center and extents
+            Vector3 center = boxCollider.bounds.center;
+            Vector3 extents = boxCollider.bounds.extents;
+
+            // Calculate the four corners of the rectangle in the x-z plane
+            // We're keeping y constant at the center's y value
+            List<Vector3> corners = new List<Vector3>();
+
+            // Bottom-left (min X, center Y, min Z)
+            corners.Add(new Vector3(center.x - extents.x, center.y, center.z - extents.z));
+
+            // Bottom-right (max X, center Y, min Z)
+            corners.Add(new Vector3(center.x + extents.x, center.y, center.z - extents.z));
+
+            // Top-right (max X, center Y, max Z)
+            corners.Add(new Vector3(center.x + extents.x, center.y, center.z + extents.z));
+
+            // Top-left (min X, center Y, max Z)
+            corners.Add(new Vector3(center.x - extents.x, center.y, center.z + extents.z));
+
             // Create parent GameObject
             GameObject rectangleObj = new GameObject("InteractiveRectangle");
+            rectangleObj.transform.SetParent(volumetricObject.transform, true);
 
             // Add the InteractiveRectangle component
             rectangle = rectangleObj.AddComponent<InteractiveRectangle>();
 
-            // Initialize the rectangle
-            rectangle.InitializeWithCorners(corners.ToArray(), handleMaterial, handleRadius);
+            // Initialize the rectangle with our calculated corners
+            rectangle.InitializeWithCorners(corners.ToArray());
         }
 
         /// <summary>
@@ -346,5 +400,6 @@
         }
 
         #endregion rectangle utilities
+
     }
 }

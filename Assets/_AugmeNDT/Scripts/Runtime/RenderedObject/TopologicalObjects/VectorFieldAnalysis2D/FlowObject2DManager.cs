@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,13 +16,17 @@ namespace AugmeNDT
     {
         public GameObject spherePrefab; // Sphere prefab
         public static FlowObject2DManager Instance;
+
         private static RectangleManager rectangleManager;
         private static StreamLine2D streamLine2DInstance;
+        private static Transform parentContainer;
 
         public int numSpheres = 1; // Number of spheres to maintain simultaneously
         private bool enableSpheres = true;
         private bool stopFlowObjects = false;
-
+        private float streamLineStepSize;
+        private float sphereSpeed;
+        private float lifetime;
 
         private void Awake()
         {
@@ -41,11 +46,23 @@ namespace AugmeNDT
         /// </summary>
         public void StartFlowObject()
         {
+            SetContainer();
             stopFlowObjects = false;
             if (enableSpheres)
             {
                 StartCoroutine(SpawnMovingSpheres());
             }
+        }
+
+        private void SetContainer()
+        {
+            if (parentContainer != null)
+                return;
+
+            parentContainer = GameObject.Find("DataVisGroup_0/fibers.raw").transform;
+            streamLineStepSize = streamLine2DInstance.streamLineStepSize * rectangleManager.scaleRateToCalculation;
+            sphereSpeed = 0.05f;
+            lifetime = 15f;
         }
 
         /// <summary>
@@ -65,13 +82,12 @@ namespace AugmeNDT
         {
             while (true)
             {
+                if (stopFlowObjects)
+                    break;
+                
                 // Get gradient data and boundary information
                 List<GradientDataset> generatedGradientPoints = rectangleManager.GetGradientPoints();
                 Bounds bounds = rectangleManager.GetRectangleBounds();
-                float streamLineStepSize = streamLine2DInstance.streamLineStepSize;
-
-                if (stopFlowObjects)
-                    break;
 
                 // Count current active spheres
                 int currentSpheres = GameObject.FindGameObjectsWithTag("2DMovingSphere").Length;
@@ -88,11 +104,13 @@ namespace AugmeNDT
 
                         // Instantiate sphere at selected position
                         GameObject sphere = Instantiate(spherePrefab, startPosition, Quaternion.identity);
+                        sphere.transform.parent = parentContainer;
+                        sphere.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f); // Uniform small scale
                         sphere.tag = "2DMovingSphere"; // Tag for tracking spheres
 
                         // Initialize flow behavior on the sphere
                         FlowObject2D movingSphere = sphere.GetComponent<FlowObject2D>();
-                        movingSphere.StartFlow(generatedGradientPoints, bounds, streamLineStepSize);
+                        movingSphere.StartFlow(generatedGradientPoints, bounds, streamLineStepSize,sphereSpeed,lifetime);
                     }
                 }
 

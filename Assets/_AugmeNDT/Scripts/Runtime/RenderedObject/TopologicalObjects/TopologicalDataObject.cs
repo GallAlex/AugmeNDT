@@ -13,6 +13,7 @@ namespace AugmeNDT
     public class TopologicalDataObject : MonoBehaviour
     {
         public static TopologicalDataObject instance;
+        public float scaleRate = 0.02f;
 
         // Original gradient and critical point data, untouched after loading
         private List<GradientDataset> orjGradientList = new List<GradientDataset>();
@@ -49,7 +50,7 @@ namespace AugmeNDT
             Vector3 centroid = ComputeCentroid();
             foreach (var gradient in orjGradientList)
             {
-                Vector3 newPosition = (gradient.Position - centroid) * 0.02f; // Normalize to local space
+                Vector3 newPosition = (gradient.Position - centroid) * scaleRate; // Normalize to local space
                 GradientDataset localGradient = new GradientDataset(
                     gradient.ID,
                     newPosition,
@@ -59,7 +60,6 @@ namespace AugmeNDT
 
                 gradientList.Add(localGradient);
             }
-
             return gradientList;
         }
 
@@ -76,7 +76,7 @@ namespace AugmeNDT
 
             foreach (var criticalPoint in orjCriticalPointList)
             {
-                Vector3 newPosition = (criticalPoint.Position - centroid) * 0.02f;
+                Vector3 newPosition = (criticalPoint.Position - centroid) * scaleRate;
 
                 CriticalPointDataset localCriticalPoint = new CriticalPointDataset(
                     criticalPoint.ID,

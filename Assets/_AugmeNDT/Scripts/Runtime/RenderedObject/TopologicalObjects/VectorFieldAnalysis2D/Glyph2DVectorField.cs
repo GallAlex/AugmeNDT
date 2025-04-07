@@ -21,6 +21,8 @@ namespace AugmeNDT
         // Container for organizing arrow objects in hierarchy
         private Transform container;
 
+        private static float localScaleRate;
+
         // References to other manager instances
         private static VectorObjectVis arrowObjectVisInstance;
         private static RectangleManager rectangleManager;
@@ -30,16 +32,16 @@ namespace AugmeNDT
             // Initialize singleton instance
             if (Instance == null)
                 Instance = this;
-
-            // Create container for organizing arrow objects
-            container = new GameObject("2DVectorForce").transform;
         }
 
         private void Start()
         {
             // Get references to required managers
             if (rectangleManager == null)
+            {
                 rectangleManager = RectangleManager.rectangleManager;
+                localScaleRate = rectangleManager.localScaleRateTo2DVectorVisualize;
+            }
 
             if (arrowObjectVisInstance == null)
                 arrowObjectVisInstance = VectorObjectVis.instance;
@@ -50,15 +52,30 @@ namespace AugmeNDT
         /// </summary>
         public void VisualizePoints()
         {
+            if (container == null)
+                SetContainer(); // Ensure container exists before drawing
+
             // Recreate arrows if none exist or if underlying data has been updated
             if (!generatedGradientPoints.Any() || rectangleManager.IsUpdated())
             {
                 generatedGradientPoints = rectangleManager.GetGradientPoints();
                 DestroyArrows();
-                arrows = arrowObjectVisInstance.CreateArrows(generatedGradientPoints, container);
+                arrows = arrowObjectVisInstance.CreateArrows(generatedGradientPoints, container, localScaleRate);
             }
             else
                 ShowHideArrows(true);
+        }
+
+        /// <summary>
+        /// Creates a new container GameObject under the fiber object to hold all vector visuals.
+        /// </summary>
+        private void SetContainer()
+        {
+            GameObject _2DVectorForce = new GameObject("2DVectorForce");
+            container = _2DVectorForce.transform;
+
+            Transform fibers = GameObject.Find("DataVisGroup_0/fibers.raw").transform;
+            container.transform.parent = fibers;
         }
 
         /// <summary>
