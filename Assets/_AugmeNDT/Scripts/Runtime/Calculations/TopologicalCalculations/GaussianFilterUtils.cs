@@ -10,24 +10,29 @@ namespace AugmeNDT
 
     public static class GaussianFilterUtils
     {
+        //gridDistance used to find near neighbors in the coordinate system
+        private static float gridDistance = 0.5f;
+
         /// <summary>
         /// Applies Gaussian smoothing to the given list of gradient points.
         /// This method reduces noise by averaging nearby gradients with a Gaussian weight function.
         /// </summary>
         /// <param name="generatedGradientPoints">List of gradient points to be smoothed.</param>
         /// <param name="gaussianSigma">The standard deviation (sigma) of the Gaussian kernel.</param>
+        /// <param name="scaleRate"></param>
         /// <returns>A new list of smoothed gradient points.</returns>
-        public static List<GradientDataset> ApplyGaussianSmoothing(List<GradientDataset> generatedGradientPoints, float gaussianSigma)
+        public static List<GradientDataset> ApplyGaussianSmoothing(List<GradientDataset> generatedGradientPoints, float gaussianSigma,float scaleRate)
         {
             List<GradientDataset> smoothedGradientPoints = new List<GradientDataset>();
-
+            gaussianSigma = gaussianSigma * scaleRate;
             foreach (var point in generatedGradientPoints)
             {
                 // Find nearby points within a radius of 1.0f using a search method.
-                List<GradientDataset> neighbors = SpatialCalculations.GetNearbyPoints(generatedGradientPoints, point.Position, 1.0f);
+                List<GradientDataset> neighbors = SpatialCalculations.GetNearbyPoints(generatedGradientPoints, point.Position, gridDistance);
 
                 // Skip if no neighbors are found (avoid division by zero later).
-                if (neighbors.Count == 0) continue;
+                if (neighbors.Count == 0) 
+                    continue;
 
                 Vector3 weightedDirection = Vector3.zero;
                 float weightedMagnitude = 0f;

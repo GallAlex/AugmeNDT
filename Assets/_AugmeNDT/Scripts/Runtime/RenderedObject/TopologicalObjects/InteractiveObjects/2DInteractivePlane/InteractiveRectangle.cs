@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
+using static UnityEngine.UI.GridLayoutGroup;
+using Unity.VisualScripting;
 
 /// <summary>
 /// Creates and manages an interactive rectangle that can be resized and repositioned by manipulating its corners
@@ -9,7 +11,6 @@ public class InteractiveRectangle : MonoBehaviour
     [Header("Rectangle Settings")]
     [SerializeField] private float width = 5f; // Default width: 5
     [SerializeField] private float height = 3f; // Default height: 3
-    [SerializeField] private Color rectangleColor = new Color(0.5f, 0.5f, 0.5f, 0.7f); // Flat medium gray with some transparency
     [SerializeField] private Color handleColor = Color.white;
     [SerializeField] private float handleRadius = 0.25f;
 
@@ -17,8 +18,6 @@ public class InteractiveRectangle : MonoBehaviour
     private GameObject rectangleObject;
     private List<GameObject> cornerHandles = new List<GameObject>();
     private int selectedCornerIndex = -1;
-    private bool isDraggingRectangle = false;
-    private Vector3 dragOffset;
     private Camera mainCamera;
     private GameObject centerPoint;
 
@@ -65,15 +64,9 @@ public class InteractiveRectangle : MonoBehaviour
     /// <param name="cornerPositions">Array of 4 positions for the corners (world space)</param>
     /// <param name="material">Optional material for handles</param>
     /// <param name="radius">Optional radius for handle spheres</param>
-    public void InitializeWithCorners(Vector3[] cornerPositions, Material handleMaterial = null, float radius = 0.25f)
+    public void InitializeWithCorners(Vector3[] cornerPositions)
     {
-        // Store material/radius for handles
-        if (handleMaterial != null)
-        {
-            this.handleMaterial = handleMaterial;
-        }
-
-        this.handleRadius = radius;
+        this.handleRadius = 0.02f;
 
         // Calculate center as average of corners
         Vector3 center = Vector3.zero;
@@ -93,9 +86,10 @@ public class InteractiveRectangle : MonoBehaviour
         }
 
         // Create handles at the specified positions
-        CreateCornerHandles();
+        //If you want to change the corners interactively, you can use it
+        //CreateCornerHandles();
         InitializeRectangle();
-        CreateCenterPoint();
+        //CreateCenterPoint();
     }
 
     /// <summary>
@@ -132,24 +126,6 @@ public class InteractiveRectangle : MonoBehaviour
 
         // We don't add any collider to the rectangle
         // This prevents any interaction with the rectangle surface
-    }
-
-    /// <summary>
-    /// Handles the end of a drag operation
-    /// </summary>
-    private void EndDrag()
-    {
-        if (selectedCornerIndex != -1)
-        {
-            // Only recreate the rectangle mesh when releasing the corner
-            UpdateRectangleMesh(rectangleObject.GetComponent<MeshFilter>());
-            selectedCornerIndex = -1;
-
-            // Ensure the center is at the average of all corners
-            UpdateRectangleCenter();
-        }
-
-        isDraggingRectangle = false;
     }
 
     private Material handleMaterial;
@@ -310,12 +286,6 @@ public class InteractiveRectangle : MonoBehaviour
                 }
             }
             // Rectangle dragging has been completely disabled
-        }
-
-        // Mouse Up: Release any drag operations
-        if (Input.GetMouseButtonUp(0))
-        {
-            EndDrag();
         }
     }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.MixedReality.Toolkit.Utilities;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
@@ -16,13 +17,18 @@ namespace AugmeNDT
         public static StreamLine2D Instance;
         public Material streamlineMaterial;
 
-        public int numStreamlines = 2500; // Number of streamlines to draw
+        public int numStreamlines = 1500; // Number of streamlines to draw 2500
         public float streamLineStepSize = 0.01f; // Step size for integration
         public int maxStreamlineSteps = 700; // Maximum number of steps per streamline
 
+        private float scaleRateToCalculation; // getFromRectangleManager
+        private float localScaleRateTo2DStreamLineVisualize; // getFromRectangleManager
+        private float defaultRateTo2DStreamLineVisualize = 0.01f; //default
+
         public List<GradientDataset> gradientPoints = new List<GradientDataset>();
-        private List<GameObject> LineObjs = new List<GameObject>();
+        private List<GameObject> lineObjs = new List<GameObject>();
         private static RectangleManager rectangleManager;
+        private static Transform parentContainer;
 
         private void Awake()
         {
@@ -33,9 +39,13 @@ namespace AugmeNDT
 
         private void Start()
         {
-            // Get reference to rectangle manager
+            // Get references to required managers
             if (rectangleManager == null)
+            {
                 rectangleManager = RectangleManager.rectangleManager;
+                scaleRateToCalculation = rectangleManager.scaleRateToCalculation;
+                localScaleRateTo2DStreamLineVisualize = rectangleManager.localScaleRateTo2DStreamLineVisualize;
+            }
         }
 
         /// <summary>
@@ -43,10 +53,10 @@ namespace AugmeNDT
         /// </summary>
         public void ShowStreamLines()
         {
-            if (!LineObjs.Any() || rectangleManager.IsUpdated())
+            if (!lineObjs.Any() || rectangleManager.IsUpdated())
                 DrawStreamlines();
             else
-                LineObjs.ForEach(line => { line.SetActive(true); });
+                lineObjs.ForEach(line => { line.SetActive(true); });
         }
 
         /// <summary>
@@ -54,7 +64,7 @@ namespace AugmeNDT
         /// </summary>
         public void HideStreamLines()
         {
-            foreach (var line in LineObjs)
+            foreach (var line in lineObjs)
             {
                 line.SetActive(false);
             }
@@ -66,15 +76,25 @@ namespace AugmeNDT
         /// </summary>
         private void DrawStreamlines()
         {
+            SetContainer();
+
             DestroyLines();
             gradientPoints.Clear();
-
             gradientPoints = rectangleManager.GetGradientPoints();
+            
             List<List<Vector3>> streamLines = CalculateStreamlines();
             streamLines.ForEach(lines =>
             {
                 CreateLineRenderer(lines);
             });
+        }
+        
+        private void SetContainer()
+        {
+            if (parentContainer != null)
+                return;
+
+            parentContainer = GameObject.Find("DataVisGroup_0/fibers.raw").transform;
         }
 
         /// <summary>
@@ -83,7 +103,7 @@ namespace AugmeNDT
         /// <returns>List of streamline point sequences</returns>
         private List<List<Vector3>> CalculateStreamlines()
         {
-            List<Vector3> seedPoints = GeneratePoissonDiskSeeds(0.1f, numStreamlines);
+            List<Vector3> seedPoints = GeneratePoissonDiskSeeds(0.1f * scaleRateToCalculation, numStreamlines);
 
             List<List<Vector3>> streamlinePoints = new List<List<Vector3>>();
 
@@ -206,7 +226,7 @@ namespace AugmeNDT
             for (int i = 0; i < maxStreamlineSteps; i++)
             {
                 // Calculate direction using Runge-Kutta 4
-                Vector3 direction = SpatialCalculations.RungeKutta4(currentPosition, gradientPoints, streamLineStepSize);
+                Vector3 direction = SpatialCalculations.RungeKutta4(currentPosition, gradientPoints, streamLineStepSize * scaleRateToCalculation);
                 float velocityMagnitude = direction.magnitude;
 
                 // Stop if the velocity is too small
@@ -214,7 +234,7 @@ namespace AugmeNDT
                     break;
 
                 // Adaptive step size based on velocity magnitude
-                float stepSize = Mathf.Clamp(velocityMagnitude * 0.05f, 0.005f, 0.05f);
+                float stepSize = Mathf.Clamp(velocityMagnitude * 0.05f, 0.005f, 0.05f) * scaleRateToCalculation;
 
                 // Calculate the next position
                 Vector3 nextPosition = currentPosition + direction * stepSize;
@@ -225,11 +245,7 @@ namespace AugmeNDT
                 // Check if the new position is still inside the rectangle
                 if (!rectangleManager.IsPointInsideMesh(nextPosition))
                 {
-                    // If we're about to leave the rectangle, we can either:
-                    // Option 1: Stop the streamline here
-                    //break;
-
-                    // Option 2 (alternative): Find intersection with boundary and add that point
+                    // Find intersection with boundary and add that point
                     Vector3 boundaryPoint = FindIntersectionWithRectangleBoundary(currentPosition, nextPosition, corners);
                     if (boundaryPoint != Vector3.zero)
                         points.Add(boundaryPoint);
@@ -364,18 +380,20 @@ namespace AugmeNDT
         /// <param name="points">List of points defining the streamline path</param>
         private void CreateLineRenderer(List<Vector3> points)
         {
-            if (points.Count < 2) return;
+            if (points.Count < 2) 
+                return;
 
             GameObject lineObj = new GameObject("Streamline");
-            LineRenderer lr = lineObj.AddComponent<LineRenderer>();
+            lineObj.transform.parent = parentContainer;
 
+            LineRenderer lr = lineObj.AddComponent<LineRenderer>();
             lr.material = streamlineMaterial;
             lr.positionCount = points.Count;
             lr.SetPositions(points.ToArray());
-            lr.startWidth = 0.03f;
-            lr.endWidth = 0.03f;
+            lr.startWidth = defaultRateTo2DStreamLineVisualize * localScaleRateTo2DStreamLineVisualize;
+            lr.endWidth   = defaultRateTo2DStreamLineVisualize * localScaleRateTo2DStreamLineVisualize;
 
-            LineObjs.Add(lineObj);
+            lineObjs.Add(lineObj);
         }
 
         /// <summary>
@@ -383,8 +401,8 @@ namespace AugmeNDT
         /// </summary>
         private void DestroyLines()
         {
-            LineObjs.ForEach(x => Destroy(x));
-            LineObjs.Clear();
+            lineObjs.ForEach(x => Destroy(x));
+            lineObjs.Clear();
         }
         #endregion private
     }

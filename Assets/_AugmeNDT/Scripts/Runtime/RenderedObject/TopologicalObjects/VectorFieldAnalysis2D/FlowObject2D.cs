@@ -10,12 +10,6 @@ namespace AugmeNDT
     /// </summary>
     public class FlowObject2D : MonoBehaviour
     {
-        // Movement speed of the flow object
-        private float sphereSpeed = 0.3f;
-
-        // Maximum duration in seconds before the flow object is destroyed
-        private float lifetime = 15;
-
         // Reference to the rectangle manager for boundary checks
         private static RectangleManager rectangleManager;
 
@@ -25,10 +19,14 @@ namespace AugmeNDT
         /// <param name="gradientPoints">List of gradient data points defining the flow field</param>
         /// <param name="cubeBounds">Boundary constraints for the flow simulation</param>
         /// <param name="streamlineStepSize">Step size for the Runge-Kutta calculation</param>
-        public void StartFlow(List<GradientDataset> gradientPoints, Bounds cubeBounds, float streamlineStepSize)
+        /// <param name="sphereSpeed">Movement speed of the flow object</param>
+        /// <param name="lifetime">Maximum duration in seconds before the flow object is destroyed</param>
+        public void StartFlow(List<GradientDataset> gradientPoints, Bounds cubeBounds, 
+            float streamlineStepSize, float sphereSpeed, float lifetime)
+
         {
             rectangleManager = RectangleManager.rectangleManager;
-            StartCoroutine(StartMoveSphere(gradientPoints, cubeBounds, streamlineStepSize));
+            StartCoroutine(StartMoveSphere(gradientPoints, cubeBounds, streamlineStepSize, sphereSpeed, lifetime));
         }
 
         /// <summary>
@@ -37,8 +35,11 @@ namespace AugmeNDT
         /// <param name="gradientPoints">List of gradient data points defining the flow field</param>
         /// <param name="cubeBounds">Boundary constraints for the flow simulation</param>
         /// <param name="streamlineStepSize">Step size for the Runge-Kutta calculation</param>
+        /// <param name="sphereSpeed">Movement speed of the flow object</param>
+        /// <param name="lifetime">Maximum duration in seconds before the flow object is destroyed</param>
         /// <returns>IEnumerator for coroutine processing</returns>
-        private IEnumerator StartMoveSphere(List<GradientDataset> gradientPoints, Bounds cubeBounds, float streamlineStepSize)
+        private IEnumerator StartMoveSphere(List<GradientDataset> gradientPoints, Bounds cubeBounds,
+            float streamlineStepSize, float sphereSpeed, float lifetime)
         {
             // Start from current object position
             Vector3 currentPosition = transform.position;

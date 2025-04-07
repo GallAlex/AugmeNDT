@@ -20,7 +20,7 @@ namespace AugmeNDT
         /// <param name="generatedGradientPoints">List of gradient data</param>
         /// <param name="container">Parent transform to organize created arrows</param>
         /// <returns>List of created arrow GameObjects</returns>
-        public List<GameObject> CreateArrows(List<GradientDataset> generatedGradientPoints, Transform container)
+        public List<GameObject> CreateArrows(List<GradientDataset> generatedGradientPoints, Transform container,float scaleFactor = 1.0f)
         {
             List<GameObject> vectors = new List<GameObject>();
 
@@ -31,7 +31,7 @@ namespace AugmeNDT
                     continue; // Skip zero-magnitude vectors to avoid unnecessary visuals
 
                 GameObject vector = CreateGameObject(gradient.Position.ToString(), container);
-                vectors.Add(CreateVector(gradient, vector));
+                vectors.Add(CreateVector(gradient, vector, scaleFactor));
             }
 
             return vectors;
@@ -40,9 +40,16 @@ namespace AugmeNDT
         /// <summary>
         /// Attaches a vector visualization component and initializes it.
         /// </summary>
-        private GameObject CreateVector(GradientDataset gradient, GameObject vector)
+        private GameObject CreateVector(GradientDataset gradient, GameObject vector, float scaleFactor)
         {
             VectorCreator3D vectorCreator = vector.AddComponent<VectorCreator3D>();
+            if (scaleFactor != 1.0f)
+            {
+                vectorCreator.vectorLength = vectorCreator.vectorLength * scaleFactor;
+                vectorCreator.lineWidth = vectorCreator.lineWidth * scaleFactor;
+                vectorCreator.arrowHeadSize = vectorCreator.arrowHeadSize * scaleFactor;
+            }
+
             vectorCreator.SetVector(gradient.Position, gradient.Direction); // Configure direction and position
             return vector;
         }

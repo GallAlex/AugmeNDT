@@ -271,5 +271,31 @@ namespace AugmeNDT
 
             return criticalPointList;
         }
+
+        public static void SaveGradientListToCSV(string filePath, List<GradientDataset> gradientList)
+        {
+            // StreamWriter kullanarak dosya açma işlemi
+            using (StreamWriter writer = new StreamWriter(filePath))
+            {
+                // Başlık satırı yazalım (isteğe bağlı)
+                writer.WriteLine("ID,PositionX,PositionY,PositionZ,DirectionX,DirectionY,DirectionZ,Magnitude");
+
+                // gradientList'i yazma işlemi
+                foreach (var gradient in gradientList)
+                {
+                    // Gradient'ın verilerini CSV formatında yazma
+                    writer.WriteLine(
+                        $"{gradient.ID}," +
+                        $"{gradient.Position.x.ToString(culture)}," +
+                        $"{gradient.Position.y.ToString(culture)}," +
+                        $"{gradient.Position.z.ToString(culture)}," +
+                        $"{gradient.Direction.x.ToString(culture)}," +
+                        $"{gradient.Direction.y.ToString(culture)}," +
+                        $"{gradient.Direction.z.ToString(culture)}," +
+                        $"{gradient.Magnitude.ToString(culture)}"
+                    );
+                }
+            }
+        }
     }
 }
