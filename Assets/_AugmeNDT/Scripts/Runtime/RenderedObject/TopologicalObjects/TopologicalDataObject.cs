@@ -13,100 +13,109 @@ namespace AugmeNDT
     public class TopologicalDataObject : MonoBehaviour
     {
         public static TopologicalDataObject instance;
-        public float scaleRate = 0.02f;
-
-        // Original gradient and critical point data, untouched after loading
-        private List<GradientDataset> orjGradientList = new List<GradientDataset>();
-        private List<CriticalPointDataset> orjCriticalPointList = new List<CriticalPointDataset>();
 
         // Transformed versions of the datasets, scaled and centered for visualization
-        private List<GradientDataset> gradientList = new List<GradientDataset>();
-        private List<CriticalPointDataset> criticalPointList = new List<CriticalPointDataset>();
-        private Vector3? centroid = null;
-
+        public List<GradientDataset> gradientList = new List<GradientDataset>();
+        public List<CriticalPointDataset> criticalPointList = new List<CriticalPointDataset>();
         public float maxMag = 0; // Maximum gradient magnitude used for normalization or color mapping
+
+        public string path;
+        public Vector3 originalDimensions = new Vector3(24, 16, 45);
 
         private void Awake()
         {
             instance = this; // Singleton assignment
-
-            // Load original gradient data and calculate maximum magnitude
-            orjGradientList = TTKCalculations.GetGradientAllVectorField();
-            maxMag = orjGradientList.Max(x => x.Magnitude);
-
-            // Load original critical point data
-            orjCriticalPointList = TTKCalculations.GetCriticalPointAllVectorField();
         }
 
-        /// <summary>
-        /// Returns the transformed gradient list, computing it if not cached.
-        /// Applies centroid centering and scaling to fit visualization space.
-        /// </summary>
-        public List<GradientDataset> GetGradientList()
+        private void Start()
         {
-            if (gradientList.Any())
-                return gradientList;
+            ConvertData(TTKCalculations.GetGradientAllVectorField(), TTKCalculations.GetCriticalPointAllVectorField());
+            //TTKCalculations.SaveGradientListToCSV(@"C:\Users\ozdag\OneDrive\Desktop\smallDATA\result.csv", gradientList);
+            TDAMenu.instance.ActivateTDAInfoPanel();
+        }
 
-            Vector3 centroid = ComputeCentroid();
+        private void ConvertData(List<GradientDataset> orjGradientList, List<CriticalPointDataset> orjCriticalPointDataset)
+        {
+            Transform volumeTransform = GameObject.Find("DataVisGroup_0/fibers.raw/Volume").transform;
+
+            // Get the world scale of the volume
+            Vector3 volumeWorldScale = volumeTransform.lossyScale; // Actual scale in world space
+            Vector3 volumePosition = volumeTransform.position;
+
+            // Transform gradient data
+            List<GradientDataset> scaledGradients = new List<GradientDataset>();
             foreach (var gradient in orjGradientList)
             {
-                Vector3 newPosition = (gradient.Position - centroid) * scaleRate; // Normalize to local space
-                GradientDataset localGradient = new GradientDataset(
-                    gradient.ID,
-                    newPosition,
-                    gradient.Direction,
-                    gradient.Magnitude
+                // Normalize position (convert to 0-1 range)
+                Vector3 normalizedPos = new Vector3(
+                    gradient.Position.x / originalDimensions.x,
+                    gradient.Position.y / originalDimensions.y,
+                    gradient.Position.z / originalDimensions.z
                 );
 
-                gradientList.Add(localGradient);
+                // Convert normalized position to world scale
+                // Take into account the size of the Volume and fibers.raw
+                Vector3 scaledPos = new Vector3(
+                    normalizedPos.x * volumeWorldScale.x,
+                    normalizedPos.y * volumeWorldScale.y,
+                    normalizedPos.z * volumeWorldScale.z
+                );
+
+                // Direction vektörünü dünya ölçeğine göre ayarla
+                Vector3 scaledDirection = new Vector3(
+                    gradient.Direction.x * volumeWorldScale.x / originalDimensions.x,
+                    gradient.Direction.y * volumeWorldScale.y / originalDimensions.y,
+                    gradient.Direction.z * volumeWorldScale.z / originalDimensions.z
+                );
+
+                // Ölçeklendirilen yön vektöründen yeni magnitude hesapla
+                float scaledMagnitude = scaledDirection.magnitude;
+
+                // Add the world-space position of the Volume
+                Vector3 finalPos = volumePosition + scaledPos - (volumeWorldScale / 2f); // Adjust from center position
+
+                // New gradient object
+                scaledGradients.Add(new GradientDataset(
+                    gradient.ID,
+                    finalPos,
+                    scaledDirection,
+                    scaledMagnitude
+                ));
+
+                maxMag = maxMag >= gradient.Magnitude ? maxMag : gradient.Magnitude;
             }
-            return gradientList;
-        }
-
-        /// <summary>
-        /// Returns the transformed critical point list, computing it if not cached.
-        /// Applies centroid centering and scaling.
-        /// </summary>
-        public List<CriticalPointDataset> GetCriticalPointList()
-        {
-            if (criticalPointList.Any())
-                return criticalPointList;
-
-            Vector3 centroid = ComputeCentroid();
-
-            foreach (var criticalPoint in orjCriticalPointList)
+            
+            // Transform critical points
+            List<CriticalPointDataset> scaledCriticalPoints = new List<CriticalPointDataset>();
+            foreach (var criticalPoint in orjCriticalPointDataset)
             {
-                Vector3 newPosition = (criticalPoint.Position - centroid) * scaleRate;
+                // Normalize position (convert to 0-1 range)
+                Vector3 normalizedPos = new Vector3(
+                    criticalPoint.Position.x / originalDimensions.x,
+                    criticalPoint.Position.y / originalDimensions.y,
+                    criticalPoint.Position.z / originalDimensions.z
+                );
 
-                CriticalPointDataset localCriticalPoint = new CriticalPointDataset(
+                // Convert normalized position to world scale
+                Vector3 scaledPos = new Vector3(
+                    normalizedPos.x * volumeWorldScale.x,
+                    normalizedPos.y * volumeWorldScale.y,
+                    normalizedPos.z * volumeWorldScale.z
+                );
+
+                // Add the world-space position of the Volume
+                Vector3 finalPos = volumePosition + scaledPos - (volumeWorldScale / 2f); // Adjust from center position
+
+                // Create new critical point object
+                scaledCriticalPoints.Add(new CriticalPointDataset(
                     criticalPoint.ID,
                     criticalPoint.Type,
-                    newPosition
-                );
-
-                criticalPointList.Add(localCriticalPoint);
+                    finalPos
+                ));
             }
 
-            return criticalPointList;
-        }
-
-        /// <summary>
-        /// Computes the geometric center (centroid) of all gradient positions.
-        /// Used for centering the dataset in the scene.
-        /// </summary>
-        private Vector3 ComputeCentroid()
-        {
-            if (centroid != null)
-                return (Vector3)centroid;
-
-            Vector3 sum = Vector3.zero;
-            foreach (var gradient in orjGradientList)
-            {
-                sum += gradient.Position;
-            }
-
-            centroid = sum / orjGradientList.Count;
-            return (Vector3)centroid;
+            gradientList = scaledGradients;
+            criticalPointList = scaledCriticalPoints;
         }
     }
 }

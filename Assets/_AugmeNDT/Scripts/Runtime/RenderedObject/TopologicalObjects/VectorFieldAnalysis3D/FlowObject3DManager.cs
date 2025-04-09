@@ -10,20 +10,29 @@ namespace AugmeNDT
     /// </summary>
     public class FlowObject3DManager : MonoBehaviour
     {
-        public GameObject spherePrefab; // Sphere prefab
         public static FlowObject3DManager Instance;
 
-        public int numSpheres = 8; // Number of spheres to maintain simultaneously
+        // Number of spheres to maintain simultaneously
+        [Range(1, 100)]
+        public int numSpheres = 8;
+
+        [Range(0.1f, 5.0f)]
+        public float spawnInterval = 1.0f;
+
+        public float localScaleRate = 0.003f;
+
         private bool enableSpheres = true;
         private bool stopFlowObjects = false;
 
         private static Rectangle3DManager rectangle3DManager;
         private static StreamLine3D streamLine3DInstance;
+        private GameObject spherePrefab; // Sphere prefab
 
         private void Awake()
         {
             // Initialize singleton instance
             Instance = this;
+            spherePrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/TopologicalVis/MovingSphere");
         }
 
         private void Start()
@@ -63,8 +72,14 @@ namespace AugmeNDT
         {
             // Get gradient data and boundary information
             List<GradientDataset> generatedGradientPoints = rectangle3DManager.GetGradientPoints();
-            Bounds bounds = rectangle3DManager.GetWireframeCubeBounds();
+            Bounds bounds = rectangle3DManager.GetRectangleBounds();
             float streamlineStepSize = streamLine3DInstance.streamlineStepSize;
+
+            // Get spatial grid properties from StreamLine3D
+            float cellSize = streamLine3DInstance.cellSize;
+
+            // Build spatial grid if needed
+            Dictionary<Vector3Int, List<GradientDataset>> spatialGrid = streamLine3DInstance.spatialGrid;
 
             while (true)
             {
@@ -87,15 +102,22 @@ namespace AugmeNDT
                         // Instantiate sphere at selected position
                         GameObject sphere = Instantiate(spherePrefab, startPosition, Quaternion.identity);
                         sphere.tag = "Moving3DSphere";
+                        sphere.transform.localScale = Vector3.one * localScaleRate;
+                        TrailRenderer trailRenderer = sphere.GetComponent<TrailRenderer>();
+                        if (trailRenderer != null)
+                        {
+                            trailRenderer.startWidth = localScaleRate;
+                            trailRenderer.endWidth = localScaleRate;
+                        }
 
                         // Initialize flow behavior on the sphere
                         FlowObject3D movingSphere = sphere.GetComponent<FlowObject3D>();
-                        movingSphere.StartFlow(generatedGradientPoints, bounds, streamlineStepSize);
+                        movingSphere.StartFlow(generatedGradientPoints, spatialGrid, cellSize, bounds, streamlineStepSize);
                     }
                 }
 
                 // Wait before checking sphere count again
-                yield return new WaitForSeconds(1f);
+                yield return new WaitForSeconds(spawnInterval);
             }
         }
         #endregion Flow

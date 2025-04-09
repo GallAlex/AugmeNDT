@@ -12,7 +12,7 @@
         private float stemWidth = 0.1f;
         private float tipLength = 0.2f;
         private float tipWidth = 0.2f;
-        public float tipScale = 1f;
+        public float  tipScale = 1f;
 
         [Header("Vector Settings")]
         [Tooltip("Direction of the vector")]

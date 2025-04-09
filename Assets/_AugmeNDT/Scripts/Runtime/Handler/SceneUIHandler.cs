@@ -80,9 +80,10 @@ namespace AugmeNDT{
             
             if (SceneManager.GetActiveScene().name == "TopologicalDataAnalysisScene")
             {
-                GameObject dataLoadingMenu = GameObject.Find("DataLoadingMenu");
-                dataLoadingMenu.SetActive(false);
-                TDAMenu.instance.ActivateTDAInfoPanel();
+                GameObject topologicalAnalysisFiberChecker = new GameObject("TopologicalAnalysisFiberChecker");
+                topologicalAnalysisFiberChecker.transform.parent = transform;
+                FiberChecker fiberChecker = topologicalAnalysisFiberChecker.AddComponent<FiberChecker>();
+                fiberChecker.path = path;
             }
         }
 

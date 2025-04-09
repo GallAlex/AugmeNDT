@@ -17,6 +17,7 @@ TagManager:
   - BoxWireframeLine
   - Moving3DSphere
   - Rectangle2D
+  - Rectangle3D
   layers:
   - Default
   - TransparentFX
