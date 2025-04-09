@@ -9,17 +9,26 @@ namespace AugmeNDT
     /// </summary>
     public class VectorFieldObjectVis : MonoBehaviour
     {
-        public static VectorFieldObjectVis instance; // Singleton instance
+        // Singleton instance
+        public static VectorFieldObjectVis instance;
 
-        private TopologicalDataObject topologicalDataInstance; // Reference to the topological data instance containing gradient data
-        private List<GameObject> arrows = new List<GameObject>(); // List to store all created arrows for toggling visibility
+        // Reference to the topological data instance containing gradient data
+        private static TopologicalDataObject topologicalDataInstance;
         
-        private Transform container;         // Parent container for all arrows in the scene
+        // Reference to the VectorObjectVis instance containing gradient data
+        private static VectorObjectVis arrowObjectVisInstance;
         
+        // List to store all created arrows for toggling visibility
+        private List<GameObject> arrows = new List<GameObject>();
+        
+        // Parent container for all arrows in the scene
+        private Transform container;
+
         // Flags to check if arrows are already created and if they are currently hidden
         private bool arrowscalculated = false;
         private bool arrowshidden = false;
-        private static VectorObjectVis arrowObjectVisInstance;
+
+        public static float localScaleRate = 0.3f;
 
         private void Awake()
         {
@@ -52,7 +61,7 @@ namespace AugmeNDT
                 if (container == null)
                     SetContainer();
 
-                arrows = arrowObjectVisInstance.CreateArrows(topologicalDataInstance.GetGradientList(), container);
+                arrows = arrowObjectVisInstance.CreateArrows(topologicalDataInstance.gradientList, container, localScaleRate);
                 arrowscalculated = true;
                 arrowshidden = false;
             }
@@ -65,11 +74,6 @@ namespace AugmeNDT
             GameObject generalVectorFieldArrows = new GameObject("GeneralVectorFieldArrows");
             container = generalVectorFieldArrows.transform;
             container.SetParent(fibers);
-
-            // Reset transform to align with parent
-            container.localPosition = Vector3.zero;
-            container.localRotation = Quaternion.identity;
-            container.localScale = Vector3.one;
         }
 
         /// <summary>
@@ -95,7 +99,5 @@ namespace AugmeNDT
             arrows.ForEach(x => x.SetActive(true));
             arrowshidden = false;
         }
-
-
     }
 }

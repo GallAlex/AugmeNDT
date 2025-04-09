@@ -12,26 +12,46 @@ namespace AugmeNDT
     public class StreamLine3D : MonoBehaviour
     {
         public static StreamLine3D Instance;
-        public Material streamlineMaterial; // Material for LineRenderer
-
-        public int numStreamlines = 1000; // Number of streamlines to draw
-        public float streamlineStepSize = 0.2f; // Step size for integration
-        public int maxStreamlineSteps = 100; // Maximum number of steps per streamline
-
         private static Rectangle3DManager rectangle3DManager;
 
         private List<GradientDataset> gradientPoints = new List<GradientDataset>();
         private List<CriticalPointDataset> criticalPoints = new List<CriticalPointDataset>();
+        public Dictionary<Vector3Int, List<GradientDataset>> spatialGrid = new Dictionary<Vector3Int, List<GradientDataset>>();
         private Bounds cubeBounds;
         private List<GameObject> LineObjs = new List<GameObject>();
+        private static Transform parentContainer;
+        private static Transform container;
+
+        private Material streamlineMaterial; // Material for LineRenderer
+
+        [Header("Streamline Parameters")]
+        public int numStreamlines = 1000; // Number of streamlines to draw
+        public float streamlineStepSize = 0.0033f; // Step size for integration
+        public int maxStreamlineSteps = 142; // Maximum number of steps per streamline
+        public float cellSize = 0.01f; // Spatial grid cell size
+
+        [Header("Visual Settings")]
+        public float streamlineWidth = 0.003f; // Reduced width for all streamlines
+        [Range(0f, 1f)]
+        public float streamlineDensity = 1f; // Controls the density of streamlines
+        public Color streamlineColor = Color.white; // Single color for all streamlines
+        public bool useAdaptiveStepSize = true;
+        public bool useAdaptiveColors = false; // Set to false to use single color
+
+        [Header("Performance")]
+        public bool useCoroutines = true;
+        public int streamlinesPerFrame = 50;
+        public bool useJobSystem = false; // Enable for better performance on supported platforms
+
+        private float maxMagnitude = 100f; // Will be updated from data
+        private float averageMagnitude = 50f; // Will be updated from data
+        private List<Vector3> criticalPointsPositions = new List<Vector3>();
 
         private void Awake()
         {
             // Initialize singleton instance
-            if (Instance == null)
-            {
-                Instance = this;
-            }
+            Instance = this;
+            streamlineMaterial = (Material)Resources.Load("Materials/StreamLine");
         }
 
         private void Start()
@@ -46,9 +66,21 @@ namespace AugmeNDT
         public void ShowStreamLines()
         {
             if (!LineObjs.Any() || rectangle3DManager.IsUpdated())
-                DrawStreamlines();
+            {
+                if (!PrepareInstance())
+                    return;
+
+                if (useCoroutines)
+                    StartCoroutine(DrawStreamlinesCoroutine());
+                else
+                    DrawStreamlines();
+
+                HideVolumeObjects(true);
+            }
             else
+            {
                 LineObjs.ForEach(line => line.SetActive(true));
+            }
         }
 
         /// <summary>
@@ -60,63 +92,319 @@ namespace AugmeNDT
             {
                 line.SetActive(false);
             }
+            HideVolumeObjects(false);
         }
 
-        #region private
+        // Disable renderers but keep GameObject active
+        public void HideVolumeObjects(bool hideObjects)
+        {
+            if (parentContainer == null)
+                return;
+
+            Renderer[] renderers = parentContainer.GetComponentsInChildren<Renderer>(true);
+            foreach (var renderer in renderers)
+            {
+                // Skip streamline objects
+                if (renderer.gameObject.name.Contains("Streamline"))
+                    continue;
+
+                renderer.enabled = !hideObjects;
+            }
+        }
+
+        /// <summary>
+        /// Gets the grid cell index for a position
+        /// </summary>
+        public Vector3Int GetGridCell(Vector3 position)
+        {
+            return new Vector3Int(
+                Mathf.FloorToInt(position.x / cellSize),
+                Mathf.FloorToInt(position.y / cellSize),
+                Mathf.FloorToInt(position.z / cellSize)
+            );
+        }
+
+        private void SetContainer()
+        {
+            if (parentContainer != null)
+                return;
+
+            parentContainer = GameObject.Find("DataVisGroup_0/fibers.raw").transform;
+            container = new GameObject("3DStreamLines").transform;
+            container.parent = parentContainer;
+            container.localPosition = Vector3.zero;
+            container.localRotation = Quaternion.identity;
+            container.localScale = Vector3.one;
+        }
+
+        private bool PrepareInstance()
+        {
+            SetContainer();
+            DestroyLines();
+
+            gradientPoints = rectangle3DManager.GetGradientPoints();
+            if (!gradientPoints.Any())
+                return false;
+
+            criticalPoints = rectangle3DManager.GetCriticalPoints();
+            cubeBounds = rectangle3DManager.GetRectangleBounds();
+
+            // Calculate statistics from the gradient data
+            CalculateStatistics();
+
+            // Build spatial grid for faster lookup
+            BuildSpatialGrid();
+
+            // Detect critical points in the vector field
+            DetectInterestingRegions();
+
+            return true;
+        }
+
+        /// <summary>
+        /// Calculates statistics from the gradient data
+        /// </summary>
+        private void CalculateStatistics()
+        {
+            float sum = 0;
+            maxMagnitude = 0;
+
+            foreach (var gradient in gradientPoints)
+            {
+                maxMagnitude = Mathf.Max(maxMagnitude, gradient.Magnitude);
+                sum += gradient.Magnitude;
+            }
+
+            averageMagnitude = sum / gradientPoints.Count;
+            Debug.Log($"Vector field statistics - Max magnitude: {maxMagnitude}, Average: {averageMagnitude}");
+        }
+
+        /// <summary>
+        /// Builds a spatial grid for faster neighbor lookups
+        /// </summary>
+        private void BuildSpatialGrid()
+        {
+            spatialGrid.Clear();
+            foreach (var gradient in gradientPoints)
+            {
+                Vector3Int cell = GetGridCell(gradient.Position);
+                if (!spatialGrid.ContainsKey(cell))
+                    spatialGrid[cell] = new List<GradientDataset>();
+                spatialGrid[cell].Add(gradient);
+            }
+
+            Debug.Log($"Built spatial grid with {spatialGrid.Count} cells");
+        }
+
+        /// <summary>
+        /// Detects interesting regions in the vector field like critical points
+        /// </summary>
+        private void DetectInterestingRegions()
+        {
+            criticalPointsPositions.Clear();
+
+            // Find local minima in magnitude as potential critical points
+            float thresholdMagnitude = averageMagnitude * 0.1f;
+
+            foreach (var gradient in gradientPoints)
+            {
+                if (gradient.Magnitude < thresholdMagnitude)
+                {
+                    // Check if this is a local minimum
+                    bool isLocalMin = true;
+                    Vector3Int cell = GetGridCell(gradient.Position);
+
+                    // Check neighboring cells
+                    for (int x = -1; x <= 1 && isLocalMin; x++)
+                    {
+                        for (int y = -1; y <= 1 && isLocalMin; y++)
+                        {
+                            for (int z = -1; z <= 1 && isLocalMin; z++)
+                            {
+                                if (x == 0 && y == 0 && z == 0) continue;
+
+                                Vector3Int neighborCell = new Vector3Int(cell.x + x, cell.y + y, cell.z + z);
+                                if (spatialGrid.TryGetValue(neighborCell, out List<GradientDataset> neighbors))
+                                {
+                                    foreach (var neighbor in neighbors)
+                                    {
+                                        if (neighbor.Magnitude < gradient.Magnitude)
+                                        {
+                                            isLocalMin = false;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (isLocalMin)
+                    {
+                        criticalPointsPositions.Add(gradient.Position);
+                    }
+                }
+            }
+
+            Debug.Log($"Detected {criticalPointsPositions.Count} potential critical points");
+        }
+
+        #region Streamline Generation
+
+        /// <summary>
+        /// Calculates and draws all streamlines using coroutines for better performance
+        /// </summary>
+        private IEnumerator DrawStreamlinesCoroutine()
+        {
+            // Generate seed points
+            List<Vector3> seedPoints = GenerateSeeds();
+            Debug.Log($"Generated {seedPoints.Count} seed points");
+
+            // Process in batches to avoid freezing the UI
+            int batchSize = streamlinesPerFrame;
+
+            for (int i = 0; i < seedPoints.Count; i += batchSize)
+            {
+                for (int j = 0; j < batchSize && i + j < seedPoints.Count; j++)
+                {
+                    GenerateAndRenderStreamline(seedPoints[i + j]);
+                }
+                yield return null; // Wait for next frame
+            }
+
+            Debug.Log($"Completed streamline generation with {LineObjs.Count} streamlines");
+        }
+
         /// <summary>
         /// Calculates and draws all streamlines
         /// </summary>
         private void DrawStreamlines()
         {
-            DestroyLines();
-
-            gradientPoints = rectangle3DManager.GetGradientPoints();
-            if (!gradientPoints.Any())
-                return;
-
-            criticalPoints = rectangle3DManager.GetCriticalPoints();
-            cubeBounds = rectangle3DManager.GetWireframeCubeBounds();
-
-            // Use better seeding strategies
-            List<Vector3> seedPoints = new List<Vector3>();
-
-            if (gradientPoints.Count > 0)
+            // Use Job System if enabled and supported
+            if (useJobSystem && SystemInfo.supportsComputeShaders)
             {
-                // If we have critical points, use those as a basis
-                seedPoints.AddRange(GenerateCriticalPointBasedSeeds(numStreamlines / 2));
+                StartCoroutine(DrawStreamlinesCoroutine());
             }
-
-            // Fill the rest with evenly distributed seeds
-            int remainingSeeds = numStreamlines - seedPoints.Count;
-            if (remainingSeeds > 0)
+            else
             {
-                seedPoints.AddRange(GenerateEvenlyDistributedSeeds(remainingSeeds));
-            }
+                // Generate seed points
+                List<Vector3> seedPoints = GenerateSeeds();
 
-            // Now generate streamlines from our seed points
-            foreach (Vector3 seedPoint in seedPoints)
-            {
-                // Generate in both directions for better coverage
-                List<Vector3> forwardPoints = GenerateStreamline(seedPoint, 1f);
-                List<Vector3> backwardPoints = GenerateStreamline(seedPoint, -1f);
-
-                // Combine the points (reverse the backward points and add them first)
-                backwardPoints.Reverse();
-                backwardPoints.AddRange(forwardPoints);
-
-                // Create the line renderer
-                if (backwardPoints.Count >= 2)
+                // Generate streamlines for each seed point
+                foreach (Vector3 seedPoint in seedPoints)
                 {
-                    CreateLineRenderer(backwardPoints);
+                    GenerateAndRenderStreamline(seedPoint);
                 }
             }
         }
 
         /// <summary>
+        /// Generates and renders a streamline from a seed point
+        /// </summary>
+        private void GenerateAndRenderStreamline(Vector3 seedPoint)
+        {
+            // Generate in both directions for better coverage
+            List<Vector3> forwardPoints = GenerateStreamline(seedPoint, 1f);
+            List<Vector3> backwardPoints = GenerateStreamline(seedPoint, -1f);
+
+            // Combine the points (reverse the backward points and add them first)
+            backwardPoints.Reverse();
+            backwardPoints.AddRange(forwardPoints);
+
+            // Create the line renderer if we have enough points
+            if (backwardPoints.Count >= 2)
+            {
+                CreateLineRenderer(backwardPoints);
+            }
+        }
+
+        /// <summary>
+        /// Generates seed points for streamlines
+        /// </summary>
+        private List<Vector3> GenerateSeeds()
+        {
+            List<Vector3> seeds = new List<Vector3>();
+            int actualStreamlineCount = Mathf.RoundToInt(numStreamlines * streamlineDensity);
+
+            // First add seeds at critical points if any
+            if (criticalPointsPositions.Count > 0)
+            {
+                foreach (var cp in criticalPointsPositions)
+                {
+                    // Add the critical point itself
+                    seeds.Add(cp);
+
+                    // Add points around critical points
+                    for (int i = 0; i < Mathf.Min(5, actualStreamlineCount / criticalPointsPositions.Count / 4); i++)
+                    {
+                        Vector3 offset = Random.insideUnitSphere * streamlineStepSize * 4f;
+                        Vector3 seed = cp + offset;
+                        if (cubeBounds.Contains(seed))
+                        {
+                            seeds.Add(seed);
+                        }
+                    }
+                }
+            }
+
+            // Then add magnitude-weighted random seeds
+            int remainingSeeds = actualStreamlineCount - seeds.Count;
+            if (remainingSeeds > 0)
+            {
+                seeds.AddRange(GenerateAdaptiveSeeds(remainingSeeds));
+            }
+
+            return seeds;
+        }
+
+        /// <summary>
+        /// Generates seed points with adaptive distribution based on magnitude
+        /// </summary>
+        private List<Vector3> GenerateAdaptiveSeeds(int count)
+        {
+            List<Vector3> seeds = new List<Vector3>();
+
+            // Create a magnitude-weighted distribution
+            List<float> weights = gradientPoints.Select(g => Mathf.Pow(g.Magnitude + 0.1f, 0.5f)).ToList();
+            float totalWeight = weights.Sum();
+
+            // Generate seeds by weighted selection
+            for (int i = 0; i < count; i++)
+            {
+                // Select a gradient point based on its magnitude weight
+                float randomValue = Random.Range(0, totalWeight);
+                float cumulativeWeight = 0;
+
+                for (int j = 0; j < gradientPoints.Count; j++)
+                {
+                    cumulativeWeight += weights[j];
+                    if (cumulativeWeight >= randomValue)
+                    {
+                        // Add some randomness to seed position
+                        Vector3 offset = Random.insideUnitSphere * streamlineStepSize * 3f;
+                        Vector3 seed = gradientPoints[j].Position + offset;
+
+                        if (cubeBounds.Contains(seed))
+                        {
+                            seeds.Add(seed);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // If we still need more seeds, add evenly distributed ones
+            if (seeds.Count < count / 2)
+            {
+                seeds.AddRange(GenerateEvenlyDistributedSeeds(count - seeds.Count));
+            }
+
+            return seeds;
+        }
+
+        /// <summary>
         /// Generates evenly distributed seed points within the volume
         /// </summary>
-        /// <param name="count">Number of seed points to generate</param>
-        /// <returns>List of seed points</returns>
         private List<Vector3> GenerateEvenlyDistributedSeeds(int count)
         {
             List<Vector3> seeds = new List<Vector3>();
@@ -146,9 +434,9 @@ namespace AugmeNDT
 
                         // Add a small random offset to avoid grid-like patterns
                         seed += new Vector3(
-                            Random.Range(-stepX / 4, stepX / 4),
-                            Random.Range(-stepY / 4, stepY / 4),
-                            Random.Range(-stepZ / 4, stepZ / 4)
+                            Random.Range(-stepX / 3, stepX / 3),
+                            Random.Range(-stepY / 3, stepY / 3),
+                            Random.Range(-stepZ / 3, stepZ / 3)
                         );
 
                         if (cubeBounds.Contains(seed))
@@ -176,49 +464,6 @@ namespace AugmeNDT
         }
 
         /// <summary>
-        /// Generates seed points based on critical points and high gradient areas
-        /// </summary>
-        /// <param name="count">Number of seed points to generate</param>
-        /// <returns>List of seed points</returns>
-        private List<Vector3> GenerateCriticalPointBasedSeeds(int count)
-        {
-            List<Vector3> seeds = new List<Vector3>();
-
-            // First add seeds near critical points
-            foreach (var cp in criticalPoints)
-            {
-                // Add the critical point itself
-                seeds.Add(cp.Position);
-
-                // Add some points around it
-                for (int i = 0; i < 3; i++)
-                {
-                    Vector3 offset = Random.insideUnitSphere * 0.5f;
-                    Vector3 seed = cp.Position + offset;
-                    if (cubeBounds.Contains(seed))
-                    {
-                        seeds.Add(seed);
-                    }
-                }
-            }
-
-            // Fill remaining seeds with areas of high gradient magnitude
-            List<GradientDataset> sortedGradients = gradientPoints
-                .OrderByDescending(g => g.Magnitude)
-                .ToList();
-
-            int remainingSeeds = count - seeds.Count;
-            int step = Mathf.Max(1, sortedGradients.Count / remainingSeeds);
-
-            for (int i = 0; i < sortedGradients.Count && seeds.Count < count; i += step)
-            {
-                seeds.Add(sortedGradients[i].Position);
-            }
-
-            return seeds;
-        }
-
-        /// <summary>
         /// Generates a single streamline starting from the given position
         /// </summary>
         /// <param name="startPosition">Starting position for the streamline</param>
@@ -230,23 +475,87 @@ namespace AugmeNDT
             Vector3 currentPosition = startPosition;
             points.Add(currentPosition);
 
+            // Keep track of previous positions to detect cycles
+            HashSet<Vector3Int> visitedCells = new HashSet<Vector3Int>();
+            visitedCells.Add(GetGridCell(currentPosition));
+
             for (int i = 0; i < maxStreamlineSteps; i++)
             {
-                //currentPosition += EulerStep(currentPosition);
+                // Get interpolated vector at current position
+                Vector3 currentVector = SpatialCalculations.InterpolateVectorField(currentPosition, cellSize, spatialGrid);
 
-                Vector3 step = SpatialCalculations.RungeKutta4(currentPosition, gradientPoints, streamlineStepSize) * direction;
+                // Skip if the vector is too small
+                if (currentVector.magnitude < 0.0005f) break;
 
-                if (step.magnitude < 0.001f) break; // Stop if movement is too small
+                // Use adaptive step size if enabled
+                float actualStepSize = streamlineStepSize;
+                if (useAdaptiveStepSize)
+                {
+                    // Adjust step size based on vector magnitude
+                    float magnitudeFactor = Mathf.Clamp01(currentVector.magnitude / averageMagnitude);
+                    actualStepSize = streamlineStepSize * Mathf.Lerp(0.5f, 1.5f, magnitudeFactor);
+                }
 
-                currentPosition += step.normalized * streamlineStepSize;
+                // Calculate step using Runge-Kutta integration
+                Vector3 step = RungeKutta4Integration(currentPosition, actualStepSize) * direction;
 
-                if (!cubeBounds.Contains(currentPosition))
+                // Apply the step
+                Vector3 newPosition = currentPosition + step.normalized * actualStepSize;
+
+                // Check for boundaries
+                if (!cubeBounds.Contains(newPosition))
                     break;
 
+                // Check for cycles (if we've visited this cell before)
+                Vector3Int newCell = GetGridCell(newPosition);
+                if (visitedCells.Contains(newCell) && i > 10)
+                    break;
+
+                visitedCells.Add(newCell);
+                currentPosition = newPosition;
                 points.Add(currentPosition);
             }
 
             return points;
+        }
+
+        /// <summary>
+        /// Performs 4th-order Runge-Kutta integration at a position
+        /// </summary>
+        private Vector3 RungeKutta4Integration(Vector3 position, float stepSize)
+        {
+            float h = stepSize;
+
+            Vector3 k1 = SpatialCalculations.InterpolateVectorField(position, cellSize, spatialGrid);
+            Vector3 k2 = SpatialCalculations.InterpolateVectorField(position + 0.5f * h * k1, cellSize, spatialGrid);
+            Vector3 k3 = SpatialCalculations.InterpolateVectorField(position + 0.5f * h * k2, cellSize, spatialGrid);
+            Vector3 k4 = SpatialCalculations.InterpolateVectorField(position + h * k3, cellSize, spatialGrid);
+
+            return (k1 + 2f * k2 + 2f * k3 + k4) / 6f;
+        }
+
+        /// <summary>
+        /// Creates a LineRenderer GameObject for visualizing a streamline
+        /// </summary>
+        private void CreateLineRenderer(List<Vector3> points)
+        {
+            if (points.Count < 2) return;
+
+            GameObject lineObj = new GameObject("Streamline");
+            LineRenderer lr = lineObj.AddComponent<LineRenderer>();
+
+            // Set base properties
+            lr.material = streamlineMaterial;
+            lr.positionCount = points.Count;
+            lr.SetPositions(points.ToArray());
+
+            // Use a single color (blue) and smaller width
+            lr.startColor = lr.endColor = streamlineColor;
+            lr.startWidth = lr.endWidth = streamlineWidth;
+
+            // Add to list and set parent
+            LineObjs.Add(lineObj);
+            lineObj.transform.SetParent(container);
         }
 
         /// <summary>
@@ -258,60 +567,6 @@ namespace AugmeNDT
             LineObjs.Clear();
         }
 
-        /// <summary>
-        /// Performs a simple Euler integration step
-        /// </summary>
-        /// <param name="position">Current position</param>
-        /// <returns>Vector representing the step to take</returns>
-        private Vector3 EulerStep(Vector3 position)
-        {
-            return InterpolateVectorField(position).normalized * streamlineStepSize;
-        }
-
-        /// <summary>
-        /// Interpolates the vector field at a given position using nearby points
-        /// </summary>
-        /// <param name="position">Position to interpolate at</param>
-        /// <returns>Interpolated direction vector</returns>
-        private Vector3 InterpolateVectorField(Vector3 position)
-        {
-            List<GradientDataset> nearestPoints = SpatialCalculations.GetNearbyPoints(gradientPoints, position, 1.0f);
-            if (nearestPoints.Count == 0) return Vector3.zero;
-
-            Vector3 interpolatedDirection = Vector3.zero;
-            float totalWeight = 0f;
-
-            foreach (var neighbor in nearestPoints)
-            {
-                float distance = Vector3.Distance(position, neighbor.Position);
-                float weight = Mathf.Exp(-Mathf.Pow(distance, 2) / 0.2f); // Gaussian weighting
-
-                interpolatedDirection += neighbor.Direction * weight;
-                totalWeight += weight;
-            }
-
-            return totalWeight > 0 ? interpolatedDirection / totalWeight : Vector3.zero;
-        }
-
-        /// <summary>
-        /// Creates a LineRenderer GameObject for visualizing a streamline
-        /// </summary>
-        /// <param name="points">List of points defining the streamline path</param>
-        private void CreateLineRenderer(List<Vector3> points)
-        {
-            if (points.Count < 2) return;
-
-            GameObject lineObj = new GameObject("Streamline");
-            LineRenderer lr = lineObj.AddComponent<LineRenderer>();
-
-            lr.material = streamlineMaterial;
-            lr.positionCount = points.Count;
-            lr.SetPositions(points.ToArray());
-            lr.startWidth = 0.02f;
-            lr.endWidth = 0.02f;
-
-            LineObjs.Add(lineObj);
-        }
-        #endregion private
+        #endregion
     }
 }

@@ -14,7 +14,6 @@ namespace AugmeNDT
     /// </summary>
     public class FlowObject2DManager : MonoBehaviour
     {
-        public GameObject spherePrefab; // Sphere prefab
         public static FlowObject2DManager Instance;
 
         private static RectangleManager rectangleManager;
@@ -27,11 +26,13 @@ namespace AugmeNDT
         private float streamLineStepSize;
         private float sphereSpeed;
         private float lifetime;
+        private GameObject spherePrefab; // Sphere prefab
 
         private void Awake()
         {
             // Initialize singleton instance
             Instance = this;
+            spherePrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/TopologicalVis/2dmovingSphere");
         }
 
         private void Start()

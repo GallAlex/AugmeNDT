@@ -14,27 +14,29 @@ namespace AugmeNDT
     /// </summary>
     public class Rectangle3DManager : MonoBehaviour
     {
-        public GameObject cubePrefab; // Assign a cube prefab in Unity Inspector
-        private GameObject wireframeCube;
-
         public static bool supportedByTTK = false;
-
         public static Rectangle3DManager rectangle3DManager;
-        private static TopologicalDataObject topologicalDataObjectInstance;
 
+        public float localScaleRateTo3DVectorVisualize;
+
+        private static TopologicalDataObject topologicalDataObjectInstance;
         private List<GradientDataset> gradientPoints = new List<GradientDataset>();
         private List<CriticalPointDataset> criticalPoints = new List<CriticalPointDataset>();
-        public Bounds currentCubeBounds;
+
+        private GameObject rectangle;
+        private Bounds currentCubeBounds;
+
 
         private void Awake()
         {
             // Initialize singleton instance
             rectangle3DManager = this;
+            localScaleRateTo3DVectorVisualize = 0.6f;
         }
 
         private void Start()
         {
-            // Get reference to topological data object
+            // Get references
             topologicalDataObjectInstance = TopologicalDataObject.instance;
         }
 
@@ -43,12 +45,12 @@ namespace AugmeNDT
         /// </summary>
         public void ShowRectangle()
         {
-            if (wireframeCube == null)
+            if (rectangle == null)
             {
-                CreateInteractiveRectangle();
+                Create3DRectangle();
             }
             else
-                wireframeCube.SetActive(true);
+                rectangle.SetActive(true);
         }
 
         /// <summary>
@@ -56,8 +58,8 @@ namespace AugmeNDT
         /// </summary>
         public void HideRectangle()
         {
-            if (wireframeCube != null)
-                wireframeCube.SetActive(false);
+            if (rectangle != null)
+                rectangle.SetActive(false);
         }
 
         /// <summary>
@@ -67,7 +69,7 @@ namespace AugmeNDT
         /// <returns>True if the bounds have changed since last update</returns>
         public bool IsUpdated()
         {
-            bool IsUpdated = currentCubeBounds != GetWireframeCubeBounds();
+            bool IsUpdated = currentCubeBounds != GetRectangleBounds();
             if (IsUpdated)
             {
                 UpdateInstance();
@@ -79,21 +81,10 @@ namespace AugmeNDT
         /// Gets the current bounds of the wireframe cube
         /// </summary>
         /// <returns>Bounds representing the position and size of the cube</returns>
-        public Bounds GetWireframeCubeBounds()
+        public Bounds GetRectangleBounds()
         {
-            WireframeCube wireframeComponent = wireframeCube.GetComponent<WireframeCube>();
-            if (wireframeComponent != null)
-            {
-                // Create bounds from the center and size of the cube
-                Vector3 center = wireframeCube.transform.position;
-                Vector3 size = wireframeComponent.cubeSize;
-
-                // Create and return bounds with appropriate transformation
-                Bounds bounds = new Bounds(center, size);
-                return bounds;
-            }
-
-            return wireframeCube.GetComponents<Renderer>().FirstOrDefault(x => x is LineRenderer).bounds;
+            Basic3DRectangle rectangleComponent = rectangle.GetComponent<Basic3DRectangle>();
+            return rectangleComponent.GetBounds();
         }
 
         /// <summary>
@@ -134,7 +125,7 @@ namespace AugmeNDT
         private void UpdateCurrentPosition()
         {
             //update position
-            currentCubeBounds = GetWireframeCubeBounds();
+            currentCubeBounds = GetRectangleBounds();
         }
 
         /// <summary>
@@ -143,21 +134,21 @@ namespace AugmeNDT
         /// <returns>List containing [minX, maxX, minY, maxY, minZ, maxZ]</returns>
         private List<int> GetMinMaxValuesOfBox()
         {
-            WireframeCube wireframeComponent = wireframeCube.GetComponent<WireframeCube>();
-            if (wireframeComponent != null)
+            Basic3DRectangle rectangleComponent = rectangle.GetComponent<Basic3DRectangle>();
+            if (rectangleComponent != null)
             {
-                Vector3 center = wireframeCube.transform.position;
-                Vector3 size = wireframeComponent.cubeSize;
+                // Sınırlayıcı kutuyu doğrudan wireframe bileşeninden al
+                Bounds bounds = rectangleComponent.GetBounds();
+                Vector3 center = bounds.center;
+                Vector3 extents = bounds.extents; // Bu size/2'ye eşit
 
-                // Calculate min and max values for each axis
-                int minX = (int)Math.Floor(center.x - (size.x / 2));
-                int maxX = (int)Math.Ceiling(center.x + (size.x / 2));
-
-                int minY = (int)Math.Floor(center.y - (size.y / 2));
-                int maxY = (int)Math.Ceiling(center.y + (size.y / 2));
-
-                int minZ = (int)Math.Floor(center.z - (size.z / 2));
-                int maxZ = (int)Math.Ceiling(center.z + (size.z / 2));
+                // Min ve max değerleri hesapla
+                int minX = (int)Math.Floor(center.x - extents.x);
+                int maxX = (int)Math.Ceiling(center.x + extents.x);
+                int minY = (int)Math.Floor(center.y - extents.y);
+                int maxY = (int)Math.Ceiling(center.y + extents.y);
+                int minZ = (int)Math.Floor(center.z - extents.z);
+                int maxZ = (int)Math.Ceiling(center.z + extents.z);
 
                 return new List<int>(new[] { minX, maxX, minY, maxY, minZ, maxZ });
             }
@@ -171,43 +162,43 @@ namespace AugmeNDT
         private void CalculateGradientPoints()
         {
             gradientPoints.Clear(); // Clear previous data
-
-            bool tkkGradientUsed = false;
+            
             if (supportedByTTK)
             {
-                var boxGradientPoints = TTKCalculations.GetGradient3DSubset(GetMinMaxValuesOfBox());
-                if (boxGradientPoints.Any())
-                {
-                    var borders = GetWireframeCubeBounds();
-                    boxGradientPoints = boxGradientPoints.Select(x => x).Where(x => borders.Contains(x.Position)).ToList();
-                    if (boxGradientPoints.Any())
-                    {
-                        gradientPoints = boxGradientPoints;
-                        tkkGradientUsed = true;
-                    }
-                }
+                bool isTTKCalculated = CalculateGradientPointsByTTK();
+                if (isTTKCalculated)
+                    return;
             }
 
-            if (!tkkGradientUsed)
+            Basic3DRectangle rectangleComponent = rectangle.GetComponent<Basic3DRectangle>();
+            foreach (var data in topologicalDataObjectInstance.gradientList)
             {
-                Bounds cubeBounds = GetWireframeCubeBounds();
-                if (topologicalDataObjectInstance == null)
+                if (rectangleComponent.ContainsPointUsingBounds(data.Position))
                 {
-                    Debug.LogError("topologicalDataObjectInstance is missing!");
-                    return;
-                }
-
-                // Filter data inside the cube
-                foreach (var data in topologicalDataObjectInstance.GetGradientList())
-                {
-                    if (cubeBounds.Contains(data.Position))
-                    {
-                        gradientPoints.Add(data);
-                    }
+                    gradientPoints.Add(data);
                 }
             }
 
             Debug.Log($"Filtered {gradientPoints.Count} points inside the cube.");
+        }
+
+        private bool CalculateGradientPointsByTTK()
+        {
+            bool tkkGradientUsed = false;
+
+            var boxGradientPoints = TTKCalculations.GetGradient3DSubset(GetMinMaxValuesOfBox());
+            if (boxGradientPoints.Any())
+            {
+                var borders = GetRectangleBounds();
+                boxGradientPoints = boxGradientPoints.Select(x => x).Where(x => borders.Contains(x.Position)).ToList();
+                if (boxGradientPoints.Any())
+                {
+                    gradientPoints = boxGradientPoints;
+                    tkkGradientUsed = true;
+                }
+            }
+
+            return tkkGradientUsed;
         }
 
         /// <summary>
@@ -217,71 +208,67 @@ namespace AugmeNDT
         private void CalculateCriticalPoints()
         {
             criticalPoints.Clear(); // Clear previous data
-
-            bool tkkcriticalPointsUsed = false;
             if (supportedByTTK)
             {
-                var boxcriticalPoints = TTKCalculations.GetCriticalpoint3DSubset(GetMinMaxValuesOfBox());
+                bool isTTKCalculated = CalculateCriticalPointsByTTK();
+                if (isTTKCalculated)
+                    return;
+            }
+
+            // Filter data inside the cube
+            Basic3DRectangle rectangleComponent = rectangle.GetComponent<Basic3DRectangle>();
+            foreach (var data in topologicalDataObjectInstance.criticalPointList)
+            {
+                if (rectangleComponent.ContainsPointUsingBounds(data.Position))
+                {
+                    criticalPoints.Add(data);
+                }
+            }
+        }
+
+        private bool CalculateCriticalPointsByTTK()
+        {
+
+            bool tkkcriticalPointsUsed = false;
+            var boxcriticalPoints = TTKCalculations.GetCriticalpoint3DSubset(GetMinMaxValuesOfBox());
+            if (boxcriticalPoints.Any())
+            {
+                var borders = GetRectangleBounds();
+                boxcriticalPoints = boxcriticalPoints.Select(x => x).Where(x => borders.Contains(x.Position)).ToList();
                 if (boxcriticalPoints.Any())
                 {
-                    var borders = GetWireframeCubeBounds();
-                    boxcriticalPoints = boxcriticalPoints.Select(x => x).Where(x => borders.Contains(x.Position)).ToList();
-                    if (boxcriticalPoints.Any())
-                    {
-                        criticalPoints = boxcriticalPoints;
-                        tkkcriticalPointsUsed = true;
-                    }
+                    criticalPoints = boxcriticalPoints;
+                    tkkcriticalPointsUsed = true;
                 }
             }
+            return tkkcriticalPointsUsed;
+        }
 
-            if (!tkkcriticalPointsUsed)
+        public void Create3DRectangle()
+        {
+            rectangle = new GameObject("Rectangle3D");
+            rectangle.tag = "Rectangle3D";
+
+            GameObject fibers = GameObject.Find("DataVisGroup_0/fibers.raw");
+            rectangle.transform.parent = fibers.transform;
+
+            // Reset transform to align with parent
+            rectangle.transform.localPosition = Vector3.zero;
+            rectangle.transform.localRotation = Quaternion.identity;
+            rectangle.transform.localScale = Vector3.one;
+            
+            Basic3DRectangle basic3DRectangle = rectangle.AddComponent<Basic3DRectangle>();
+            basic3DRectangle.Initialize();
+
+            BoxCollider boxCollider = fibers.GetComponent<BoxCollider>();
+            if (boxCollider != null)
             {
-                if (topologicalDataObjectInstance == null)
-                {
-                    Debug.LogError("topologicalDataObjectInstance is missing!");
-                    return;
-                }
-
-                // Filter data inside the cube
-                foreach (var data in topologicalDataObjectInstance.GetCriticalPointList())
-                {
-                    // Get the cube's boundaries
-                    Bounds cubeBounds = GetWireframeCubeBounds();
-                    if (cubeBounds.Contains(data.Position))
-                    {
-                        criticalPoints.Add(data);
-                    }
-                }
+                Vector3 min = fibers.transform.TransformPoint(boxCollider.center - boxCollider.size * 0.5f);
+                Vector3 max = fibers.transform.TransformPoint(boxCollider.center + boxCollider.size * 0.5f);
+                basic3DRectangle.SetBounds(min, max);
             }
         }
 
-        /// <summary>
-        /// Creates an interactive wireframe cube at the default position
-        /// </summary>
-        private void CreateInteractiveRectangle()
-        {
-            wireframeCube = Instantiate(cubePrefab, new Vector3(9.081296f, 6.504251f, 11.54561f), Quaternion.identity);
-            wireframeCube.tag = "BoxWireframeLine";
-
-            // Ensure no solid cube is rendered
-            MeshRenderer meshRenderer = wireframeCube.GetComponent<MeshRenderer>();
-            if (meshRenderer != null) meshRenderer.enabled = false;
-
-            // Add necessary wireframe behavior
-            if (wireframeCube.GetComponent<WireframeCube>() == null)
-                wireframeCube.AddComponent<WireframeCube>();
-
-            if (wireframeCube.GetComponent<DraggableResizableWireframe>() == null)
-                wireframeCube.AddComponent<DraggableResizableWireframe>();
-        }
-
-        /// <summary>
-        /// Destroys the wireframe cube
-        /// </summary>
-        private void DestroyWireframe()
-        {
-            Destroy(wireframeCube);
-        }
         #endregion private
     }
 }

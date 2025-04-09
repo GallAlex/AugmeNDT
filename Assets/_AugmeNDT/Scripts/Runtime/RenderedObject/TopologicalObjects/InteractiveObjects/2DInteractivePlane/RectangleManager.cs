@@ -220,7 +220,7 @@
         {
             gradientPoints.Clear();
             bool tkkGradientUsed = false;
-            List<GradientDataset> sourceGradientPoints = topologicalDataObjectInstance.GetGradientList();
+            List<GradientDataset> sourceGradientPoints = topologicalDataObjectInstance.gradientList;
 
             if (supportedByTTK)
             {
@@ -243,10 +243,7 @@
 
             gradientPoints = GaussianFilterUtils.ApplyGaussianSmoothing(gradientPoints, defaultInterval, scaleRateToCalculation);
 
-            //gradientPoints.ForEach(x =>
-            //{
-            //    TEST(x.Position);
-            //});
+            //TTKCalculations.SaveGradientListToCSV(@"C:\Users\ozdag\OneDrive\Desktop\smallDATA\result.csv", gradientPoints);
         }
 
         /// <summary>

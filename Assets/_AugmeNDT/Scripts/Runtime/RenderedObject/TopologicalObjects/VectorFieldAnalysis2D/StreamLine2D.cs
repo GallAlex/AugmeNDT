@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using UnityEngine;
+using static Unity.VisualScripting.Member;
 using static UnityEditor.Progress;
 
 namespace AugmeNDT
@@ -15,26 +16,34 @@ namespace AugmeNDT
     public class StreamLine2D : MonoBehaviour
     {
         public static StreamLine2D Instance;
-        public Material streamlineMaterial;
 
-        public int numStreamlines = 1500; // Number of streamlines to draw 2500
-        public float streamLineStepSize = 0.01f; // Step size for integration
-        public int maxStreamlineSteps = 700; // Maximum number of steps per streamline
+        public int numStreamlines; // Number of streamlines
+        public float streamLineStepSize; // Step size for integration
+        public int maxStreamlineSteps; // Maximum number of steps per streamline
+        public float minDistanceToGeneratePoissonDiskSeeds;
 
-        private float scaleRateToCalculation; // getFromRectangleManager
-        private float localScaleRateTo2DStreamLineVisualize; // getFromRectangleManager
-        private float defaultRateTo2DStreamLineVisualize = 0.01f; //default
+        [Header("Visual Settings")]
+        public float streamlineWidth; // Reduced width for all streamlines
 
         public List<GradientDataset> gradientPoints = new List<GradientDataset>();
         private List<GameObject> lineObjs = new List<GameObject>();
         private static RectangleManager rectangleManager;
-        private static Transform parentContainer;
+        private static Transform container;
+        private Material streamlineMaterial;
+
 
         private void Awake()
         {
             // Initialize singleton instance
             if (Instance == null)
                 Instance = this;
+
+            streamlineMaterial = (Material)Resources.Load("Materials/StreamLine");
+            numStreamlines = 100;                      // Daha az streamline
+            streamLineStepSize = 0.01f;              // Daha küçük adım boyutu
+            maxStreamlineSteps = 100;                // Daha fazla adım sayısı
+            streamlineWidth = 0.005f;                // Çok daha ince çizgiler
+            minDistanceToGeneratePoissonDiskSeeds = 0.05f; // Biraz daha büyük minimum mesafe
         }
 
         private void Start()
@@ -43,8 +52,6 @@ namespace AugmeNDT
             if (rectangleManager == null)
             {
                 rectangleManager = RectangleManager.rectangleManager;
-                scaleRateToCalculation = rectangleManager.scaleRateToCalculation;
-                localScaleRateTo2DStreamLineVisualize = rectangleManager.localScaleRateTo2DStreamLineVisualize;
             }
         }
 
@@ -54,7 +61,10 @@ namespace AugmeNDT
         public void ShowStreamLines()
         {
             if (!lineObjs.Any() || rectangleManager.IsUpdated())
+            {
                 DrawStreamlines();
+                HideVolumeObjects(true);
+            }
             else
                 lineObjs.ForEach(line => { line.SetActive(true); });
         }
@@ -68,8 +78,26 @@ namespace AugmeNDT
             {
                 line.SetActive(false);
             }
+            HideVolumeObjects(false);
         }
 
+        // Disable renderers but keep GameObject active
+        public void HideVolumeObjects(bool hideObjects)
+        {
+            if (container == null)
+                return;
+
+            return;
+            Renderer[] renderers = container.parent.GetComponentsInChildren<Renderer>(true);
+            foreach (var renderer in renderers)
+            {
+                // Skip streamline objects
+                if (renderer.gameObject.name.Contains("SliceStreamLine"))
+                    continue;
+
+                renderer.enabled = !hideObjects;
+            }
+        }
         #region private
         /// <summary>
         /// Calculates and draws all streamlines
@@ -81,20 +109,11 @@ namespace AugmeNDT
             DestroyLines();
             gradientPoints.Clear();
             gradientPoints = rectangleManager.GetGradientPoints();
-            
             List<List<Vector3>> streamLines = CalculateStreamlines();
-            streamLines.ForEach(lines =>
+            foreach (var lines in streamLines)
             {
                 CreateLineRenderer(lines);
-            });
-        }
-        
-        private void SetContainer()
-        {
-            if (parentContainer != null)
-                return;
-
-            parentContainer = GameObject.Find("DataVisGroup_0/fibers.raw").transform;
+            }
         }
 
         /// <summary>
@@ -103,10 +122,14 @@ namespace AugmeNDT
         /// <returns>List of streamline point sequences</returns>
         private List<List<Vector3>> CalculateStreamlines()
         {
-            List<Vector3> seedPoints = GeneratePoissonDiskSeeds(0.1f * scaleRateToCalculation, numStreamlines);
-
+            //List<Vector3> seedPoints = GeneratePoissonDiskSeeds(minDistanceToGeneratePoissonDiskSeeds, numStreamlines);
+            List<Vector3> seedPoints = gradientPoints
+                .OrderBy(x => UnityEngine.Random.value) // Rastgele sırala
+                .Take(numStreamlines)
+                .Select(x => x.Position)
+                .ToList();
+            
             List<List<Vector3>> streamlinePoints = new List<List<Vector3>>();
-
             foreach (var seed in seedPoints)
             {
                 streamlinePoints.Add(GenerateStreamline(seed));
@@ -145,7 +168,7 @@ namespace AugmeNDT
             float maxZ = Mathf.Max(corners[0].z, corners[1].z, corners[2].z, corners[3].z);
 
             // Poisson Disk Sampling
-            int attemptsPerPoint = 30; // Number of attempts to find a valid point position
+            int attemptsPerPoint = 50; // Number of attempts to find a valid point position
 
             for (int attempt = 0; attempt < maxAttempts; attempt++)
             {
@@ -226,20 +249,31 @@ namespace AugmeNDT
             for (int i = 0; i < maxStreamlineSteps; i++)
             {
                 // Calculate direction using Runge-Kutta 4
-                Vector3 direction = SpatialCalculations.RungeKutta4(currentPosition, gradientPoints, streamLineStepSize * scaleRateToCalculation);
-                float velocityMagnitude = direction.magnitude;
+                Vector3 direction = SpatialCalculations.RungeKutta4(currentPosition, gradientPoints, streamLineStepSize);
 
-                // Stop if the velocity is too small
-                if (velocityMagnitude < 0.001f)
+                // Normalize the direction vector
+                if (direction.magnitude < 0.001f)
                     break;
 
-                // Adaptive step size based on velocity magnitude
-                float stepSize = Mathf.Clamp(velocityMagnitude * 0.05f, 0.005f, 0.05f) * scaleRateToCalculation;
+                direction = direction.normalized;
+
+                // Project direction onto the plane to ensure it stays on the surface
+                direction = direction - Vector3.Dot(direction, normal) * normal;
+
+                // Check if the projected direction is zero
+                if (direction.magnitude < 0.001f)
+                    break;
+
+                // Normalize again after projection
+                direction = direction.normalized;
+
+                // Use a smaller fixed step size for more stability
+                float stepSize = 0.01f;  // Sabit ve küçük bir adım boyutu
 
                 // Calculate the next position
                 Vector3 nextPosition = currentPosition + direction * stepSize;
 
-                // Project the point back onto the rectangle plane to ensure it stays on the surface
+                // Project back onto the plane with higher precision
                 nextPosition = SpatialCalculations.ProjectPointOntoRectanglePlane(nextPosition, corners, normal);
 
                 // Check if the new position is still inside the rectangle
@@ -380,20 +414,43 @@ namespace AugmeNDT
         /// <param name="points">List of points defining the streamline path</param>
         private void CreateLineRenderer(List<Vector3> points)
         {
-            if (points.Count < 2) 
+            if (points.Count < 2)
                 return;
 
-            GameObject lineObj = new GameObject("Streamline");
-            lineObj.transform.parent = parentContainer;
+            GameObject lineObj = new GameObject("SliceStreamLine");
+            lineObj.transform.parent = container;
 
             LineRenderer lr = lineObj.AddComponent<LineRenderer>();
             lr.material = streamlineMaterial;
             lr.positionCount = points.Count;
             lr.SetPositions(points.ToArray());
-            lr.startWidth = defaultRateTo2DStreamLineVisualize * localScaleRateTo2DStreamLineVisualize;
-            lr.endWidth   = defaultRateTo2DStreamLineVisualize * localScaleRateTo2DStreamLineVisualize;
+            lr.useWorldSpace = false;
+
+            // Daha ince çizgiler
+            lr.startWidth = lr.endWidth = 0.0009f;  // Çok daha ince değer
+
+            // Kesit ile paralel olacak şekilde alignment'ı değiştirin
+            // View yerine, TransformZ kullanın - bu şerit benzeri bir görünüm sağlar
+            lr.alignment = LineAlignment.TransformZ;
+
+            // Anti-aliasing ekleyin
+            lr.numCapVertices = 2;
+            lr.numCornerVertices = 2;
 
             lineObjs.Add(lineObj);
+        }
+
+        private void SetContainer()
+        {
+            if (container != null)
+                return;
+
+            Transform parentContainer = GameObject.Find("DataVisGroup_0/fibers.raw").transform;
+            container = new GameObject("2DStreamLines").transform;
+            container.parent = parentContainer;
+            container.localPosition = Vector3.zero;
+            container.localRotation = Quaternion.identity;
+            container.localScale = Vector3.one;
         }
 
         /// <summary>
@@ -404,6 +461,7 @@ namespace AugmeNDT
             lineObjs.ForEach(x => Destroy(x));
             lineObjs.Clear();
         }
+
         #endregion private
     }
 }
