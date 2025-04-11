@@ -16,8 +16,8 @@ namespace AugmeNDT
     {
         public static bool supportedByTTK = false;
         public static Rectangle3DManager rectangle3DManager;
-
-        public float localScaleRateTo3DVectorVisualize;
+        public TopologyConfigData config;
+        public Transform volumeTransform;
 
         private static TopologicalDataObject topologicalDataObjectInstance;
         private List<GradientDataset> gradientPoints = new List<GradientDataset>();
@@ -26,18 +26,24 @@ namespace AugmeNDT
         private GameObject rectangle;
         private Bounds currentCubeBounds;
 
-
+        private TTKCalculations ttkCalculations;
         private void Awake()
         {
             // Initialize singleton instance
             rectangle3DManager = this;
-            localScaleRateTo3DVectorVisualize = 0.6f;
         }
 
         private void Start()
         {
-            // Get references
-            topologicalDataObjectInstance = TopologicalDataObject.instance;
+            // Get reference to topological data object
+            if (topologicalDataObjectInstance == null)
+            {
+                topologicalDataObjectInstance = TopologicalDataObject.instance;
+                ttkCalculations = topologicalDataObjectInstance.ttkCalculation;
+                volumeTransform = topologicalDataObjectInstance.volumeTransform;
+                config = topologicalDataObjectInstance.config;
+            }
+            ShowRectangle();
         }
 
         /// <summary>
@@ -47,7 +53,7 @@ namespace AugmeNDT
         {
             if (rectangle == null)
             {
-                Create3DRectangle();
+                rectangle3DManager.Create3DRectangle(topologicalDataObjectInstance.min3D,topologicalDataObjectInstance.max3D);
             }
             else
                 rectangle.SetActive(true);
@@ -106,7 +112,12 @@ namespace AugmeNDT
             IsUpdated();
             return criticalPoints;
         }
-
+        
+        public Transform GetRectangleContainer()
+        {
+            return rectangle.transform;
+        }
+        
         #region private
         /// <summary>
         /// Updates internal data when the rectangle position or size changes
@@ -156,19 +167,65 @@ namespace AugmeNDT
         }
 
         /// <summary>
+        /// Mevcut wireframe sınırları içinde 0.2 birim aralıklarla gradient noktaları oluşturur
+        /// </summary>
+        private void CalculateGradientPointsNew()
+        {
+            // Önceki verileri temizle
+            gradientPoints.Clear();
+
+            // Dikdörtgenin sınırlarını al
+            Bounds bounds = GetRectangleBounds();
+            Vector3 min = bounds.min;
+            Vector3 max = bounds.max;
+
+            // Noktalar arası mesafe
+            float spacing = 0.1f;
+
+            // X, Y ve Z eksenleri boyunca noktaları oluştur
+            for (float x = min.x; x <= max.x; x += spacing)
+            {
+                for (float y = min.y; y <= max.y; y += spacing)
+                {
+                    for (float z = min.z; z <= max.z; z += spacing)
+                    {
+                        Vector3 position = new Vector3(x, y, z);
+
+                        // Sınır kontrolü - tam sınırda sayısal hatalar olabilir
+                        if (bounds.Contains(position))
+                        {
+                            // Yeni bir gradient noktası oluştur
+                            GradientDataset gradientPoint = new GradientDataset(
+                                gradientPoints.Count,
+                                position,
+                                Vector3.one,
+                                0);
+
+                            gradientPoints.Add(gradientPoint);
+                        }
+                    }
+                }
+            }
+
+            Debug.Log($"Oluşturulan toplam gradient nokta sayısı: {gradientPoints.Count}");
+            gradientPoints.ForEach(gradientPoint => { TEST(gradientPoint.Position); });
+        }
+
+        private void TEST(Vector3 position)
+        {
+            // Create and configure sphere object
+            GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            sphere.transform.position = position;
+            sphere.transform.localScale = Vector3.one * 0.003f;
+        }
+        /// <summary>
         /// Calculates and filters gradient points within the current wireframe bounds
         /// Uses TTK calculations if supported, otherwise filters from topological data
         /// </summary>
         private void CalculateGradientPoints()
         {
-            gradientPoints.Clear(); // Clear previous data
-            
-            if (supportedByTTK)
-            {
-                bool isTTKCalculated = CalculateGradientPointsByTTK();
-                if (isTTKCalculated)
-                    return;
-            }
+            // Clear previous data
+            gradientPoints.Clear();
 
             Basic3DRectangle rectangleComponent = rectangle.GetComponent<Basic3DRectangle>();
             foreach (var data in topologicalDataObjectInstance.gradientList)
@@ -185,8 +242,7 @@ namespace AugmeNDT
         private bool CalculateGradientPointsByTTK()
         {
             bool tkkGradientUsed = false;
-
-            var boxGradientPoints = TTKCalculations.GetGradient3DSubset(GetMinMaxValuesOfBox());
+            var boxGradientPoints = ttkCalculations.GetGradient3DSubset(GetMinMaxValuesOfBox());
             if (boxGradientPoints.Any())
             {
                 var borders = GetRectangleBounds();
@@ -230,7 +286,7 @@ namespace AugmeNDT
         {
 
             bool tkkcriticalPointsUsed = false;
-            var boxcriticalPoints = TTKCalculations.GetCriticalpoint3DSubset(GetMinMaxValuesOfBox());
+            var boxcriticalPoints = ttkCalculations.GetCriticalpoint3DSubset(GetMinMaxValuesOfBox());
             if (boxcriticalPoints.Any())
             {
                 var borders = GetRectangleBounds();
@@ -249,8 +305,8 @@ namespace AugmeNDT
             rectangle = new GameObject("Rectangle3D");
             rectangle.tag = "Rectangle3D";
 
-            GameObject fibers = GameObject.Find("DataVisGroup_0/fibers.raw");
-            rectangle.transform.parent = fibers.transform;
+            rectangle.transform.parent = volumeTransform;
+            GameObject volumeObject = volumeTransform.gameObject;
 
             // Reset transform to align with parent
             rectangle.transform.localPosition = Vector3.zero;
@@ -260,13 +316,35 @@ namespace AugmeNDT
             Basic3DRectangle basic3DRectangle = rectangle.AddComponent<Basic3DRectangle>();
             basic3DRectangle.Initialize();
 
-            BoxCollider boxCollider = fibers.GetComponent<BoxCollider>();
+            BoxCollider boxCollider = volumeObject.GetComponent<BoxCollider>();
             if (boxCollider != null)
             {
-                Vector3 min = fibers.transform.TransformPoint(boxCollider.center - boxCollider.size * 0.5f);
-                Vector3 max = fibers.transform.TransformPoint(boxCollider.center + boxCollider.size * 0.5f);
+                Vector3 min = volumeObject.transform.TransformPoint(boxCollider.center - boxCollider.size * 0.5f);
+                Vector3 max = volumeObject.transform.TransformPoint(boxCollider.center + boxCollider.size * 0.5f);
                 basic3DRectangle.SetBounds(min, max);
             }
+        }
+
+        public void Create3DRectangle(Vector3 min, Vector3 max)
+        {
+            // Yeni GameObject oluştur
+            rectangle = new GameObject("Rectangle3D");
+            rectangle.tag = "Rectangle3D";
+
+            // Parent olarak volumeTransform'a ayarla
+            rectangle.transform.parent = volumeTransform;
+
+            // Transformu sıfırla
+            rectangle.transform.localPosition = Vector3.zero;
+            rectangle.transform.localRotation = Quaternion.identity;
+            rectangle.transform.localScale = Vector3.one;
+
+            // Basic3DRectangle bileşenini ekle ve başlat
+            Basic3DRectangle basic3DRectangle = rectangle.AddComponent<Basic3DRectangle>();
+            basic3DRectangle.Initialize();
+
+            // Sınırları ayarla
+            basic3DRectangle.SetBounds(min, max);
         }
 
         #endregion private

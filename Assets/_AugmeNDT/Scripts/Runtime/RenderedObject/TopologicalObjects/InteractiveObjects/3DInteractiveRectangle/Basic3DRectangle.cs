@@ -9,7 +9,7 @@
     {
         private GameObject rectangleObject;
         private LineRenderer lineRenderer;
-
+        private bool drawBorders = true;
         private Vector3 minCorner { get; set; }
         private Vector3 maxCorner { get; set; }
 
@@ -19,20 +19,24 @@
             rectangleObject = new GameObject("RectangleVisual");
             rectangleObject.transform.SetParent(transform);
 
-            lineRenderer = rectangleObject.AddComponent<LineRenderer>();
-            lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-            lineRenderer.startColor = Color.yellow;
-            lineRenderer.endColor = Color.yellow;
-            lineRenderer.startWidth = 0.001f;
-            lineRenderer.endWidth = 0.001f;
-            lineRenderer.positionCount = 24; // 12 kenar için 24 nokta
-            lineRenderer.useWorldSpace = false;
-
             // Varsayılan bounds değerleri
             minCorner = Vector3.one * -1f;
             maxCorner = Vector3.one;
 
-            UpdateLinePositions();
+
+            if (drawBorders)
+            {
+                lineRenderer = rectangleObject.AddComponent<LineRenderer>();
+                lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+                lineRenderer.startColor = Color.yellow;
+                lineRenderer.endColor = Color.yellow;
+                lineRenderer.startWidth = 0.001f;
+                lineRenderer.endWidth = 0.001f;
+                lineRenderer.positionCount = 24; // 12 kenar için 24 nokta
+                lineRenderer.useWorldSpace = false;
+
+                UpdateLinePositions();
+            }
         }
 
         // Dikdörtgenin sınırlarını ayarla
@@ -40,7 +44,10 @@
         {
             minCorner = min;
             maxCorner = max;
-            UpdateLinePositions();
+            if (drawBorders)
+            {
+                UpdateLinePositions();
+            }
         }
 
         public Bounds GetBounds()

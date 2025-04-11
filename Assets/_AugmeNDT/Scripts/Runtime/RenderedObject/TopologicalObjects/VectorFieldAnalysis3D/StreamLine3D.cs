@@ -129,12 +129,8 @@ namespace AugmeNDT
             if (parentContainer != null)
                 return;
 
-            parentContainer = GameObject.Find("DataVisGroup_0/fibers.raw").transform;
             container = new GameObject("3DStreamLines").transform;
-            container.parent = parentContainer;
-            container.localPosition = Vector3.zero;
-            container.localRotation = Quaternion.identity;
-            container.localScale = Vector3.one;
+            container.transform.parent = rectangle3DManager.GetRectangleContainer();
         }
 
         private bool PrepareInstance()

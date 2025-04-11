@@ -41,10 +41,9 @@ namespace AugmeNDT
             {
                 // Get reference to the rectangle manager
                 rectangle3DManager = Rectangle3DManager.rectangle3DManager;
-                localScaleRateTo3DVectorVisualize = rectangle3DManager.localScaleRateTo3DVectorVisualize;
+
                 localScaleRateTo3DVectorVisualize = 0.3f;
                 localScaleRateTo3DCriticalPointsVisualize = 0.006f;
-                
             }
             createCriticalPointsInstance = CreateCriticalPoints.instance;
         }
@@ -148,9 +147,8 @@ namespace AugmeNDT
             if (container != null)
                 return;
 
-            Transform fibers = GameObject.Find("Rectangle3D").transform;
             container = new GameObject("3DVectorForce").transform;
-            container.transform.parent = fibers;
+            container.transform.parent = rectangle3DManager.GetRectangleContainer();
         }
 
         private IEnumerator CreateArrowsCoroutine()
