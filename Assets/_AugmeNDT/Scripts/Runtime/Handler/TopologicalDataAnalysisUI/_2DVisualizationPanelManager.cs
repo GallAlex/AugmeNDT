@@ -59,13 +59,13 @@ namespace AugmeNDT
         {
             if (!showArrows)
             {
-                detailed2DVectorFieldObjectInstance.VisualizePoints(); // First time draw
+                detailed2DVectorFieldObjectInstance.ShowArrows(); // First time draw
                 showArrows = true;
             }
             else
             {
                 showArrows = false;
-                detailed2DVectorFieldObjectInstance.ShowHideArrows(showArrows); // Toggle visibility
+                detailed2DVectorFieldObjectInstance.HideArrows(); // Toggle visibility
             }
         }
 

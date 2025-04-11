@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 
 namespace AugmeNDT
@@ -29,18 +30,19 @@ namespace AugmeNDT
             instance = this; // Singleton setup for global access
         }
 
-        public Dictionary<int, List<GameObject>> CreateInteractiveCriticalPoint(List<CriticalPointDataset> criticalPoints,Transform container, GameObject pointPrefab, float localScaleRate = 1.0f)
+        public Dictionary<int, List<GameObject>> CreateInteractiveCriticalPoint(List<CriticalPointDataset> criticalPoints,Transform container, GameObject pointPrefab, float localScaleRate = 1.0f, bool createLegendColorBar = true)
         {
             Dictionary<int, List<GameObject>> criticalPointDictionary = new Dictionary<int, List<GameObject>>();
             criticalPoints.ForEach(point => {
 
                 CreateInteractiveCriticalPoint(point.ID, point.Type, point.Position, container, pointPrefab, localScaleRate, criticalPointDictionary);
             });
-            CreateLegendColorBar(container, localScaleRate * 10);
+            if (createLegendColorBar)
+                CreateLegendColorBar(container, localScaleRate * 10);
             return criticalPointDictionary;
         }
 
-        public List<GameObject> CreateBasicCriticalPoint(List<CriticalPointDataset> criticalPoints, Transform container, float localScaleRate = 1.0f)
+        public List<GameObject> CreateBasicCriticalPoint(List<CriticalPointDataset> criticalPoints, Transform container, float localScaleRate = 1.0f, bool createLegendColorBar = true)
         {
             List<GameObject> spheres = new List<GameObject>();
             criticalPoints.ForEach(cp => {
@@ -52,8 +54,10 @@ namespace AugmeNDT
                 sphere.GetComponent<Renderer>().material.color = GetColorByType(cp.Type);
                 spheres.Add(sphere);
             });
+            
+            if(createLegendColorBar)
+                CreateLegendColorBar(container, localScaleRate * 10);
 
-            CreateLegendColorBar(container, localScaleRate * 10);
             return spheres;
         }
 
@@ -110,9 +114,11 @@ namespace AugmeNDT
             // Create an instance of the LegendColorBar class to generate the visual legend
             LegendColorBar legend = new LegendColorBar();
 
+            Vector3 legendPosition = GameObject.Find("Volume").transform.position + new Vector3(0.2f, 0f, 0f);
+            
             // Generate the color bar using the new method that places labels on all sides
             GameObject legendObject = legend.CreateColorScalarBar(
-                new Vector3(0f, 0f, 0f),   // World position where the legend will appear
+                legendPosition,   // World position where the legend will appear
                 "Critical Points",         // Title of the legend
                 labels,                    // Labels to display for each color segment
                 colors,                    // Corresponding colors for each label

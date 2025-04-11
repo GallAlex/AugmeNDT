@@ -5,7 +5,7 @@
     using System.Linq;
     using Assets.Scripts.DataStructure;
     using System;
-    using UnityEngine.UIElements;
+    using System.Diagnostics;
 
     /// <summary>
     /// Manages the 2D rectangle for visualization and analysis of vector field data on a plane
@@ -13,19 +13,27 @@
     public class RectangleManager : MonoBehaviour
     {
         public static RectangleManager rectangleManager;
-        public static bool supportedByTTK = false; // TTK PARAVIEW API ERROR
-
-        public float defaultInterval;
-        public float localScaleRateTo2DVectorVisualize;
-        public float localScaleRateTo2DStreamLineVisualize;
+        
+        public TopologyConfigData config;
+        /// <summary>
+        /// Controls the density of the grid used for gradient calculations.
+        /// Lower values create denser grids with more detail but higher processing cost.
+        /// </summary>
+        private float defaultInterval;
+        /// Scale factor for calculation grid density, automatically adjusted based on volume dimensions.
         public float scaleRateToCalculation;
+        public float intervalValue; // defaultInterval*scaleRateToCalculation
 
         private InteractiveRectangle rectangle;
+
+        private TTKCalculations ttkCalculations;
+        public Transform volumeTransform;
 
         // TDA
         private List<GradientDataset> gradientPoints = new List<GradientDataset>();
         private List<CriticalPointDataset> criticalPoints = new List<CriticalPointDataset>();
         private static TopologicalDataObject topologicalDataObjectInstance;
+        private bool supportedByTTK = false; // true means run-time calculation (TTK PARAVIEW API) (slow)
 
         // Tracking parameters
         private Vector3[] lastKnownCorners;
@@ -36,19 +44,24 @@
         {
             // Initialize singleton instance
             rectangleManager = this;
-
-            // config
-            localScaleRateTo2DVectorVisualize = 0.2f; //default
-            localScaleRateTo2DStreamLineVisualize = 0.02f; //default
-            defaultInterval = 0.3f; //default
-            scaleRateToCalculation = 0.02f; //default
         }
 
         private void Start()
         {
             // Get reference to topological data object
             if (topologicalDataObjectInstance == null)
+            {
                 topologicalDataObjectInstance = TopologicalDataObject.instance;
+                volumeTransform = topologicalDataObjectInstance.volumeTransform;
+                ttkCalculations = topologicalDataObjectInstance.ttkCalculation;
+                scaleRateToCalculation = topologicalDataObjectInstance.GetOptimalScaleRateToCalculation();
+
+                config = topologicalDataObjectInstance.config;
+                defaultInterval = 0.1f; //default
+            }
+
+
+            intervalValue = defaultInterval * scaleRateToCalculation;
         }
 
         /// <summary>
@@ -76,6 +89,11 @@
             {
                 rectangle.gameObject.SetActive(false);
             }
+        }
+
+        public Transform GetInteractiveRectangleContainer()
+        {
+            return volumeTransform;
         }
 
         /// <summary>
@@ -132,12 +150,31 @@
             return gradientPoints;
         }
 
+        public void UpdateRectangleAfterScaling()
+        {
+            if (rectangle == null)
+                return;
+
+            Destroy(rectangle.gameObject.GetComponent<InteractiveRectangle>());
+            Destroy(volumeTransform.Find("Rectangle").gameObject);
+            rectangle = null;
+            CreateRectangle();
+            UpdateInstance();
+            //return;
+
+            //rectangle.UpdateCorners(GetVolumeBoxCorners());
+            //UpdateInstance();
+        }
+
         #region topological data analysis
         /// <summary>
         /// Updates the instance state and recalculates gradient and critical points
         /// </summary>
         private void UpdateInstance()
         {
+            if (rectangle == null)
+                return;
+
             UpdateSaveCurrentState();
             CalculateGradientPoints();
             CalculateCriticalPoints();
@@ -150,15 +187,14 @@
         /// <returns>List of gradient data points on the rectangle surface</returns>
         private List<GradientDataset> GetRectangleGridPoints(float interval)
         {
-            List<GradientDataset> gridPoints = new List<GradientDataset>();
 
             if (rectangle == null)
-                return gridPoints;
+                return new List<GradientDataset>();
 
             // Get the four corners
             Vector3[] corners = rectangle.GetCornerPositions();
             if (corners.Length != 4)
-                return gridPoints;
+                return new List<GradientDataset>();
 
             // Calculate the normal of the rectangle
             Vector3 normal = rectangle.GetNormal();
@@ -179,6 +215,7 @@
             int stepsWidth = Mathf.CeilToInt(width / interval);
             int stepsHeight = Mathf.CeilToInt(height / interval);
 
+            List<GradientDataset> gridPoints = new List<GradientDataset>();
             // Generate grid points
             for (int w = 0; w <= stepsWidth; w++)
             {
@@ -218,32 +255,14 @@
         /// </summary>
         private void CalculateGradientPoints()
         {
+            List<GradientDataset> pointsOnSurface = GetRectangleGridPoints(intervalValue);
+
             gradientPoints.Clear();
-            bool tkkGradientUsed = false;
+
             List<GradientDataset> sourceGradientPoints = topologicalDataObjectInstance.gradientList;
-
-            if (supportedByTTK)
-            {
-                var normal = GetRectangleNormal();
-                var minMaxVal = GetMinMaxValuesOfBox();
-                var sliceGradientPoints = TTKCalculations.GetGradient2DSlice(rectangle.transform.position, normal, minMaxVal);
-                if (sliceGradientPoints.Any())
-                {
-                    sliceGradientPoints = sliceGradientPoints.Select(x => x).Where(x => rectangleManager.IsPointInsideMesh(x.Position)).ToList();
-                    sourceGradientPoints = sliceGradientPoints;
-                    tkkGradientUsed = true;
-                }
-            }
-
-            List<GradientDataset> pointsOnSurface = GetRectangleGridPoints(defaultInterval * scaleRateToCalculation);
-            gradientPoints = GradientUtils.AssignNewGradientValues(pointsOnSurface, sourceGradientPoints);
-
-            if (!tkkGradientUsed)
-                gradientPoints = GradientUtils.NormalizeGradientsToRectangle(gradientPoints, rectangle.GetCornerPositions());
-
-            gradientPoints = GaussianFilterUtils.ApplyGaussianSmoothing(gradientPoints, defaultInterval, scaleRateToCalculation);
-
-            //TTKCalculations.SaveGradientListToCSV(@"C:\Users\ozdag\OneDrive\Desktop\smallDATA\result.csv", gradientPoints);
+            gradientPoints = GradientUtils.AssignNewGradientValuesParallel(pointsOnSurface, sourceGradientPoints);
+            gradientPoints = GradientUtils.NormalizeGradientsToRectangleParallel(gradientPoints, rectangle.GetCornerPositions());
+            gradientPoints = GaussianFilterUtils.ApplyGaussianSmoothingParallel(gradientPoints, intervalValue);
         }
 
         /// <summary>
@@ -256,7 +275,7 @@
                 var normal = GetRectangleNormal();
                 var minMaxVal = GetMinMaxValuesOfBox();
 
-                criticalPoints = TTKCalculations.GetCriticalpoint2DSlice(rectangle.transform.position, normal, minMaxVal);
+                criticalPoints = ttkCalculations.GetCriticalpoint2DSlice(rectangle.transform.position, normal, minMaxVal);
                 criticalPoints = criticalPoints.Select(x => x).Where(x => rectangleManager.IsPointInsideMesh(x.Position)).ToList();
             }
         }
@@ -286,10 +305,17 @@
         /// Checks if a point is inside the rectangle
         /// </summary>
         /// <param name="point">Point to check</param>
+        /// <param name="useWorldCornersManuelUpdated"> Only used for 2DStreamline Calculation 
+        /// MUST UPDATED before start threads</param>
         /// <returns>True if the point is inside the rectangle</returns>
-        public bool IsPointInsideMesh(Vector3 point)
+        public bool IsPointInsideMesh(Vector3 point, bool useWorldCornersManuelUpdated = false)
         {
-            return rectangle.IsPointInsideMesh(point);
+            return rectangle.IsPointInsideMesh(point, useWorldCornersManuelUpdated);
+        }
+
+        public void UpdateWorldCornersManuel()
+        {
+            rectangle.UpdateWorldCornersManuel();
         }
 
         /// <summary>
@@ -321,18 +347,14 @@
         /// <param name="corners">List of corner positions (should have 4 elements)</param>
         private void CreateRectangle()
         {
-            GameObject volumetricObject = GameObject.Find("DataVisGroup_0/fibers.raw");
-            if (volumetricObject == null)
-            {
-                Debug.LogError("volumetricObject not found on the scene!");
+            if (rectangle != null)
                 return;
-            }
 
             // Get the BoxCollider component
-            BoxCollider boxCollider = volumetricObject.GetComponent<BoxCollider>();
+            BoxCollider boxCollider = volumeTransform.gameObject.GetComponent<BoxCollider>();
             if (boxCollider == null)
             {
-                Debug.LogError("BoxCollider not found on the volumetric object!");
+                UnityEngine.Debug.LogError("BoxCollider not found on the volumetric object!");
                 return;
             }
 
@@ -356,13 +378,8 @@
             // Top-left (min X, center Y, max Z)
             corners.Add(new Vector3(center.x - extents.x, center.y, center.z + extents.z));
 
-            // Create parent GameObject
-            GameObject rectangleObj = new GameObject("InteractiveRectangle");
-            rectangleObj.transform.SetParent(volumetricObject.transform, true);
-
             // Add the InteractiveRectangle component
-            rectangle = rectangleObj.AddComponent<InteractiveRectangle>();
-
+            rectangle = volumeTransform.gameObject.AddComponent<InteractiveRectangle>();
             // Initialize the rectangle with our calculated corners
             rectangle.InitializeWithCorners(corners.ToArray());
         }
@@ -397,6 +414,5 @@
         }
 
         #endregion rectangle utilities
-
     }
 }

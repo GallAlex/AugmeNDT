@@ -63,9 +63,9 @@ namespace AugmeNDT
             vector.transform.parent = parentContainer;
 
             // Reset local transform
-            vector.transform.localPosition = Vector3.zero;
-            vector.transform.localRotation = Quaternion.identity;
-            vector.transform.localScale = Vector3.one;
+            //vector.transform.localPosition = Vector3.zero;
+            //vector.transform.localRotation = Quaternion.identity;
+            //vector.transform.localScale = Vector3.one;
 
             return vector;
         }

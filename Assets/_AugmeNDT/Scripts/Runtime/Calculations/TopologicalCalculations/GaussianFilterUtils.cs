@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,29 +11,29 @@ namespace AugmeNDT
 
     public static class GaussianFilterUtils
     {
-        //gridDistance used to find near neighbors in the coordinate system
-        private static float gridDistance = 0.5f;
-
         /// <summary>
-        /// Applies Gaussian smoothing to the given list of gradient points.
+        /// Applies Gaussian smoothing to the given list of gradient points using parallel processing.
         /// This method reduces noise by averaging nearby gradients with a Gaussian weight function.
         /// </summary>
         /// <param name="generatedGradientPoints">List of gradient points to be smoothed.</param>
         /// <param name="gaussianSigma">The standard deviation (sigma) of the Gaussian kernel.</param>
-        /// <param name="scaleRate"></param>
         /// <returns>A new list of smoothed gradient points.</returns>
-        public static List<GradientDataset> ApplyGaussianSmoothing(List<GradientDataset> generatedGradientPoints, float gaussianSigma,float scaleRate)
+        public static List<GradientDataset> ApplyGaussianSmoothingParallel(List<GradientDataset> generatedGradientPoints, float gaussianSigma)
         {
-            List<GradientDataset> smoothedGradientPoints = new List<GradientDataset>();
-            gaussianSigma = gaussianSigma * scaleRate;
-            foreach (var point in generatedGradientPoints)
+            // Thread-safe koleksiyon kullanarak çıktıyı topluyoruz
+            ConcurrentBag<GradientDataset> smoothedGradientPoints = new ConcurrentBag<GradientDataset>();
+
+            // Her bir nokta için paralel işlem yürütüyoruz
+            Parallel.ForEach(generatedGradientPoints, point =>
             {
-                // Find nearby points within a radius of 1.0f using a search method.
-                List<GradientDataset> neighbors = SpatialCalculations.GetNearbyPoints(generatedGradientPoints, point.Position, gridDistance);
+                // Her nokta için belirli mesafedeki komşuları buluyoruz
+                List<GradientDataset> neighbors = generatedGradientPoints
+                    .Where(p => Vector3.Distance(point.Position, p.Position) <= 0.5f)
+                    .ToList();
 
                 // Skip if no neighbors are found (avoid division by zero later).
-                if (neighbors.Count == 0) 
-                    continue;
+                if (neighbors.Count == 0)
+                    return; // Parallel.ForEach içinde continue yerine return kullanılır
 
                 Vector3 weightedDirection = Vector3.zero;
                 float weightedMagnitude = 0f;
@@ -46,7 +47,7 @@ namespace AugmeNDT
 
                     // Gaussian weight function: exp(-d^2 / (2 * sigma^2))
                     float weight = Mathf.Exp(-Mathf.Pow(distance, 2) / (2 * Mathf.Pow(gaussianSigma, 2)));
-                    
+
                     // Accumulate weighted values
                     weightedDirection += neighbor.Direction * weight;
                     weightedMagnitude += neighbor.Magnitude * weight;
@@ -60,12 +61,20 @@ namespace AugmeNDT
                     weightedMagnitude /= totalWeight;
                 }
 
-                // Add the smoothed gradient point to the new list
-                smoothedGradientPoints.Add(new GradientDataset(point.ID, point.Position, weightedDirection.normalized, weightedMagnitude));
-            }
+                // Thread-safe koleksiyona yeni oluşturulan noktayı ekliyoruz
+                smoothedGradientPoints.Add(new GradientDataset(
+                    point.ID,
+                    point.Position,
+                    weightedDirection.normalized,
+                    weightedMagnitude));
+            });
 
-            Debug.Log("Gaussian Kernel Smoothing completed.");
-            return smoothedGradientPoints;
+            // Debug.Log çağrısını paralel döngü dışında yapıyoruz
+            Debug.Log("Gaussian Kernel Smoothing completed with parallel processing.");
+
+            // ConcurrentBag'i normal listeye dönüştürüyoruz
+            // Not: ConcurrentBag sırayı korumaz, eğer sıra önemliyse ID bazlı sıralama eklenebilir
+            return smoothedGradientPoints.ToList();
         }
     }
 }

@@ -24,11 +24,12 @@ namespace AugmeNDT
 
         private static float localScaleRate;
         private static int arrowsPerFrame = 50;
+        private bool dontUseHideVolumeObjects = true;
+        public bool IsVectorDrawn = false; // for onEnable
 
         // References to other manager instances
         private static VectorObjectVis arrowObjectVisInstance;
         private static RectangleManager rectangleManager;
-
         private void Awake()
         {
             // Initialize singleton instance
@@ -42,54 +43,58 @@ namespace AugmeNDT
             if (rectangleManager == null)
             {
                 rectangleManager = RectangleManager.rectangleManager;
-                localScaleRate = rectangleManager.localScaleRateTo2DVectorVisualize;
+                localScaleRate = rectangleManager.config.Slice2D_VectorSizeRate;
             }
 
             if (arrowObjectVisInstance == null)
                 arrowObjectVisInstance = VectorObjectVis.instance;
+
+        }
+
+        public void ShowArrows()
+        {
+            bool createNewVectors = !generatedGradientPoints.Any() || !arrows.Any() ||rectangleManager.IsUpdated();
+            if (createNewVectors)
+                VisualizePoints();
+            else
+            {
+                foreach (var arrow in arrows)
+                    arrow.SetActive(true);
+            }
+
+            IsVectorDrawn = true;
+        }
+
+        public void HideArrows()
+        {
+            foreach (var arrow in arrows)
+                arrow.SetActive(false);
+
+            IsVectorDrawn = false;
         }
 
         /// <summary>
         /// Creates and displays arrow glyphs to visualize the vector field
         /// </summary>
-        public void VisualizePoints()
+        private void VisualizePoints()
         {
-            // Recreate arrows if none exist or if underlying data has been updated
-            bool createNewVectors = !generatedGradientPoints.Any() || rectangleManager.IsUpdated();
-            if (createNewVectors)
-            {
-                SetContainer();
-                DestroyArrows();
-                generatedGradientPoints = rectangleManager.GetGradientPoints();
+            //Depends on rectangleManager. Therefore it can not call in start()
+            SetContainer();
 
-                // Çok sayıda ok varsa Coroutine kullan yoksa CreateArrows'u kullan
-                if (generatedGradientPoints.Count > 500)
-                    StartCoroutine(CreateArrowsCoroutine());
-                else
-                    arrows = arrowObjectVisInstance.CreateArrows(generatedGradientPoints, container, localScaleRate);
-                HideVolumeObjects(true);
-            }
+            DestroyArrows();
+            generatedGradientPoints = rectangleManager.GetGradientPoints();
+
+            // Çok sayıda ok varsa Coroutine kullan yoksa CreateArrows'u kullan
+            if (generatedGradientPoints.Count > 100)
+                StartCoroutine(CreateArrowsCoroutine());
             else
-                ShowHideArrows(true);
-        }
-
-        /// <summary>
-        /// Shows or hides all arrow glyphs
-        /// </summary>
-        /// <param name="showArrows">True to show arrows, false to hide them</param>
-        public void ShowHideArrows(bool showArrows)
-        {
-            foreach (var arrow in arrows)
-                arrow.SetActive(showArrows);
-
-            if(!showArrows)
-                HideVolumeObjects(false);
+                arrows = arrowObjectVisInstance.CreateArrows(generatedGradientPoints, container, localScaleRate);
         }
 
         // Disable renderers but keep GameObject active
         public void HideVolumeObjects(bool hideObjects)
         {
-            if (container == null)
+            if (container == null || dontUseHideVolumeObjects)
                 return;
 
             Renderer[] renderers = container.parent.GetComponentsInChildren<Renderer>(true);
@@ -102,7 +107,6 @@ namespace AugmeNDT
                 renderer.enabled = !hideObjects;
             }
         }
-
 
         private IEnumerator CreateArrowsCoroutine()
         {
@@ -141,9 +145,7 @@ namespace AugmeNDT
 
             GameObject _2DVectorForce = new GameObject("2DVectorForce");
             container = _2DVectorForce.transform;
-
-            Transform fibers = GameObject.Find("DataVisGroup_0/fibers.raw").transform;
-            container.transform.parent = fibers;
+            container.transform.parent = rectangleManager.GetInteractiveRectangleContainer();
         }
 
         /// <summary>

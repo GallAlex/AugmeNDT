@@ -39,22 +39,40 @@ namespace AugmeNDT
         /// <param name="lifetime">Maximum duration in seconds before the flow object is destroyed</param>
         /// <returns>IEnumerator for coroutine processing</returns>
         private IEnumerator StartMoveSphere(List<GradientDataset> gradientPoints, Bounds cubeBounds,
-            float streamlineStepSize, float sphereSpeed, float lifetime)
+                            float streamlineStepSize, float sphereSpeed, float lifetime)
         {
             // Start from current object position
             Vector3 currentPosition = transform.position;
             float elapsedTime = 0f;
 
+            // Get rectangle normal for projection
+            Vector3 normal = rectangleManager.GetRectangleNormal();
+            Vector3[] corners = rectangleManager.GetRectangleCorners();
+
             while (elapsedTime < lifetime)
             {
-                // Calculate direction using Runge-Kutta 4th order method
-                Vector3 direction = SpatialCalculations.RungeKutta4(currentPosition, gradientPoints, streamlineStepSize);
+                // Get direction with returnPosition parameter set to false
+                Vector3 direction = SpatialCalculations.RungeKutta4(
+                    currentPosition,
+                    gradientPoints,
+                    streamlineStepSize,
+                    false  // Direction döndürsün, pozisyon değil
+                );
 
                 // Exit if magnitude is too small (converged or stagnant flow)
                 if (direction.magnitude < 0.01f) break;
 
-                // Calculate next position based on direction and speed
-                Vector3 nextPosition = currentPosition + direction.normalized * sphereSpeed * Time.deltaTime;
+                // Project direction onto the plane
+                direction = direction - Vector3.Dot(direction, normal) * normal;
+
+                // Normalize and apply speed
+                direction = direction.normalized * sphereSpeed * Time.deltaTime;
+
+                // Calculate next position
+                Vector3 nextPosition = currentPosition + direction;
+
+                // Project position onto the plane to prevent drift
+                nextPosition = SpatialCalculations.ProjectPointOntoRectanglePlane(nextPosition, corners, normal);
 
                 // Exit if object goes outside the boundary mesh
                 if (!rectangleManager.IsPointInsideMesh(nextPosition)) break;

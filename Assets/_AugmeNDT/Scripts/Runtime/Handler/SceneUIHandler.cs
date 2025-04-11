@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.MixedReality.Toolkit.UI;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace AugmeNDT{
     /// <summary>
@@ -77,14 +76,6 @@ namespace AugmeNDT{
 
             string path = await asyncLoadingTask;
             textLabel.text = path;
-            
-            if (SceneManager.GetActiveScene().name == "TopologicalDataAnalysisScene")
-            {
-                GameObject topologicalAnalysisFiberChecker = new GameObject("TopologicalAnalysisFiberChecker");
-                topologicalAnalysisFiberChecker.transform.parent = transform;
-                FiberChecker fiberChecker = topologicalAnalysisFiberChecker.AddComponent<FiberChecker>();
-                fiberChecker.path = path;
-            }
         }
 
         public void CreateVisualization()

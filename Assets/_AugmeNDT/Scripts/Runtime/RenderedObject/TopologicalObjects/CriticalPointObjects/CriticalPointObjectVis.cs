@@ -16,13 +16,17 @@ namespace AugmeNDT
         public static CriticalPointObjectVis instance;
         public Dictionary<int, List<GameObject>> criticalPointDictionary = new Dictionary<int, List<GameObject>>();
 
-        public Transform container; // All visualized points will be parented to this container for better scene organization
+        // All visualized points will be parented to this container for better scene organization
+        public Transform container; 
+        // Volume Transform to set container's parent
+        private Transform volumeTransform;
 
         private TopologicalDataObject topologicalDataInstance;
         private CreateCriticalPoints createCriticalPointsInstance;
+        private Transform legendColorBar;
+
         private GameObject pointPrefab;  // Prefab for the critical point representation
-        private Transform legendColorBar;  
-        private static float localScaleRate = 0.006f;
+        private float localScaleRate = 0.006f;
 
         private void Awake()
         {
@@ -34,8 +38,17 @@ namespace AugmeNDT
         private void Start()
         {
             // Get reference to the singleton data object
-            topologicalDataInstance = TopologicalDataObject.instance; 
-            createCriticalPointsInstance = CreateCriticalPoints.instance;
+            if (topologicalDataInstance == null)
+            {
+                topologicalDataInstance = TopologicalDataObject.instance;
+                volumeTransform = topologicalDataInstance.volumeTransform;
+
+                TopologyConfigData config = topologicalDataInstance.config;
+                localScaleRate = config.criticalPoints_localScaleRate;
+            }
+
+            if (createCriticalPointsInstance == null)
+                createCriticalPointsInstance = CreateCriticalPoints.instance;
         }
 
         /// <summary>
@@ -96,11 +109,9 @@ namespace AugmeNDT
         /// </summary>
         private void SetContainer()
         {
-            Transform fibers = GameObject.Find("DataVisGroup_0/fibers.raw").transform;
-
             GameObject criticalPointsObj = new GameObject("CriticalPointObjects");
             container = criticalPointsObj.transform;
-            container.SetParent(fibers);
+            container.SetParent(volumeTransform);
         }
     }
 

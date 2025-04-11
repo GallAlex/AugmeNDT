@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace AugmeNDT
@@ -23,12 +26,17 @@ namespace AugmeNDT
         
         // Parent container for all arrows in the scene
         private Transform container;
+        // Volume Transform to set container's parent
+        private static Transform volumeTransform;
 
         // Flags to check if arrows are already created and if they are currently hidden
         private bool arrowscalculated = false;
         private bool arrowshidden = false;
 
-        public static float localScaleRate = 0.3f;
+        //Scale factor for arrow size
+        private float localScaleRate = 0.3f; // default
+        //Number of arrows to create per frame
+        private int arrowsPerFrame = 50;    // default
 
         private void Awake()
         {
@@ -36,13 +44,22 @@ namespace AugmeNDT
                 instance = this;
         }
 
-        void Start()
+        private void Start()
         {
             if (topologicalDataInstance == null)
+            {
                 topologicalDataInstance = TopologicalDataObject.instance;
+                volumeTransform = topologicalDataInstance.volumeTransform;
+
+                TopologyConfigData config = topologicalDataInstance.config;
+                localScaleRate = config.localScaleRate;
+                arrowsPerFrame = config.arrowsPerFrame;
+            }
 
             if (arrowObjectVisInstance == null)
                 arrowObjectVisInstance = VectorObjectVis.instance;
+
+            SetContainer();
         }
 
         /// <summary>
@@ -58,22 +75,22 @@ namespace AugmeNDT
             }
             else
             {
-                if (container == null)
-                    SetContainer();
-
-                arrows = arrowObjectVisInstance.CreateArrows(topologicalDataInstance.gradientList, container, localScaleRate);
                 arrowscalculated = true;
                 arrowshidden = false;
+                StartCoroutine(CreateArrowsCoroutine());
             }
         }
 
-        private void SetContainer()
+        /// <summary>
+        /// Makes all arrows in the vector field visible again.
+        /// </summary>
+        public void ShowVectorField()
         {
-            Transform fibers = GameObject.Find("DataVisGroup_0/fibers.raw").transform;
+            if (!arrowshidden)
+                return;
 
-            GameObject generalVectorFieldArrows = new GameObject("GeneralVectorFieldArrows");
-            container = generalVectorFieldArrows.transform;
-            container.SetParent(fibers);
+            arrows.ForEach(x => x.SetActive(true));
+            arrowshidden = false;
         }
 
         /// <summary>
@@ -88,16 +105,40 @@ namespace AugmeNDT
             arrowshidden = true;
         }
 
-        /// <summary>
-        /// Makes all arrows in the vector field visible again.
-        /// </summary>
-        public void ShowVectorField()
+        private IEnumerator CreateArrowsCoroutine()
         {
-            if (!arrowshidden)
-                return;
+            List<GradientDataset> gradientPoints = topologicalDataInstance.gradientList;
+            // Toplam ok sayısı
+            int totalArrows = gradientPoints.Count;
+            arrows = new List<GameObject>(totalArrows);
 
-            arrows.ForEach(x => x.SetActive(true));
-            arrowshidden = false;
+            for (int i = 0; i < totalArrows; i += arrowsPerFrame)
+            {
+                // Bu frame'de işlenecek gradientPoints alt kümesini al
+                List<GradientDataset> batchPoints = gradientPoints
+                    .Skip(i)
+                    .Take(Mathf.Min(arrowsPerFrame, totalArrows - i))
+                    .ToList();
+
+                // Bu grup için okları oluştur
+                List<GameObject> batchArrows = arrowObjectVisInstance.CreateArrows(
+                    batchPoints, container, localScaleRate);
+
+                // Ana listeye ekle
+                arrows.AddRange(batchArrows);
+
+                // Bir sonraki frame'e geç
+                yield return null;
+            }
+
+            Debug.Log($"Created {arrows.Count} arrow glyphs");
+        }
+
+        private void SetContainer()
+        {
+            GameObject generalVectorFieldArrows = new GameObject("GeneralVectorFieldArrows");
+            container = generalVectorFieldArrows.transform;
+            container.SetParent(volumeTransform);
         }
     }
 }

@@ -9,19 +9,18 @@ using UnityEngine;
 
 namespace AugmeNDT
 {
-    public static class TTKCalculations
+    public class TTKCalculations
     {
         // Paths for input/output and scripts
-        private static string mhdPath = @"C:/Users/ozdag/OneDrive/Desktop/ThesisAll/new_Studies/Volume_Fibers/fiber_volumes.mhd";
-        //private static string mhdPath = @"C:/Users/ozdag/OneDrive/Desktop/SourceForUnity/new_mhd_files/fibers.mhd";
-        private static string ttkScripts = Application.streamingAssetsPath + @"/TTKScripts/";
-        private static string ttkResults = Application.streamingAssetsPath + @"/TTKResults/";
-        private static CultureInfo culture = new CultureInfo("en-US");
+        public string mhdPath;
+        private string ttkScripts = Application.streamingAssetsPath + @"/TTKScripts/";
+        private string ttkResults = Application.streamingAssetsPath + @"/TTKResults/";
+        private CultureInfo culture = new CultureInfo("en-US");
 
         /// <summary>
         /// Starts a Python process and retries up to 4 times until it succeeds.
         /// </summary>
-        private static bool StartPythonScript(string arguments)
+        private bool StartPythonScript(string arguments)
         {
             int maxRetries = 4;
             int retryCount = 0;
@@ -69,7 +68,7 @@ namespace AugmeNDT
         /// <summary>
         /// Gets the full 3D gradient field from TTK, or loads it from cache if available.
         /// </summary>
-        public static List<GradientDataset> GetGradientAllVectorField()
+        public List<GradientDataset> GetGradientAllVectorField()
         {
             string csvOutputPath = ttkResults + @"gradient_AllVectorField.csv";
             if (File.Exists(csvOutputPath))
@@ -85,7 +84,7 @@ namespace AugmeNDT
         /// <summary>
         /// Gets the critical points from the full 3D vector field.
         /// </summary>
-        public static List<CriticalPointDataset> GetCriticalPointAllVectorField()
+        public List<CriticalPointDataset> GetCriticalPointAllVectorField()
         {
             string csvOutputPath = ttkResults + @"critical_points_AllVectorField.csv";
             if (File.Exists(csvOutputPath))
@@ -101,7 +100,7 @@ namespace AugmeNDT
         /// <summary>
         /// Calculates the 2D slice gradient field using TTK.
         /// </summary>
-        public static List<GradientDataset> GetGradient2DSlice(Vector3 origin, Vector3 normal, List<int> minMaxValues)
+        public List<GradientDataset> GetGradient2DSlice(Vector3 origin, Vector3 normal, List<int> minMaxValues)
         {
             string pythonScript = "./calculate_gradient_2D_Slice.py";
             string csvOutputPath = ttkResults + @"gradient_2D_Slice.csv";
@@ -124,7 +123,7 @@ namespace AugmeNDT
         /// <summary>
         /// Calculates 2D slice critical points using TTK.
         /// </summary>
-        public static List<CriticalPointDataset> GetCriticalpoint2DSlice(Vector3 origin, Vector3 normal, List<int> minMaxValues)
+        public List<CriticalPointDataset> GetCriticalpoint2DSlice(Vector3 origin, Vector3 normal, List<int> minMaxValues)
         {
             string pythonScript = "./calculate_critical_point_2D_Slice.py";
             string csvOutputPath = ttkResults + @"critical_points_2D_Slice.csv";
@@ -148,7 +147,7 @@ namespace AugmeNDT
         /// Gets gradient field data for a specific 3D volume of interest.
         /// NOTE: TTK requires all VOI values to be integers.
         /// </summary>
-        public static List<GradientDataset> GetGradient3DSubset(List<int> minMaxValues)
+        public List<GradientDataset> GetGradient3DSubset(List<int> minMaxValues)
         {
             string pythonScript = "./calculate_gradient_3D_Subset.py";
             string csvOutputPath = ttkResults + @"gradient_3D_Subset.csv";
@@ -169,7 +168,7 @@ namespace AugmeNDT
         /// <summary>
         /// Gets critical points from a 3D volume subset using TTK.
         /// </summary>
-        public static List<CriticalPointDataset> GetCriticalpoint3DSubset(List<int> minMaxValues)
+        public List<CriticalPointDataset> GetCriticalpoint3DSubset(List<int> minMaxValues)
         {
             string pythonScript = "./calculate_criticalpoint_3D_Subset.py";
             string csvOutputPath = ttkResults + @"criticalpoint_3D_Subset.csv";
@@ -190,7 +189,7 @@ namespace AugmeNDT
         /// <summary>
         /// Loads gradient data from a CSV file and parses it into GradientDataset objects.
         /// </summary>
-        private static List<GradientDataset> LoadGradients(string fullPath)
+        private List<GradientDataset> LoadGradients(string fullPath)
         {
             string[] lines = null;
             try
@@ -238,7 +237,7 @@ namespace AugmeNDT
         /// <summary>
         /// Loads critical point data from a CSV file and parses it into CriticalPointDataset objects.
         /// </summary>
-        private static List<CriticalPointDataset> LoadCriticalPoints(string fullPath)
+        private List<CriticalPointDataset> LoadCriticalPoints(string fullPath)
         {
             string[] lines = null;
             try
@@ -272,7 +271,7 @@ namespace AugmeNDT
             return criticalPointList;
         }
 
-        public static void SaveGradientListToCSV(string filePath, List<GradientDataset> gradientList)
+        public void SaveGradientListToCSV(string filePath, List<GradientDataset> gradientList)
         {
             // StreamWriter kullanarak dosya açma işlemi
             using (StreamWriter writer = new StreamWriter(filePath))
