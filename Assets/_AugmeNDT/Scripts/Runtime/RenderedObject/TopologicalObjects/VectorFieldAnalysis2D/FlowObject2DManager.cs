@@ -28,6 +28,9 @@ namespace AugmeNDT
         private float localScale;
         private GameObject spherePrefab; // Sphere prefab
 
+        /// <summary>
+        /// Initializes the singleton instance and loads the sphere prefab resource
+        /// </summary>
         private void Awake()
         {
             // Initialize singleton instance
@@ -35,6 +38,9 @@ namespace AugmeNDT
             spherePrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/TopologicalVis/2dmovingSphere");
         }
 
+        /// <summary>
+        /// Gets references to other manager instances required for operation
+        /// </summary>
         private void Start()
         {
             // Get references to other managers
@@ -55,6 +61,10 @@ namespace AugmeNDT
             }
         }
 
+        /// <summary>
+        /// Creates and configures the container that holds all the flowing sphere objects
+        /// Sets default values for sphere parameters if not already initialized
+        /// </summary>
         private void SetContainer()
         {
             if (container != null)
@@ -68,14 +78,14 @@ namespace AugmeNDT
             container = new GameObject("2DMovingSpheres").transform;
             Transform rectangleTransform = rectangleManager.GetInteractiveRectangleContainer();
             container.parent = rectangleTransform;
-            
+
+            // Scale inversely to parent to maintain consistent visual size
             Vector3 parentScale = rectangleTransform.gameObject.transform.localScale;
             container.transform.localScale = new Vector3(
                 1f / parentScale.x,
                 1f / parentScale.y,
                 1f / parentScale.z
             );
-            ;
         }
 
         /// <summary>
@@ -100,7 +110,7 @@ namespace AugmeNDT
             {
                 if (stopFlowObjects)
                     break;
-                
+
                 // Get gradient data and boundary information
                 List<GradientDataset> generatedGradientPoints = rectangleManager.GetGradientPoints();
                 Bounds bounds = rectangleManager.GetRectangleBounds();
@@ -126,7 +136,7 @@ namespace AugmeNDT
 
                         // Initialize flow behavior on the sphere
                         FlowObject2D movingSphere = sphere.GetComponent<FlowObject2D>();
-                        movingSphere.StartFlow(generatedGradientPoints, bounds, streamLine2DInstance.streamLineStepSize, sphereSpeed,lifetime);
+                        movingSphere.StartFlow(generatedGradientPoints, bounds, streamLine2DInstance.streamLineStepSize, sphereSpeed, lifetime);
                     }
                 }
 

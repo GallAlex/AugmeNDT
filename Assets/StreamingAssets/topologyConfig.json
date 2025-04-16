@@ -1,25 +1,12 @@
 {
+    "SceneNumber": 8,
     "mhdDimension": {
         "x": 24.0,
         "y": 16.0,
         "z": 45.0
     },
     "mhdPath": "C:/Users/ozdag/OneDrive/Desktop/smallDATA/fibers.mhd",
-    "showTopologicalUI": true,
-    "localScaleRate": 0.30000001192092898,
-    "arrowsPerFrame": 50,
-    "UseDynamicVectorField": false,
-    "maxVectorCount": 20000,
-    "minVectorCount": 1000,
-    "scaleChangeThreshold": 0.10000000149011612,
-    "vectorDensity": 0.6000000238418579,
-    "criticalPoints_localScaleRate": 0.006000000052154064,
-    "UseDynamicCriticalPoints": false,
-    "cp_dynamic_localScaleFactor": 0.006000000052154064,
-    "cp_dynamic_maxPointCount": 10000,
-    "cp_dynamic_minPointCount": 400,
-    "cp_dynamic_scaleChangeThreshold": 0.10000000149011612,
-    "criticalPointSize": 0.10000000149011612,
+    "showTopologicalUI": false,
     "sinkColor": {
         "r": 0.0,
         "g": 0.0,
@@ -37,5 +24,19 @@
         "g": 0.9215686321258545,
         "b": 0.01568627543747425,
         "a": 1.0
-    }
+    },
+    "localScaleRate": 0.30000001192092898,
+    "arrowsPerFrame": 50,
+    "UseDynamicVectorField": false,
+    "maxVectorCount": 20000,
+    "minVectorCount": 1000,
+    "scaleChangeThreshold": 0.10000000149011612,
+    "vectorDensity": 0.6000000238418579,
+    "criticalPoints_localScaleRate": 0.006000000052154064,
+    "UseDynamicCriticalPoints": false,
+    "cp_dynamic_localScaleFactor": 0.006000000052154064,
+    "cp_dynamic_maxPointCount": 10000,
+    "cp_dynamic_minPointCount": 400,
+    "cp_dynamic_scaleChangeThreshold": 0.10000000149011612,
+    "Slice2D_VectorSizeRate": 0.20000000298023225
 }

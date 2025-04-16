@@ -1,5 +1,6 @@
 ﻿using Assets.Scripts.DataStructure;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -14,73 +15,70 @@ namespace AugmeNDT
     /// </summary>
     public class Rectangle3DManager : MonoBehaviour
     {
-        public static bool supportedByTTK = false;
         public static Rectangle3DManager rectangle3DManager;
+
+        public bool useAllData = true;
+        public bool visibleRectangle = false;
+
         public TopologyConfigData config;
         public Transform volumeTransform;
+
+        /// <summary>
+        /// Controls the density of the grid used for gradient calculations.
+        /// Lower values create denser grids with more detail but higher processing cost.
+        /// </summary>
+        private float defaultInterval;
+        /// Scale factor for calculation grid density, automatically adjusted based on volume dimensions.
+        public float scaleRateToCalculation;
+        public float intervalValue; // defaultInterval*scaleRateToCalculation
+
 
         private static TopologicalDataObject topologicalDataObjectInstance;
         private List<GradientDataset> gradientPoints = new List<GradientDataset>();
         private List<CriticalPointDataset> criticalPoints = new List<CriticalPointDataset>();
-
         private GameObject rectangle;
-        private Bounds currentCubeBounds;
 
-        private TTKCalculations ttkCalculations;
+        /// <summary>
+        /// Initializes the singleton instance
+        /// </summary>
         private void Awake()
         {
             // Initialize singleton instance
             rectangle3DManager = this;
         }
 
+        /// <summary>
+        /// Initializes references and configuration values
+        /// </summary>
         private void Start()
         {
             // Get reference to topological data object
             if (topologicalDataObjectInstance == null)
             {
                 topologicalDataObjectInstance = TopologicalDataObject.instance;
-                ttkCalculations = topologicalDataObjectInstance.ttkCalculation;
                 volumeTransform = topologicalDataObjectInstance.volumeTransform;
                 config = topologicalDataObjectInstance.config;
+
+                scaleRateToCalculation = topologicalDataObjectInstance.GetOptimalScaleRateToCalculation();
+                defaultInterval = 0.1f; //default
+                intervalValue = defaultInterval * scaleRateToCalculation;
             }
-            ShowRectangle();
         }
 
         /// <summary>
-        /// Shows the 3D rectangle wireframe, creating it if needed
+        /// Creates the 3D rectangle visualization if it doesn't exist yet
         /// </summary>
-        public void ShowRectangle()
+        public void InitializeRectangle()
         {
             if (rectangle == null)
             {
-                rectangle3DManager.Create3DRectangle(topologicalDataObjectInstance.min3D,topologicalDataObjectInstance.max3D);
-            }
-            else
-                rectangle.SetActive(true);
-        }
+                if (useAllData)
+                    rectangle3DManager.Create3DRectangle();
+                else
+                    rectangle3DManager.Create3DRectangle(topologicalDataObjectInstance.min3D, topologicalDataObjectInstance.max3D);
 
-        /// <summary>
-        /// Hides the 3D rectangle wireframe
-        /// </summary>
-        public void HideRectangle()
-        {
-            if (rectangle != null)
-                rectangle.SetActive(false);
-        }
-
-        /// <summary>
-        /// Checks if the rectangle position or size has changed
-        /// and updates internal data if necessary
-        /// </summary>
-        /// <returns>True if the bounds have changed since last update</returns>
-        public bool IsUpdated()
-        {
-            bool IsUpdated = currentCubeBounds != GetRectangleBounds();
-            if (IsUpdated)
-            {
                 UpdateInstance();
             }
-            return IsUpdated;
         }
 
         /// <summary>
@@ -99,7 +97,6 @@ namespace AugmeNDT
         /// <returns>List of gradient points inside the rectangle</returns>
         public List<GradientDataset> GetGradientPoints()
         {
-            IsUpdated();
             return gradientPoints;
         }
 
@@ -109,197 +106,126 @@ namespace AugmeNDT
         /// <returns>List of critical points inside the rectangle</returns>
         public List<CriticalPointDataset> GetCriticalPoints()
         {
-            IsUpdated();
             return criticalPoints;
         }
-        
-        public Transform GetRectangleContainer()
+
+        /// <summary>
+        /// Recreates the rectangle after the volume has been scaled
+        /// </summary>
+        public void UpdateRectangleAfterScaling()
         {
-            return rectangle.transform;
+            if (rectangle == null)
+                return;
+
+            Destroy(rectangle.GetComponent<Basic3DRectangle>());
+            Destroy(GameObject.Find("RectangleVisual"));
+            Destroy(rectangle);
+            rectangle = null;
+
+            if (useAllData)
+                rectangle3DManager.Create3DRectangle();
+            else
+                rectangle3DManager.Create3DRectangle(topologicalDataObjectInstance.min3D, topologicalDataObjectInstance.max3D);
+
+            UpdateInstance();
         }
-        
+
         #region private
         /// <summary>
         /// Updates internal data when the rectangle position or size changes
         /// </summary>
         private void UpdateInstance()
         {
-            UpdateCurrentPosition();
-
-            CalculateGradientPoints();
-            CalculateCriticalPoints();
+            CalculateGradientPointsWithSpacing();
+            CalculateCriticalPointsWithSpacing();
         }
 
         /// <summary>
-        /// Updates the current position of the rectangle
+        /// Calculates and filters gradient points within the rectangle using spatial grid spacing
         /// </summary>
-        private void UpdateCurrentPosition()
-        {
-            //update position
-            currentCubeBounds = GetRectangleBounds();
-        }
-
-        /// <summary>
-        /// Gets the minimum and maximum values of the box along each axis
-        /// </summary>
-        /// <returns>List containing [minX, maxX, minY, maxY, minZ, maxZ]</returns>
-        private List<int> GetMinMaxValuesOfBox()
-        {
-            Basic3DRectangle rectangleComponent = rectangle.GetComponent<Basic3DRectangle>();
-            if (rectangleComponent != null)
-            {
-                // Sınırlayıcı kutuyu doğrudan wireframe bileşeninden al
-                Bounds bounds = rectangleComponent.GetBounds();
-                Vector3 center = bounds.center;
-                Vector3 extents = bounds.extents; // Bu size/2'ye eşit
-
-                // Min ve max değerleri hesapla
-                int minX = (int)Math.Floor(center.x - extents.x);
-                int maxX = (int)Math.Ceiling(center.x + extents.x);
-                int minY = (int)Math.Floor(center.y - extents.y);
-                int maxY = (int)Math.Ceiling(center.y + extents.y);
-                int minZ = (int)Math.Floor(center.z - extents.z);
-                int maxZ = (int)Math.Ceiling(center.z + extents.z);
-
-                return new List<int>(new[] { minX, maxX, minY, maxY, minZ, maxZ });
-            }
-            return new List<int>();
-        }
-
-        /// <summary>
-        /// Mevcut wireframe sınırları içinde 0.2 birim aralıklarla gradient noktaları oluşturur
-        /// </summary>
-        private void CalculateGradientPointsNew()
-        {
-            // Önceki verileri temizle
-            gradientPoints.Clear();
-
-            // Dikdörtgenin sınırlarını al
-            Bounds bounds = GetRectangleBounds();
-            Vector3 min = bounds.min;
-            Vector3 max = bounds.max;
-
-            // Noktalar arası mesafe
-            float spacing = 0.1f;
-
-            // X, Y ve Z eksenleri boyunca noktaları oluştur
-            for (float x = min.x; x <= max.x; x += spacing)
-            {
-                for (float y = min.y; y <= max.y; y += spacing)
-                {
-                    for (float z = min.z; z <= max.z; z += spacing)
-                    {
-                        Vector3 position = new Vector3(x, y, z);
-
-                        // Sınır kontrolü - tam sınırda sayısal hatalar olabilir
-                        if (bounds.Contains(position))
-                        {
-                            // Yeni bir gradient noktası oluştur
-                            GradientDataset gradientPoint = new GradientDataset(
-                                gradientPoints.Count,
-                                position,
-                                Vector3.one,
-                                0);
-
-                            gradientPoints.Add(gradientPoint);
-                        }
-                    }
-                }
-            }
-
-            Debug.Log($"Oluşturulan toplam gradient nokta sayısı: {gradientPoints.Count}");
-            gradientPoints.ForEach(gradientPoint => { TEST(gradientPoint.Position); });
-        }
-
-        private void TEST(Vector3 position)
-        {
-            // Create and configure sphere object
-            GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            sphere.transform.position = position;
-            sphere.transform.localScale = Vector3.one * 0.003f;
-        }
-        /// <summary>
-        /// Calculates and filters gradient points within the current wireframe bounds
-        /// Uses TTK calculations if supported, otherwise filters from topological data
-        /// </summary>
-        private void CalculateGradientPoints()
+        private void CalculateGradientPointsWithSpacing()
         {
             // Clear previous data
             gradientPoints.Clear();
 
             Basic3DRectangle rectangleComponent = rectangle.GetComponent<Basic3DRectangle>();
-            foreach (var data in topologicalDataObjectInstance.gradientList)
+            Bounds bounds = rectangleComponent.GetBounds();
+
+            // Get rectangle bounds
+            Vector3 min = bounds.min;
+            Vector3 max = bounds.max;
+
+            // Use interval value
+            float spacing = intervalValue;
+
+            // Use thread-safe dictionary to manage concurrent access
+            ConcurrentDictionary<Vector3Int, GradientDataset> gridPoints = new ConcurrentDictionary<Vector3Int, GradientDataset>();
+
+            rectangleComponent.SetBoundsManuelUpdated();
+            Parallel.ForEach(topologicalDataObjectInstance.gradientList, data =>
             {
-                if (rectangleComponent.ContainsPointUsingBounds(data.Position))
+                if (rectangleComponent.ContainsPointUsingBounds(data.Position, true))
                 {
-                    gradientPoints.Add(data);
+                    // Convert position to grid cell
+                    Vector3Int gridPos = new Vector3Int(
+                        Mathf.FloorToInt(data.Position.x / spacing),
+                        Mathf.FloorToInt(data.Position.y / spacing),
+                        Mathf.FloorToInt(data.Position.z / spacing)
+                    );
+
+                    // Take only one point from each grid cell (in a thread-safe way)
+                    gridPoints.TryAdd(gridPos, data);
                 }
-            }
+            });
 
-            Debug.Log($"Filtered {gradientPoints.Count} points inside the cube.");
-        }
+            // Add selected points to gradientPoints list
+            gradientPoints.AddRange(gridPoints.Values);
 
-        private bool CalculateGradientPointsByTTK()
-        {
-            bool tkkGradientUsed = false;
-            var boxGradientPoints = ttkCalculations.GetGradient3DSubset(GetMinMaxValuesOfBox());
-            if (boxGradientPoints.Any())
-            {
-                var borders = GetRectangleBounds();
-                boxGradientPoints = boxGradientPoints.Select(x => x).Where(x => borders.Contains(x.Position)).ToList();
-                if (boxGradientPoints.Any())
-                {
-                    gradientPoints = boxGradientPoints;
-                    tkkGradientUsed = true;
-                }
-            }
-
-            return tkkGradientUsed;
+            Debug.Log($"Filtered {gradientPoints.Count} points inside the cube with interval {spacing}.");
         }
 
         /// <summary>
-        /// Calculates and filters critical points within the current wireframe bounds
-        /// Uses TTK calculations if supported, otherwise filters from topological data
+        /// Calculates and filters critical points within the rectangle using spatial grid spacing
         /// </summary>
-        private void CalculateCriticalPoints()
+        private void CalculateCriticalPointsWithSpacing()
         {
             criticalPoints.Clear(); // Clear previous data
-            if (supportedByTTK)
-            {
-                bool isTTKCalculated = CalculateCriticalPointsByTTK();
-                if (isTTKCalculated)
-                    return;
-            }
 
-            // Filter data inside the cube
             Basic3DRectangle rectangleComponent = rectangle.GetComponent<Basic3DRectangle>();
-            foreach (var data in topologicalDataObjectInstance.criticalPointList)
+            Bounds bounds = rectangleComponent.GetBounds();
+
+            // Use interval value - you can use a different interval value for critical points
+            float spacing = intervalValue;
+
+            // Use thread-safe dictionary to manage concurrent access
+            ConcurrentDictionary<Vector3Int, CriticalPointDataset> gridPoints = new ConcurrentDictionary<Vector3Int, CriticalPointDataset>();
+
+            rectangleComponent.SetBoundsManuelUpdated();
+            Parallel.ForEach(topologicalDataObjectInstance.criticalPointList, data =>
             {
-                if (rectangleComponent.ContainsPointUsingBounds(data.Position))
+                if (rectangleComponent.ContainsPointUsingBounds(data.Position, true))
                 {
-                    criticalPoints.Add(data);
+                    // Convert position to grid cell
+                    Vector3Int gridPos = new Vector3Int(
+                        Mathf.FloorToInt(data.Position.x / spacing),
+                        Mathf.FloorToInt(data.Position.y / spacing),
+                        Mathf.FloorToInt(data.Position.z / spacing)
+                    );
+
+                    // Take only one point from each grid cell (in a thread-safe way)
+                    gridPoints.TryAdd(gridPos, data);
                 }
-            }
+            });
+
+            // Add selected points to criticalPoints list
+            criticalPoints.AddRange(gridPoints.Values);
+
+            Debug.Log($"Filtered {criticalPoints.Count} critical points inside the cube with interval {spacing}.");
         }
 
-        private bool CalculateCriticalPointsByTTK()
-        {
-
-            bool tkkcriticalPointsUsed = false;
-            var boxcriticalPoints = ttkCalculations.GetCriticalpoint3DSubset(GetMinMaxValuesOfBox());
-            if (boxcriticalPoints.Any())
-            {
-                var borders = GetRectangleBounds();
-                boxcriticalPoints = boxcriticalPoints.Select(x => x).Where(x => borders.Contains(x.Position)).ToList();
-                if (boxcriticalPoints.Any())
-                {
-                    criticalPoints = boxcriticalPoints;
-                    tkkcriticalPointsUsed = true;
-                }
-            }
-            return tkkcriticalPointsUsed;
-        }
-
+        /// <summary>
+        /// Creates a 3D rectangle using the volume's bounds
+        /// </summary>
         public void Create3DRectangle()
         {
             rectangle = new GameObject("Rectangle3D");
@@ -312,9 +238,9 @@ namespace AugmeNDT
             rectangle.transform.localPosition = Vector3.zero;
             rectangle.transform.localRotation = Quaternion.identity;
             rectangle.transform.localScale = Vector3.one;
-            
+
             Basic3DRectangle basic3DRectangle = rectangle.AddComponent<Basic3DRectangle>();
-            basic3DRectangle.Initialize();
+            basic3DRectangle.drawBorders = visibleRectangle;
 
             BoxCollider boxCollider = volumeObject.GetComponent<BoxCollider>();
             if (boxCollider != null)
@@ -325,25 +251,29 @@ namespace AugmeNDT
             }
         }
 
+        /// <summary>
+        /// Creates a 3D rectangle with specified minimum and maximum corners
+        /// </summary>
+        /// <param name="min">Minimum corner position (x,y,z)</param>
+        /// <param name="max">Maximum corner position (x,y,z)</param>
         public void Create3DRectangle(Vector3 min, Vector3 max)
         {
-            // Yeni GameObject oluştur
+            // Create new GameObject
             rectangle = new GameObject("Rectangle3D");
             rectangle.tag = "Rectangle3D";
 
-            // Parent olarak volumeTransform'a ayarla
+            // Set volumeTransform as parent
             rectangle.transform.parent = volumeTransform;
 
-            // Transformu sıfırla
+            // Reset transform
             rectangle.transform.localPosition = Vector3.zero;
             rectangle.transform.localRotation = Quaternion.identity;
             rectangle.transform.localScale = Vector3.one;
 
-            // Basic3DRectangle bileşenini ekle ve başlat
+            // Add and initialize Basic3DRectangle component
             Basic3DRectangle basic3DRectangle = rectangle.AddComponent<Basic3DRectangle>();
-            basic3DRectangle.Initialize();
-
-            // Sınırları ayarla
+            basic3DRectangle.drawBorders = visibleRectangle;
+            // Set bounds
             basic3DRectangle.SetBounds(min, max);
         }
 

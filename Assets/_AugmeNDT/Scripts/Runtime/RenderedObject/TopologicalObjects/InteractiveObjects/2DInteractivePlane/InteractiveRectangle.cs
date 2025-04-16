@@ -154,7 +154,7 @@ public class InteractiveRectangle : MonoBehaviour
     /// <param name="point">The world space point to check</param>
     /// <param name="useWorldCornersManuelUpdated"> Only used for 2DStreamline Calculation MUST UPDATED before start threads</param>
     /// <returns>True if the point is inside the rectangle mesh</returns>
-    public bool IsPointInsideMesh(Vector3 point, bool useWorldCornersManuelUpdated=false)
+    public bool IsPointInsideMesh(Vector3 point, bool useWorldCornersManuelUpdated = false)
     {
         // Get corners in world space
         Vector3[] corners = useWorldCornersManuelUpdated ? worldCornersManuelUpdated : GetCornerPositions();
@@ -242,6 +242,10 @@ public class InteractiveRectangle : MonoBehaviour
         return worldCorners;
     }
 
+    /// <summary>
+    /// Updates the cached world corner positions
+    /// Used for thread-safe operations in 2D streamline calculations
+    /// </summary>
     public void UpdateWorldCornersManuel()
     {
         worldCornersManuelUpdated = GetCornerPositions();

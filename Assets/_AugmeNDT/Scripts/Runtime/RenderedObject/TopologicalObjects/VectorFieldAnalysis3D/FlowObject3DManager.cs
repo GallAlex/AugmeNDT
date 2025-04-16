@@ -16,16 +16,15 @@ namespace AugmeNDT
         [Range(1, 100)]
         public int numSpheres = 8;
 
-        [Range(0.1f, 5.0f)]
-        public float spawnInterval = 1.0f;
-
         public float localScaleRate = 0.003f;
 
-        private bool enableSpheres = true;
         private bool stopFlowObjects = false;
 
-        private static Rectangle3DManager rectangle3DManager;
+        public float lifeTime = 15f;
+        public float sphereSpeed = 0.01f;
+
         private static StreamLine3D streamLine3DInstance;
+        private static Rectangle3DManager rectangle3DManager;
         private GameObject spherePrefab; // Sphere prefab
 
         private void Awake()
@@ -38,7 +37,6 @@ namespace AugmeNDT
         private void Start()
         {
             // Get references to other managers
-            rectangle3DManager = Rectangle3DManager.rectangle3DManager;
             streamLine3DInstance = StreamLine3D.Instance;
         }
 
@@ -49,10 +47,7 @@ namespace AugmeNDT
         public void StartFlowObject()
         {
             stopFlowObjects = false;
-            if (enableSpheres)
-            {
-                StartCoroutine(SpawnMovingSpheres());
-            }
+            StartCoroutine(SpawnMovingSpheres());
         }
 
         /// <summary>
@@ -101,6 +96,7 @@ namespace AugmeNDT
 
                         // Instantiate sphere at selected position
                         GameObject sphere = Instantiate(spherePrefab, startPosition, Quaternion.identity);
+                        sphere.transform.parent = streamLine3DInstance.container;
                         sphere.tag = "Moving3DSphere";
                         sphere.transform.localScale = Vector3.one * localScaleRate;
                         TrailRenderer trailRenderer = sphere.GetComponent<TrailRenderer>();
@@ -112,12 +108,12 @@ namespace AugmeNDT
 
                         // Initialize flow behavior on the sphere
                         FlowObject3D movingSphere = sphere.GetComponent<FlowObject3D>();
-                        movingSphere.StartFlow(generatedGradientPoints, spatialGrid, cellSize, bounds, streamlineStepSize);
+                        movingSphere.StartFlow(generatedGradientPoints, spatialGrid, cellSize, bounds, streamlineStepSize, lifeTime, sphereSpeed);
                     }
                 }
 
                 // Wait before checking sphere count again
-                yield return new WaitForSeconds(spawnInterval);
+                yield return new WaitForSeconds(1);
             }
         }
         #endregion Flow

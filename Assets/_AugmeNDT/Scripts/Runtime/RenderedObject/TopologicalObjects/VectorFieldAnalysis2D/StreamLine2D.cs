@@ -32,8 +32,10 @@ namespace AugmeNDT
         private static RectangleManager rectangleManager;
         private static Transform container;
         private Material streamlineMaterial;
-        public bool IsStreamLineDrawn = false; // for onEnable
 
+        /// <summary>
+        /// Initializes the singleton instance and default values for visualization
+        /// </summary>
         private void Awake()
         {
             // Initialize singleton instance
@@ -41,13 +43,16 @@ namespace AugmeNDT
                 Instance = this;
 
             streamlineMaterial = (Material)Resources.Load("Materials/StreamLine");
-            numStreamlines = 200;                      // Daha az streamline
-            streamLineStepSize = 0.007f;              // Daha küçük adım boyutu
-            maxStreamlineSteps = 300;                // Daha fazla adım sayısı
-            streamlineWidth = 0.01f;                // Çok daha ince çizgiler
-            minDistanceToGeneratePoissonDiskSeeds = 0.01f; // Biraz daha büyük minimum mesafe
+            numStreamlines = 200;                      // Fewer streamlines
+            streamLineStepSize = 0.007f;              // Smaller step size
+            maxStreamlineSteps = 300;                // More steps
+            streamlineWidth = 0.01f;                // Much thinner lines
+            minDistanceToGeneratePoissonDiskSeeds = 0.01f; // Slightly larger minimum distance
         }
 
+        /// <summary>
+        /// Gets references to required managers
+        /// </summary>
         private void Start()
         {
             // Get references to required managers
@@ -68,8 +73,6 @@ namespace AugmeNDT
             }
             else
                 lineObjs.ForEach(line => { line.SetActive(true); });
-
-            IsStreamLineDrawn = true;
         }
 
         /// <summary>
@@ -79,8 +82,6 @@ namespace AugmeNDT
         {
             foreach (var line in lineObjs)
                 line.SetActive(false);
-
-            IsStreamLineDrawn = false;
         }
 
         #region private
@@ -99,6 +100,11 @@ namespace AugmeNDT
             List<List<Vector3>> streamLines = CalculateStreamlinesParallel();
             StartCoroutine(CreateStreamlinesInBatches(streamLines, 10));
         }
+
+        /// <summary>
+        /// Calculates streamlines in parallel to improve performance
+        /// </summary>
+        /// <returns>List of streamline point sequences</returns>
         private List<List<Vector3>> CalculateStreamlinesParallel()
         {
             rectangleManager.UpdateWorldCornersManuel();
@@ -106,10 +112,10 @@ namespace AugmeNDT
 
             List<Vector3> seedPoints = GeneratePoissonDiskSeeds(minDistanceToGeneratePoissonDiskSeeds, numStreamlines);
 
-            // Concurrent koleksiyon kullanarak thread-safe olarak sonuçları topluyoruz
+            // Using concurrent collection to safely collect results from multiple threads
             ConcurrentBag<Tuple<int, List<Vector3>>> concurrentResults = new ConcurrentBag<Tuple<int, List<Vector3>>>();
 
-            // Her bir çekirdek noktası için paralel olarak streamline hesaplıyoruz
+            // Calculate streamlines in parallel for each seed point
             Parallel.For(0, seedPoints.Count, i =>
             {
                 Vector3 seed = seedPoints[i];
@@ -117,7 +123,7 @@ namespace AugmeNDT
                 concurrentResults.Add(new Tuple<int, List<Vector3>>(i, streamline));
             });
 
-            // ConcurrentBag sırası garanti etmediği için, sonuçları sıralı listeye dönüştürüyoruz
+            // ConcurrentBag doesn't guarantee order, so sort results by index
             var sortedResults = concurrentResults.OrderBy(t => t.Item1).Select(t => t.Item2).ToList();
 
             return sortedResults;
@@ -235,6 +241,7 @@ namespace AugmeNDT
         /// Generates a streamline starting from the given position by tracing through the gradient field.
         /// </summary>
         /// <param name="startPosition">Starting position for the streamline</param>
+        /// <param name="corners">Array of rectangle corner points</param>
         /// <returns>List of points representing the streamline path</returns>
         private List<Vector3> GenerateStreamline(Vector3 startPosition, Vector3[] corners)
         {
@@ -261,7 +268,7 @@ namespace AugmeNDT
                 nextPosition = SpatialCalculations.ProjectPointOntoRectanglePlane(nextPosition, corners, normal);
 
                 // Check if the new position is still inside the rectangle
-                if (!rectangleManager.IsPointInsideMesh(nextPosition,true))
+                if (!rectangleManager.IsPointInsideMesh(nextPosition, true))
                 {
                     // Find the intersection with the rectangle boundary
                     Vector3 boundaryPoint = FindIntersectionWithRectangleBoundary(currentPosition, nextPosition, corners);
@@ -392,6 +399,12 @@ namespace AugmeNDT
             return true;
         }
 
+        /// <summary>
+        /// Creates streamlines in batches over multiple frames to prevent performance spikes
+        /// </summary>
+        /// <param name="streamLines">List of streamline point sequences</param>
+        /// <param name="batchSize">Number of streamlines to create per frame</param>
+        /// <returns>IEnumerator for coroutine processing</returns>
         private IEnumerator CreateStreamlinesInBatches(List<List<Vector3>> streamLines, int batchSize)
         {
             int totalCount = streamLines.Count;
@@ -399,7 +412,7 @@ namespace AugmeNDT
 
             while (processedCount < totalCount)
             {
-                // Her frame'de batchSize kadar streamline oluştur
+                // Create batchSize streamlines each frame
                 int currentBatchSize = Mathf.Min(batchSize, totalCount - processedCount);
 
                 for (int i = 0; i < currentBatchSize; i++)
@@ -409,7 +422,7 @@ namespace AugmeNDT
 
                 processedCount += currentBatchSize;
 
-                // Bir sonraki frame'e kadar bekle
+                // Wait for the next frame
                 yield return null;
             }
         }
@@ -432,25 +445,28 @@ namespace AugmeNDT
             lr.SetPositions(points.ToArray());
             lr.useWorldSpace = false;
 
-            // Daha ince çizgiler
-            lr.startWidth = lr.endWidth = 0.0009f;  // Çok daha ince değer
+            // Thinner lines
+            lr.startWidth = lr.endWidth = 0.0009f;  // Much thinner value
 
-            // Kesit ile paralel olacak şekilde alignment'ı değiştirin
-            // View yerine, TransformZ kullanın - bu şerit benzeri bir görünüm sağlar
+            // Change alignment to be parallel with the section
+            // Use TransformZ instead of View - this provides a ribbon-like appearance
             lr.alignment = LineAlignment.TransformZ;
 
-            // Anti-aliasing ekleyin
+            // Add anti-aliasing
             lr.numCapVertices = 2;
             lr.numCornerVertices = 2;
 
             lineObjs.Add(lineObj);
         }
 
+        /// <summary>
+        /// Creates and initializes the container for streamline objects
+        /// </summary>
         private void SetContainer()
         {
             if (container != null)
                 return;
-            
+
             container = new GameObject("2DStreamLines").transform;
             container.transform.parent = rectangleManager.GetInteractiveRectangleContainer();
         }

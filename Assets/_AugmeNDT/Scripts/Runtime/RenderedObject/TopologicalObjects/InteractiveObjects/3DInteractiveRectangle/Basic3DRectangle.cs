@@ -1,28 +1,40 @@
 ﻿namespace AugmeNDT
 {
+    using Newtonsoft.Json.Bson;
     using UnityEngine;
 
     /// <summary>
-    /// Basitleştirilmiş wireframe küp oluşturma ve yönetme sınıfı
+    /// Simplified wireframe cube creation and management class
     /// </summary>
     public class Basic3DRectangle : MonoBehaviour
     {
         private GameObject rectangleObject;
         private LineRenderer lineRenderer;
-        private bool drawBorders = true;
+        public bool drawBorders = true;
         private Vector3 minCorner { get; set; }
         private Vector3 maxCorner { get; set; }
+        private Bounds boundsManuelUpdated;
 
-        public void Initialize()
+        /// <summary>
+        /// Initializes the LineRenderer component
+        /// </summary>
+        private void Awake()
         {
-            // LineRenderer bileşeni oluştur
+            // Create LineRenderer component
             rectangleObject = new GameObject("RectangleVisual");
             rectangleObject.transform.SetParent(transform);
+        }
 
-            // Varsayılan bounds değerleri
-            minCorner = Vector3.one * -1f;
-            maxCorner = Vector3.one;
-
+        /// <summary>
+        /// Sets the boundaries of the rectangle and initializes visualization
+        /// </summary>
+        /// <param name="min">Minimum corner position (x,y,z)</param>
+        /// <param name="max">Maximum corner position (x,y,z)</param>
+        public void SetBounds(Vector3 min, Vector3 max)
+        {
+            minCorner = min;
+            maxCorner = max;
+            boundsManuelUpdated = GetBounds();
 
             if (drawBorders)
             {
@@ -32,32 +44,25 @@
                 lineRenderer.endColor = Color.yellow;
                 lineRenderer.startWidth = 0.001f;
                 lineRenderer.endWidth = 0.001f;
-                lineRenderer.positionCount = 24; // 12 kenar için 24 nokta
+                lineRenderer.positionCount = 24; // 24 points for 12 edges
                 lineRenderer.useWorldSpace = false;
 
                 UpdateLinePositions();
             }
         }
 
-        // Dikdörtgenin sınırlarını ayarla
-        public void SetBounds(Vector3 min, Vector3 max)
-        {
-            minCorner = min;
-            maxCorner = max;
-            if (drawBorders)
-            {
-                UpdateLinePositions();
-            }
-        }
-
+        /// <summary>
+        /// Calculates and returns a Bounds object that encapsulates the rectangle
+        /// </summary>
+        /// <returns>Bounds object representing the rectangle</returns>
         public Bounds GetBounds()
         {
             Vector3[] corners = GetCorners();
 
-            // İlk köşeyi kullanarak Bounds başlat
+            // Initialize Bounds with the first corner
             Bounds bounds = new Bounds(corners[0], Vector3.zero);
 
-            // Diğer tüm köşeleri Bounds'a dahil et
+            // Include all other corners in the Bounds
             for (int i = 1; i < corners.Length; i++)
             {
                 bounds.Encapsulate(corners[i]);
@@ -66,94 +71,113 @@
             return bounds;
         }
 
-        // Alternatif olarak Bounds kullanarak da kontrol edebilirsiniz
-        public bool ContainsPointUsingBounds(Vector3 point)
+        /// <summary>
+        /// Updates the manually cached bounds value
+        /// </summary>
+        public void SetBoundsManuelUpdated()
         {
-            Bounds bounds = GetBounds();
-            // Epsilon değeri kullanarak sınır kontrolü
+            boundsManuelUpdated = GetBounds();
+        }
+
+        /// <summary>
+        /// Checks if a point is inside the rectangle bounds
+        /// </summary>
+        /// <param name="point">Point to check</param>
+        /// <param name="useBoundsManuelUpdated">Whether to use manually updated bounds or recalculate</param>
+        /// <returns>True if the point is inside the bounds</returns>
+        public bool ContainsPointUsingBounds(Vector3 point, bool useBoundsManuelUpdated)
+        {
+            Bounds bounds = useBoundsManuelUpdated ? boundsManuelUpdated : GetBounds();
+
+            // Use epsilon value for boundary checking
             float epsilon = 0.0001f;
             Bounds expandedBounds = new Bounds(bounds.center, bounds.size + new Vector3(epsilon, epsilon, epsilon) * 2);
             return expandedBounds.Contains(point);
         }
 
-        // LineRenderer pozisyonlarını güncelle
+        /// <summary>
+        /// Updates the LineRenderer positions to display the wireframe cube
+        /// </summary>
         private void UpdateLinePositions()
         {
             if (lineRenderer == null) return;
 
             Vector3[] corners = GetCorners();
 
-            // LineRenderer'ı 12 ayrı kenar için yapılandır (her kenar 2 nokta içerir)
+            // Configure LineRenderer for 12 separate edges (each edge contains 2 points)
             lineRenderer.positionCount = 24;
 
-            // Alt yüzeyin 4 kenarı
+            // Bottom surface 4 edges
             int index = 0;
-            // Kenar 1: corners[0] -> corners[1]
+            // Edge 1: corners[0] -> corners[1]
             lineRenderer.SetPosition(index++, corners[0]);
             lineRenderer.SetPosition(index++, corners[1]);
 
-            // Kenar 2: corners[1] -> corners[2]
+            // Edge 2: corners[1] -> corners[2]
             lineRenderer.SetPosition(index++, corners[1]);
             lineRenderer.SetPosition(index++, corners[2]);
 
-            // Kenar 3: corners[2] -> corners[3]
+            // Edge 3: corners[2] -> corners[3]
             lineRenderer.SetPosition(index++, corners[2]);
             lineRenderer.SetPosition(index++, corners[3]);
 
-            // Kenar 4: corners[3] -> corners[0]
+            // Edge 4: corners[3] -> corners[0]
             lineRenderer.SetPosition(index++, corners[3]);
             lineRenderer.SetPosition(index++, corners[0]);
 
-            // Üst yüzeyin 4 kenarı
-            // Kenar 5: corners[4] -> corners[5]
+            // Top surface 4 edges
+            // Edge 5: corners[4] -> corners[5]
             lineRenderer.SetPosition(index++, corners[4]);
             lineRenderer.SetPosition(index++, corners[5]);
 
-            // Kenar 6: corners[5] -> corners[6]
+            // Edge 6: corners[5] -> corners[6]
             lineRenderer.SetPosition(index++, corners[5]);
             lineRenderer.SetPosition(index++, corners[6]);
 
-            // Kenar 7: corners[6] -> corners[7]
+            // Edge 7: corners[6] -> corners[7]
             lineRenderer.SetPosition(index++, corners[6]);
             lineRenderer.SetPosition(index++, corners[7]);
 
-            // Kenar 8: corners[7] -> corners[4]
+            // Edge 8: corners[7] -> corners[4]
             lineRenderer.SetPosition(index++, corners[7]);
             lineRenderer.SetPosition(index++, corners[4]);
 
-            // Yan kenarlar (4 dikey kenar)
-            // Kenar 9: corners[0] -> corners[4]
+            // Side edges (4 vertical edges)
+            // Edge 9: corners[0] -> corners[4]
             lineRenderer.SetPosition(index++, corners[0]);
             lineRenderer.SetPosition(index++, corners[4]);
 
-            // Kenar 10: corners[1] -> corners[5]
+            // Edge 10: corners[1] -> corners[5]
             lineRenderer.SetPosition(index++, corners[1]);
             lineRenderer.SetPosition(index++, corners[5]);
 
-            // Kenar 11: corners[2] -> corners[6]
+            // Edge 11: corners[2] -> corners[6]
             lineRenderer.SetPosition(index++, corners[2]);
             lineRenderer.SetPosition(index++, corners[6]);
 
-            // Kenar 12: corners[3] -> corners[7]
+            // Edge 12: corners[3] -> corners[7]
             lineRenderer.SetPosition(index++, corners[3]);
             lineRenderer.SetPosition(index++, corners[7]);
         }
 
-        // Köşe noktalarını hesapla - Z koordinatını düzeltilmiş sırayla
+        /// <summary>
+        /// Calculates the 8 corner points of the rectangle - with corrected Z coordinate order
+        /// </summary>
+        /// <returns>Array of 8 Vector3 corner positions</returns>
         private Vector3[] GetCorners()
         {
             Vector3[] corners = new Vector3[8];
-            // Alt köşeler (saat yönünde)
-            corners[0] = new Vector3(minCorner.x, minCorner.y, minCorner.z); // sol ön alt
-            corners[1] = new Vector3(maxCorner.x, minCorner.y, minCorner.z); // sağ ön alt
-            corners[2] = new Vector3(maxCorner.x, minCorner.y, maxCorner.z); // sağ arka alt
-            corners[3] = new Vector3(minCorner.x, minCorner.y, maxCorner.z); // sol arka alt
+            // Bottom corners (clockwise)
+            corners[0] = new Vector3(minCorner.x, minCorner.y, minCorner.z); // front left bottom
+            corners[1] = new Vector3(maxCorner.x, minCorner.y, minCorner.z); // front right bottom
+            corners[2] = new Vector3(maxCorner.x, minCorner.y, maxCorner.z); // back right bottom
+            corners[3] = new Vector3(minCorner.x, minCorner.y, maxCorner.z); // back left bottom
 
-            // Üst köşeler (saat yönünde)
-            corners[4] = new Vector3(minCorner.x, maxCorner.y, minCorner.z); // sol ön üst
-            corners[5] = new Vector3(maxCorner.x, maxCorner.y, minCorner.z); // sağ ön üst
-            corners[6] = new Vector3(maxCorner.x, maxCorner.y, maxCorner.z); // sağ arka üst
-            corners[7] = new Vector3(minCorner.x, maxCorner.y, maxCorner.z); // sol arka üst
+            // Top corners (clockwise)
+            corners[4] = new Vector3(minCorner.x, maxCorner.y, minCorner.z); // front left top
+            corners[5] = new Vector3(maxCorner.x, maxCorner.y, minCorner.z); // front right top
+            corners[6] = new Vector3(maxCorner.x, maxCorner.y, maxCorner.z); // back right top
+            corners[7] = new Vector3(minCorner.x, maxCorner.y, maxCorner.z); // back left top
 
             return corners;
         }

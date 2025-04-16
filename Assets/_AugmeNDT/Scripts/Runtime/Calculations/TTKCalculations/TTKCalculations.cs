@@ -112,8 +112,8 @@ namespace AugmeNDT
                                $"--origin {origin.x} {origin.y} {origin.z} " +
                                $"--normal {normal.x} {normal.y} {normal.z} " +
                                $" --voi {minMaxValues[0]} {minMaxValues[1]} " +  // min x, max x
-                               $" {minMaxValues[2]} {minMaxValues[3]} " + // min y, max y
-                               $" {minMaxValues[4]} {minMaxValues[5]} " + // min z, max z
+                               $" {minMaxValues[2]} {minMaxValues[3]} " +       // min y, max y
+                               $" {minMaxValues[4]} {minMaxValues[5]} " +       // min z, max z
                                $"--csv \"{csvOutputPath}\"";
 
             bool isSucceed = StartPythonScript(arguments);
@@ -263,7 +263,7 @@ namespace AugmeNDT
                 float y = float.Parse(values[3]);
                 float z = float.Parse(values[4]);
 
-                // Add only if type is in allowed range
+                // Only include types within the valid range
                 if (type <= 3)
                     criticalPointList.Add(new CriticalPointDataset(id, type, new Vector3(x, y, z)));
             }
@@ -271,18 +271,19 @@ namespace AugmeNDT
             return criticalPointList;
         }
 
+        /// <summary>
+        /// Saves a list of gradients to a CSV file using StreamWriter.
+        /// </summary>
         public void SaveGradientListToCSV(string filePath, List<GradientDataset> gradientList)
         {
-            // StreamWriter kullanarak dosya açma işlemi
             using (StreamWriter writer = new StreamWriter(filePath))
             {
-                // Başlık satırı yazalım (isteğe bağlı)
+                // Write header row (optional)
                 writer.WriteLine("ID,PositionX,PositionY,PositionZ,DirectionX,DirectionY,DirectionZ,Magnitude");
 
-                // gradientList'i yazma işlemi
+                // Write each gradient entry in CSV format
                 foreach (var gradient in gradientList)
                 {
-                    // Gradient'ın verilerini CSV formatında yazma
                     writer.WriteLine(
                         $"{gradient.ID}," +
                         $"{gradient.Position.x.ToString(culture)}," +

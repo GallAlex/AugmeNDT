@@ -13,7 +13,7 @@
     public class RectangleManager : MonoBehaviour
     {
         public static RectangleManager rectangleManager;
-        
+
         public TopologyConfigData config;
         /// <summary>
         /// Controls the density of the grid used for gradient calculations.
@@ -40,12 +40,18 @@
         private Vector3 lastKnownNormal;
         private Bounds lastKnownBounds;
 
+        /// <summary>
+        /// Initializes the singleton instance
+        /// </summary>
         private void Awake()
         {
             // Initialize singleton instance
             rectangleManager = this;
         }
 
+        /// <summary>
+        /// Sets up references and configures calculation parameters
+        /// </summary>
         private void Start()
         {
             // Get reference to topological data object
@@ -91,6 +97,10 @@
             }
         }
 
+        /// <summary>
+        /// Returns the transform that contains the interactive rectangle for parenting purposes
+        /// </summary>
+        /// <returns>The parent transform for interactive rectangle objects</returns>
         public Transform GetInteractiveRectangleContainer()
         {
             return volumeTransform;
@@ -150,6 +160,9 @@
             return gradientPoints;
         }
 
+        /// <summary>
+        /// Recreates the rectangle when the volume has been scaled
+        /// </summary>
         public void UpdateRectangleAfterScaling()
         {
             if (rectangle == null)
@@ -160,10 +173,6 @@
             rectangle = null;
             CreateRectangle();
             UpdateInstance();
-            //return;
-
-            //rectangle.UpdateCorners(GetVolumeBoxCorners());
-            //UpdateInstance();
         }
 
         #region topological data analysis
@@ -241,6 +250,11 @@
             return gridPoints;
         }
 
+        /// <summary>
+        /// Creates a test sphere at the specified position for debugging
+        /// </summary>
+        /// <param name="position">Position to place the sphere</param>
+        /// <returns>The created sphere GameObject</returns>
         private GameObject TEST(Vector3 position)
         {
             // Create and configure sphere object
@@ -313,6 +327,9 @@
             return rectangle.IsPointInsideMesh(point, useWorldCornersManuelUpdated);
         }
 
+        /// <summary>
+        /// Updates cached corner positions for thread-safe operations
+        /// </summary>
         public void UpdateWorldCornersManuel()
         {
             rectangle.UpdateWorldCornersManuel();
@@ -342,10 +359,9 @@
         }
 
         /// <summary>
-        /// Creates a new interactive rectangle with the given corner positions
+        /// Old method to create a rectangle - kept for reference
         /// </summary>
-        /// <param name="corners">List of corner positions (should have 4 elements)</param>
-        private void CreateRectangle()
+        private void CreateRectangleOLD()
         {
             if (rectangle != null)
                 return;
@@ -383,7 +399,53 @@
             // Initialize the rectangle with our calculated corners
             rectangle.InitializeWithCorners(corners.ToArray());
         }
+        /// <summary>
+        /// Creates a new interactive rectangle with corners based on the volume's box collider
+        /// </summary>
+        private void CreateRectangle()
+        {
+            if (rectangle != null)
+                return;
 
+            // Get the BoxCollider component
+            BoxCollider boxCollider = volumeTransform.gameObject.GetComponent<BoxCollider>();
+            if (boxCollider == null)
+            {
+                UnityEngine.Debug.LogError("BoxCollider not found on the volumetric object!");
+                return;
+            }
+
+            // Get the local extents of the box collider
+            Vector3 extents = boxCollider.size / 2;
+
+            // Create corners in local space
+            List<Vector3> localCorners = new List<Vector3>();
+
+            // Bottom-left (min X, center Y, min Z)
+            localCorners.Add(new Vector3(-extents.x, 0, -extents.z));
+
+            // Bottom-right (max X, center Y, min Z)
+            localCorners.Add(new Vector3(extents.x, 0, -extents.z));
+
+            // Top-right (max X, center Y, max Z)
+            localCorners.Add(new Vector3(extents.x, 0, extents.z));
+
+            // Top-left (min X, center Y, max Z)
+            localCorners.Add(new Vector3(-extents.x, 0, extents.z));
+
+            // Convert local corners to world space, respecting rotation
+            List<Vector3> worldCorners = new List<Vector3>();
+            foreach (Vector3 localCorner in localCorners)
+            {
+                worldCorners.Add(volumeTransform.TransformPoint(localCorner));
+            }
+
+            // Add the InteractiveRectangle component
+            rectangle = volumeTransform.gameObject.AddComponent<InteractiveRectangle>();
+
+            // Initialize the rectangle with our calculated corners
+            rectangle.InitializeWithCorners(worldCorners.ToArray());
+        }
         /// <summary>
         /// Gets the minimum and maximum values of the rectangle in each axis
         /// </summary>
