@@ -14,38 +14,34 @@ namespace AugmeNDT
         public static StreamLine3D Instance;
         private static Rectangle3DManager rectangle3DManager;
 
-        private List<GradientDataset> gradientPoints = new List<GradientDataset>();
-        private List<CriticalPointDataset> criticalPoints = new List<CriticalPointDataset>();
+        public List<GradientDataset> gradientPoints = new List<GradientDataset>();
         public Dictionary<Vector3Int, List<GradientDataset>> spatialGrid = new Dictionary<Vector3Int, List<GradientDataset>>();
-        private Bounds cubeBounds;
+
         private List<GameObject> LineObjs = new List<GameObject>();
-        private static Transform parentContainer;
-        private static Transform container;
+        public Transform container;
 
         private Material streamlineMaterial; // Material for LineRenderer
 
         [Header("Streamline Parameters")]
-        public int numStreamlines = 1000; // Number of streamlines to draw
+        public int numStreamlines = 20; // Number of streamlines to draw
         public float streamlineStepSize = 0.0033f; // Step size for integration
         public int maxStreamlineSteps = 142; // Maximum number of steps per streamline
         public float cellSize = 0.01f; // Spatial grid cell size
+        public float streamlineDensity = 1f; // Controls the density of streamlines
 
         [Header("Visual Settings")]
-        public float streamlineWidth = 0.003f; // Reduced width for all streamlines
+        public float streamlineWidth = 0.001f; // Reduced width for all streamlines
         [Range(0f, 1f)]
-        public float streamlineDensity = 1f; // Controls the density of streamlines
         public Color streamlineColor = Color.white; // Single color for all streamlines
         public bool useAdaptiveStepSize = true;
-        public bool useAdaptiveColors = false; // Set to false to use single color
 
-        [Header("Performance")]
-        public bool useCoroutines = true;
-        public int streamlinesPerFrame = 50;
-        public bool useJobSystem = false; // Enable for better performance on supported platforms
+        public int streamlinesPerFrame = 10;
 
-        private float maxMagnitude = 100f; // Will be updated from data
         private float averageMagnitude = 50f; // Will be updated from data
         private List<Vector3> criticalPointsPositions = new List<Vector3>();
+        public Bounds cubeBounds;
+
+
 
         private void Awake()
         {
@@ -60,55 +56,55 @@ namespace AugmeNDT
             rectangle3DManager = Rectangle3DManager.rectangle3DManager;
         }
 
+        private bool IsUpdated()
+        {
+            Bounds currentCubeBounds = rectangle3DManager.GetRectangleBounds();
+            if (cubeBounds == currentCubeBounds)
+                return false;
+
+            cubeBounds = currentCubeBounds;
+            return true;
+        }
+
+        private bool PrepareInstance()
+        {
+            DestroyLines();
+            Destroy(GameObject.Find("3DStreamLines"));
+
+            container = new GameObject("3DStreamLines").transform;
+            container.transform.parent = rectangle3DManager.volumeTransform;
+
+            gradientPoints = rectangle3DManager.GetGradientPoints();
+            if (!gradientPoints.Any())
+                return false;
+
+            cubeBounds = rectangle3DManager.GetRectangleBounds();
+            averageMagnitude = gradientPoints.Average(gradient => gradient.Magnitude);
+
+            // Build spatial grid for faster lookup
+            BuildSpatialGrid();
+
+            // Detect critical points in the vector field
+            DetectInterestingRegions();
+
+            return true;
+        }
+
         /// <summary>
         /// Shows streamlines by creating them if needed or making existing ones visible
         /// </summary>
-        public void ShowStreamLines()
+        public void ShowStreamLines(bool forced = false)
         {
-            if (!LineObjs.Any() || rectangle3DManager.IsUpdated())
+            if (forced || !LineObjs.Any() || IsUpdated())
             {
                 if (!PrepareInstance())
                     return;
 
-                if (useCoroutines)
-                    StartCoroutine(DrawStreamlinesCoroutine());
-                else
-                    DrawStreamlines();
-
-                HideVolumeObjects(true);
+                StartCoroutine(DrawStreamlinesCoroutine());
             }
             else
             {
                 LineObjs.ForEach(line => line.SetActive(true));
-            }
-        }
-
-        /// <summary>
-        /// Hides all streamlines by setting them inactive
-        /// </summary>
-        public void HideStreamLines()
-        {
-            foreach (var line in LineObjs)
-            {
-                line.SetActive(false);
-            }
-            HideVolumeObjects(false);
-        }
-
-        // Disable renderers but keep GameObject active
-        public void HideVolumeObjects(bool hideObjects)
-        {
-            if (parentContainer == null)
-                return;
-
-            Renderer[] renderers = parentContainer.GetComponentsInChildren<Renderer>(true);
-            foreach (var renderer in renderers)
-            {
-                // Skip streamline objects
-                if (renderer.gameObject.name.Contains("Streamline"))
-                    continue;
-
-                renderer.enabled = !hideObjects;
             }
         }
 
@@ -122,57 +118,6 @@ namespace AugmeNDT
                 Mathf.FloorToInt(position.y / cellSize),
                 Mathf.FloorToInt(position.z / cellSize)
             );
-        }
-
-        private void SetContainer()
-        {
-            if (parentContainer != null)
-                return;
-
-            container = new GameObject("3DStreamLines").transform;
-            container.transform.parent = rectangle3DManager.GetRectangleContainer();
-        }
-
-        private bool PrepareInstance()
-        {
-            SetContainer();
-            DestroyLines();
-
-            gradientPoints = rectangle3DManager.GetGradientPoints();
-            if (!gradientPoints.Any())
-                return false;
-
-            criticalPoints = rectangle3DManager.GetCriticalPoints();
-            cubeBounds = rectangle3DManager.GetRectangleBounds();
-
-            // Calculate statistics from the gradient data
-            CalculateStatistics();
-
-            // Build spatial grid for faster lookup
-            BuildSpatialGrid();
-
-            // Detect critical points in the vector field
-            DetectInterestingRegions();
-
-            return true;
-        }
-
-        /// <summary>
-        /// Calculates statistics from the gradient data
-        /// </summary>
-        private void CalculateStatistics()
-        {
-            float sum = 0;
-            maxMagnitude = 0;
-
-            foreach (var gradient in gradientPoints)
-            {
-                maxMagnitude = Mathf.Max(maxMagnitude, gradient.Magnitude);
-                sum += gradient.Magnitude;
-            }
-
-            averageMagnitude = sum / gradientPoints.Count;
-            Debug.Log($"Vector field statistics - Max magnitude: {maxMagnitude}, Average: {averageMagnitude}");
         }
 
         /// <summary>
@@ -198,6 +143,9 @@ namespace AugmeNDT
         private void DetectInterestingRegions()
         {
             criticalPointsPositions.Clear();
+
+            criticalPointsPositions = rectangle3DManager.GetCriticalPoints().Select(x => x.Position).ToList();
+            return;
 
             // Find local minima in magnitude as potential critical points
             float thresholdMagnitude = averageMagnitude * 0.1f;
@@ -269,29 +217,6 @@ namespace AugmeNDT
             }
 
             Debug.Log($"Completed streamline generation with {LineObjs.Count} streamlines");
-        }
-
-        /// <summary>
-        /// Calculates and draws all streamlines
-        /// </summary>
-        private void DrawStreamlines()
-        {
-            // Use Job System if enabled and supported
-            if (useJobSystem && SystemInfo.supportsComputeShaders)
-            {
-                StartCoroutine(DrawStreamlinesCoroutine());
-            }
-            else
-            {
-                // Generate seed points
-                List<Vector3> seedPoints = GenerateSeeds();
-
-                // Generate streamlines for each seed point
-                foreach (Vector3 seedPoint in seedPoints)
-                {
-                    GenerateAndRenderStreamline(seedPoint);
-                }
-            }
         }
 
         /// <summary>
@@ -538,12 +463,14 @@ namespace AugmeNDT
             if (points.Count < 2) return;
 
             GameObject lineObj = new GameObject("Streamline");
+            lineObj.transform.parent = container;
             LineRenderer lr = lineObj.AddComponent<LineRenderer>();
 
             // Set base properties
             lr.material = streamlineMaterial;
             lr.positionCount = points.Count;
             lr.SetPositions(points.ToArray());
+            lr.useWorldSpace = false;
 
             // Use a single color (blue) and smaller width
             lr.startColor = lr.endColor = streamlineColor;
@@ -551,7 +478,6 @@ namespace AugmeNDT
 
             // Add to list and set parent
             LineObjs.Add(lineObj);
-            lineObj.transform.SetParent(container);
         }
 
         /// <summary>

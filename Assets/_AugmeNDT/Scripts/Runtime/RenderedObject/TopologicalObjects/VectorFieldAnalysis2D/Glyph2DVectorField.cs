@@ -25,11 +25,14 @@ namespace AugmeNDT
         private static float localScaleRate;
         private static int arrowsPerFrame = 50;
         private bool dontUseHideVolumeObjects = true;
-        public bool IsVectorDrawn = false; // for onEnable
 
         // References to other manager instances
         private static VectorObjectVis arrowObjectVisInstance;
         private static RectangleManager rectangleManager;
+
+        /// <summary>
+        /// Initializes the singleton instance
+        /// </summary>
         private void Awake()
         {
             // Initialize singleton instance
@@ -37,6 +40,9 @@ namespace AugmeNDT
                 Instance = this;
         }
 
+        /// <summary>
+        /// Gets references to required managers and initializes configuration values
+        /// </summary>
         private void Start()
         {
             // Get references to required managers
@@ -51,9 +57,12 @@ namespace AugmeNDT
 
         }
 
+        /// <summary>
+        /// Makes vector field arrows visible, creating them if necessary
+        /// </summary>
         public void ShowArrows()
         {
-            bool createNewVectors = !generatedGradientPoints.Any() || !arrows.Any() ||rectangleManager.IsUpdated();
+            bool createNewVectors = !generatedGradientPoints.Any() || !arrows.Any() || rectangleManager.IsUpdated();
             if (createNewVectors)
                 VisualizePoints();
             else
@@ -62,15 +71,15 @@ namespace AugmeNDT
                     arrow.SetActive(true);
             }
 
-            IsVectorDrawn = true;
         }
 
+        /// <summary>
+        /// Hides all vector field arrows by setting them inactive
+        /// </summary>
         public void HideArrows()
         {
             foreach (var arrow in arrows)
                 arrow.SetActive(false);
-
-            IsVectorDrawn = false;
         }
 
         /// <summary>
@@ -84,14 +93,17 @@ namespace AugmeNDT
             DestroyArrows();
             generatedGradientPoints = rectangleManager.GetGradientPoints();
 
-            // Çok sayıda ok varsa Coroutine kullan yoksa CreateArrows'u kullan
+            // For a large number of arrows use Coroutine, otherwise use CreateArrows directly
             if (generatedGradientPoints.Count > 100)
                 StartCoroutine(CreateArrowsCoroutine());
             else
                 arrows = arrowObjectVisInstance.CreateArrows(generatedGradientPoints, container, localScaleRate);
         }
 
-        // Disable renderers but keep GameObject active
+        /// <summary>
+        /// Toggles visibility of volume objects while keeping vector field visible
+        /// </summary>
+        /// <param name="hideObjects">Whether to hide the volume objects</param>
         public void HideVolumeObjects(bool hideObjects)
         {
             if (container == null || dontUseHideVolumeObjects)
@@ -108,27 +120,30 @@ namespace AugmeNDT
             }
         }
 
+        /// <summary>
+        /// Creates arrows over multiple frames to prevent performance spikes
+        /// </summary>
         private IEnumerator CreateArrowsCoroutine()
         {
-            // Toplam ok sayısı
+            // Total number of arrows
             int totalArrows = generatedGradientPoints.Count;
             arrows = new List<GameObject>(totalArrows);
 
             for (int i = 0; i < totalArrows; i += arrowsPerFrame)
             {
-                // Bu frame'de işlenecek gradientPoints alt kümesini al
+                // Get the subset of gradientPoints to process in this frame
                 List<GradientDataset> batchPoints = generatedGradientPoints
                     .Skip(i)
                     .Take(Mathf.Min(arrowsPerFrame, totalArrows - i))
                     .ToList();
 
-                // Bu grup için okları oluştur
+                // Create arrows for this batch
                 List<GameObject> batchArrows = arrowObjectVisInstance.CreateArrows(batchPoints, container, localScaleRate);
 
-                // Ana listeye ekle
+                // Add to the main list
                 arrows.AddRange(batchArrows);
 
-                // Bir sonraki frame'e geç
+                // Move to the next frame
                 yield return null;
             }
 

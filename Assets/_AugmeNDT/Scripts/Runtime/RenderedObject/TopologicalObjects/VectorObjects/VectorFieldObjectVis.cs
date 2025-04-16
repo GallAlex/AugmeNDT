@@ -17,13 +17,13 @@ namespace AugmeNDT
 
         // Reference to the topological data instance containing gradient data
         private static TopologicalDataObject topologicalDataInstance;
-        
+
         // Reference to the VectorObjectVis instance containing gradient data
         private static VectorObjectVis arrowObjectVisInstance;
-        
+
         // List to store all created arrows for toggling visibility
         private List<GameObject> arrows = new List<GameObject>();
-        
+
         // Parent container for all arrows in the scene
         private Transform container;
         // Volume Transform to set container's parent
@@ -108,26 +108,26 @@ namespace AugmeNDT
         private IEnumerator CreateArrowsCoroutine()
         {
             List<GradientDataset> gradientPoints = topologicalDataInstance.gradientList;
-            // Toplam ok sayısı
+            // Total number of arrows
             int totalArrows = gradientPoints.Count;
             arrows = new List<GameObject>(totalArrows);
 
             for (int i = 0; i < totalArrows; i += arrowsPerFrame)
             {
-                // Bu frame'de işlenecek gradientPoints alt kümesini al
+                // Get the subset of gradientPoints to process in this frame
                 List<GradientDataset> batchPoints = gradientPoints
                     .Skip(i)
                     .Take(Mathf.Min(arrowsPerFrame, totalArrows - i))
                     .ToList();
 
-                // Bu grup için okları oluştur
+                // Create arrows for this batch
                 List<GameObject> batchArrows = arrowObjectVisInstance.CreateArrows(
                     batchPoints, container, localScaleRate);
 
-                // Ana listeye ekle
+                // Add to the main list
                 arrows.AddRange(batchArrows);
 
-                // Bir sonraki frame'e geç
+                // Move to the next frame
                 yield return null;
             }
 

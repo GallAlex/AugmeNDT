@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace AugmeNDT
@@ -9,6 +8,7 @@ namespace AugmeNDT
     public static class SpatialCalculations
     {
         #region 2D Rectangle
+
         /// <summary>
         /// Projects a 3D point onto the plane defined by a rectangle.
         /// </summary>
@@ -18,6 +18,7 @@ namespace AugmeNDT
             float distance = Vector3.Dot(normal, point - planePoint);
             return point - distance * normal;
         }
+
         #endregion
 
         #region 3D Space Utilities
@@ -25,9 +26,9 @@ namespace AugmeNDT
         /// <summary>
         /// Performs 4th-order Runge-Kutta integration to estimate a flow vector from a position.
         /// </summary>
-        public static Vector3 RungeKutta4(Vector3 position, List<GradientDataset> gradientPoints, float stepSize,bool returnPosition = false)
+        public static Vector3 RungeKutta4(Vector3 position, List<GradientDataset> gradientPoints, float stepSize, bool returnPosition = false)
         {
-            // RK4 implementasyonu
+            // 4th-order Runge-Kutta integration implementation
             Vector3 k1 = InterpolateGradientAtPositionOptimized(position, gradientPoints);
             Vector3 k2 = InterpolateGradientAtPositionOptimized(position + k1 * stepSize * 0.5f, gradientPoints);
             Vector3 k3 = InterpolateGradientAtPositionOptimized(position + k2 * stepSize * 0.5f, gradientPoints);
@@ -40,37 +41,40 @@ namespace AugmeNDT
             else
                 return direction;
         }
+
+        /// <summary>
+        /// Optimized method to interpolate a gradient at a given position using nearest neighbors.
+        /// </summary>
         private static Vector3 InterpolateGradientAtPositionOptimized(Vector3 position, List<GradientDataset> gradientPoints)
         {
             int maxNeighbors = 8;
             List<Tuple<float, GradientDataset>> nearestPointsWithDistance = new List<Tuple<float, GradientDataset>>(maxNeighbors);
 
-            // En yakın 8 noktayı bulmak için daha verimli bir yaklaşım
+            // Efficient nearest neighbor search
             foreach (var point in gradientPoints)
             {
                 float distance = Vector3.Distance(position, point.Position);
 
-                // Direkt aşırı yakın nokta varsa, hemen döndür
+                // If a very close point is found, return its direction immediately
                 if (distance < 0.0001f)
                 {
                     return point.Direction;
                 }
 
-                // Hedef boyutta liste tutuyoruz
+                // Maintain a list of the closest N points
                 if (nearestPointsWithDistance.Count < maxNeighbors)
                 {
                     nearestPointsWithDistance.Add(new Tuple<float, GradientDataset>(distance, point));
                     if (nearestPointsWithDistance.Count == maxNeighbors)
                     {
-                        // Listeyi en uzak nokta başta olacak şekilde sırala
+                        // Sort by distance in descending order (farthest first)
                         nearestPointsWithDistance.Sort((a, b) => b.Item1.CompareTo(a.Item1));
                     }
                 }
                 else if (distance < nearestPointsWithDistance[0].Item1)
                 {
-                    // Eğer bu nokta listenin en uzak noktasından daha yakınsa, onu değiştir
+                    // If this point is closer than the farthest in the list, replace and re-sort
                     nearestPointsWithDistance[0] = new Tuple<float, GradientDataset>(distance, point);
-                    // Yeniden sırala (insertion sort mantığı)
                     for (int i = 0; i < maxNeighbors - 1; i++)
                     {
                         if (nearestPointsWithDistance[i].Item1 > nearestPointsWithDistance[i + 1].Item1)
@@ -87,7 +91,7 @@ namespace AugmeNDT
                 }
             }
 
-            // Ağırlıklı ortalama ile yön hesapla
+            // Compute weighted average direction
             Vector3 weightedDirection = Vector3.zero;
             float totalWeight = 0f;
 
@@ -107,6 +111,10 @@ namespace AugmeNDT
 
             return Vector3.zero;
         }
+
+        /// <summary>
+        /// Basic interpolation of gradient direction using the 8 nearest neighbors.
+        /// </summary>
         private static Vector3 InterpolateGradientAtPosition(Vector3 position, List<GradientDataset> gradientPoints)
         {
             var nearestPoints = gradientPoints
@@ -117,7 +125,7 @@ namespace AugmeNDT
             if (!nearestPoints.Any())
                 return Vector3.zero;
 
-            // Ağırlıklı ortalama ile yön hesapla
+            // Compute weighted average direction
             Vector3 weightedDirection = Vector3.zero;
             float totalWeight = 0f;
 
@@ -135,11 +143,13 @@ namespace AugmeNDT
 
             return Vector3.zero;
         }
+
         #endregion
 
-        #region 
+        #region Grid-Based Spatial Interpolation
+
         /// <summary>
-        /// Gets the grid cell index for a position
+        /// Gets the grid cell index for a given 3D position based on cell size.
         /// </summary>
         public static Vector3Int GetGridCell(Vector3 position, float cellSize)
         {
@@ -149,13 +159,17 @@ namespace AugmeNDT
                 Mathf.FloorToInt(position.z / cellSize)
             );
         }
+
+        /// <summary>
+        /// Interpolates a vector field using a spatial grid of precomputed gradients.
+        /// </summary>
         public static Vector3 InterpolateVectorField(Vector3 position, float cellSize, Dictionary<Vector3Int, List<GradientDataset>> spatialGrid)
         {
             Vector3Int cell = GetGridCell(position, cellSize);
             Vector3 interpolatedDirection = Vector3.zero;
             float totalWeight = 0f;
 
-            // Search in current cell and neighboring cells
+            // Search in current and surrounding cells (3x3x3)
             for (int x = -1; x <= 1; x++)
             {
                 for (int y = -1; y <= 1; y++)
@@ -168,7 +182,7 @@ namespace AugmeNDT
                             foreach (var point in cellPoints)
                             {
                                 float distance = Vector3.Distance(position, point.Position);
-                                float weight = Mathf.Exp(-distance * distance * 100f); // Higher falloff for more local interpolation
+                                float weight = Mathf.Exp(-distance * distance * 100f); // Fast falloff for local influence
 
                                 interpolatedDirection += point.Direction * weight;
                                 totalWeight += weight;
@@ -184,6 +198,7 @@ namespace AugmeNDT
 
             return interpolatedDirection / totalWeight;
         }
+
         #endregion
     }
 }

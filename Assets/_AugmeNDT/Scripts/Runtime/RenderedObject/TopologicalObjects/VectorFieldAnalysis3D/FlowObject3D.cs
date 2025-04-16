@@ -11,12 +11,6 @@ namespace AugmeNDT
     /// </summary>
     public class FlowObject3D : MonoBehaviour
     {
-        // Movement speed of the sphere
-        private float sphereSpeed = 0.005f; // Düşürüldü çünkü vektör alanı artık daha hassas
-
-        // Maximum duration in seconds before the flow object is destroyed
-        private float lifetime = 15;
-
         // Reference to spatial grid for faster interpolation
         private Dictionary<Vector3Int, List<GradientDataset>> spatialGrid;
         private float cellSize;
@@ -29,12 +23,14 @@ namespace AugmeNDT
         /// <param name="cellSize">Cell size for spatial grid</param>
         /// <param name="cubeBounds">Boundary constraints for the flow simulation</param>
         /// <param name="streamlineStepSize">Step size for the Runge-Kutta calculation</param>
+        /// <param name="lifetime">Duration that the sphere will exist before being destroyed</param>
+        /// <param name="sphereSpeed">Speed at which the sphere moves along the streamline</param>
         public void StartFlow(List<GradientDataset> gradientPoints, Dictionary<Vector3Int, List<GradientDataset>> spatialGrid,
-                              float cellSize, Bounds cubeBounds, float streamlineStepSize)
+                              float cellSize, Bounds cubeBounds, float streamlineStepSize, float lifetime, float sphereSpeed)
         {
             this.spatialGrid = spatialGrid;
             this.cellSize = cellSize;
-            StartCoroutine(StartMoveSphere(gradientPoints, cubeBounds, streamlineStepSize));
+            StartCoroutine(StartMoveSphere(gradientPoints, cubeBounds, streamlineStepSize, lifetime, sphereSpeed));
         }
 
         /// <summary>
@@ -43,8 +39,10 @@ namespace AugmeNDT
         /// <param name="gradientPoints">List of gradient data points defining the flow field</param>
         /// <param name="cubeBounds">Boundary constraints for the flow simulation</param>
         /// <param name="streamlineStepSize">Step size for the Runge-Kutta calculation</param>
+        /// <param name="lifetime">Duration that the sphere will exist before being destroyed</param>
+        /// <param name="sphereSpeed">Speed at which the sphere moves along the streamline</param>
         /// <returns>IEnumerator for coroutine processing</returns>
-        private IEnumerator StartMoveSphere(List<GradientDataset> gradientPoints, Bounds cubeBounds, float streamlineStepSize)
+        private IEnumerator StartMoveSphere(List<GradientDataset> gradientPoints, Bounds cubeBounds, float streamlineStepSize, float lifetime, float sphereSpeed)
         {
             // Exit if no gradient points are provided
             if (gradientPoints == null || spatialGrid == null)

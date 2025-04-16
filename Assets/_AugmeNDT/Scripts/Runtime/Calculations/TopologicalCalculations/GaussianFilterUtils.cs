@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
 namespace AugmeNDT
 {
-
     public static class GaussianFilterUtils
     {
         /// <summary>
@@ -20,20 +17,20 @@ namespace AugmeNDT
         /// <returns>A new list of smoothed gradient points.</returns>
         public static List<GradientDataset> ApplyGaussianSmoothingParallel(List<GradientDataset> generatedGradientPoints, float gaussianSigma)
         {
-            // Thread-safe koleksiyon kullanarak çıktıyı topluyoruz
+            // Using a thread-safe collection to gather output
             ConcurrentBag<GradientDataset> smoothedGradientPoints = new ConcurrentBag<GradientDataset>();
 
-            // Her bir nokta için paralel işlem yürütüyoruz
+            // Execute parallel processing for each point
             Parallel.ForEach(generatedGradientPoints, point =>
             {
-                // Her nokta için belirli mesafedeki komşuları buluyoruz
+                // Find neighbors within a fixed distance for each point
                 List<GradientDataset> neighbors = generatedGradientPoints
                     .Where(p => Vector3.Distance(point.Position, p.Position) <= 0.5f)
                     .ToList();
 
                 // Skip if no neighbors are found (avoid division by zero later).
                 if (neighbors.Count == 0)
-                    return; // Parallel.ForEach içinde continue yerine return kullanılır
+                    return; // In Parallel.ForEach, use return instead of continue
 
                 Vector3 weightedDirection = Vector3.zero;
                 float weightedMagnitude = 0f;
@@ -61,7 +58,7 @@ namespace AugmeNDT
                     weightedMagnitude /= totalWeight;
                 }
 
-                // Thread-safe koleksiyona yeni oluşturulan noktayı ekliyoruz
+                // Add the new smoothed point to the thread-safe collection
                 smoothedGradientPoints.Add(new GradientDataset(
                     point.ID,
                     point.Position,
@@ -69,11 +66,11 @@ namespace AugmeNDT
                     weightedMagnitude));
             });
 
-            // Debug.Log çağrısını paralel döngü dışında yapıyoruz
+            // Logging outside of the parallel loop to avoid performance issues
             Debug.Log("Gaussian Kernel Smoothing completed with parallel processing.");
 
-            // ConcurrentBag'i normal listeye dönüştürüyoruz
-            // Not: ConcurrentBag sırayı korumaz, eğer sıra önemliyse ID bazlı sıralama eklenebilir
+            // Convert ConcurrentBag to a regular list
+            // Note: ConcurrentBag does not preserve order. If order matters, sort by ID.
             return smoothedGradientPoints.ToList();
         }
     }

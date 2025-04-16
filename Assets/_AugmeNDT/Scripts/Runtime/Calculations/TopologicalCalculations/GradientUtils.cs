@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -9,7 +7,6 @@ namespace AugmeNDT
 {
     public static class GradientUtils
     {
-
         /// <summary>
         /// Parallel implementation: Assigns new gradient values to a list of generated gradient points by interpolating
         /// values from the original dataset. Combines the functionality of AssignNewGradientValues and 
@@ -26,17 +23,17 @@ namespace AugmeNDT
                 return generatedGradientPoints;
             }
 
-            // Paralel olarak her bir point için hesaplama yapacağız
+            // Perform computation for each point in parallel
             Parallel.ForEach(generatedGradientPoints, point =>
             {
-                // CalculateNewGradientValueByDistanceAvg metodunun içeriğini doğrudan burada uygulayalım
+                // Re-implementation of CalculateNewGradientValueByDistanceAvg inline
                 List<GradientDataset> nearest = new List<GradientDataset>();
                 float minDistance = 0.2f;
 
-                // Expand search radius in steps of 0.2f until a nearby gradient is found (max 4 iterations)
+                // Expand search radius in steps of 0.2f until nearby points are found (max 4 iterations)
                 for (int i = 0; i < 4; i++)
                 {
-                    // ForEach yerine LINQ kullanabiliriz, çünkü originalGradientList sadece okunuyor
+                    // Use LINQ instead of ForEach for clarity and efficiency
                     var nearbyPoints = originalGradientList.Where(x =>
                         Vector3.Distance(point.Position, x.Position) <= minDistance);
 
@@ -48,15 +45,15 @@ namespace AugmeNDT
                     minDistance += 0.2f;
                 }
 
-                // If no nearby gradients are found, set zero vector
+                // If no nearby gradients are found, set to zero vector
                 if (nearest.Count == 0)
                 {
                     point.Direction = Vector3.zero;
                     point.Magnitude = 0f;
-                    return; // continue in Parallel.ForEach için return kullanılır
+                    return; // Use return instead of continue in Parallel.ForEach
                 }
 
-                // Compute weighted gradient
+                // Compute weighted average of neighboring gradients
                 Vector3 weightedDirection = Vector3.zero;
                 float weightedMagnitude = 0f;
                 float totalWeight = 0f;
@@ -66,15 +63,15 @@ namespace AugmeNDT
                 {
                     float distance = Vector3.Distance(point.Position, data.Position);
 
-                    // If the target position exactly matches a known point, use it directly
+                    // If exact match, use it directly
                     if (distance < 1e-6f)
                     {
                         point.Direction = data.Direction;
                         point.Magnitude = data.Magnitude;
-                        return; // continue in Parallel.ForEach için return kullanılır
+                        return;
                     }
 
-                    // Compute inverse distance weight
+                    // Compute inverse-distance weighting
                     float weight = 1f / Mathf.Pow(distance, alpha);
                     totalWeight += weight;
 
@@ -82,15 +79,15 @@ namespace AugmeNDT
                     weightedMagnitude += data.Magnitude * weight;
                 }
 
-                // If total weight is zero, set zero vector
+                // If weights sum to zero, assign zero values
                 if (totalWeight < 1e-6f)
                 {
                     point.Direction = Vector3.zero;
                     point.Magnitude = 0f;
-                    return; // continue in Parallel.ForEach için return kullanılır
+                    return;
                 }
 
-                // Normalize weighted sum
+                // Normalize weighted results
                 point.Direction = (weightedDirection / totalWeight);
                 point.Magnitude = (weightedMagnitude / totalWeight);
             });
@@ -110,51 +107,51 @@ namespace AugmeNDT
             if (!generatedGradientPoints.Any() || rectangleCorners == null || rectangleCorners.Length != 4)
                 return generatedGradientPoints;
 
-            // Calculate the normal of the rectangle using multiple corner combinations for robustness
+            // Calculate the normal of the rectangle using different corner pairs for better accuracy
             Vector3 normal1 = Vector3.Cross(rectangleCorners[1] - rectangleCorners[0], rectangleCorners[3] - rectangleCorners[0]).normalized;
             Vector3 normal2 = Vector3.Cross(rectangleCorners[2] - rectangleCorners[1], rectangleCorners[0] - rectangleCorners[1]).normalized;
             Vector3 normal3 = Vector3.Cross(rectangleCorners[3] - rectangleCorners[2], rectangleCorners[1] - rectangleCorners[2]).normalized;
             Vector3 normal4 = Vector3.Cross(rectangleCorners[0] - rectangleCorners[3], rectangleCorners[2] - rectangleCorners[3]).normalized;
 
-            // Average the normals for a more accurate representation
+            // Average the normals to improve plane estimation
             Vector3 normal = (normal1 + normal2 + normal3 + normal4).normalized;
 
-            // Calculate average gradient direction
+            // Calculate average gradient direction to determine orientation
             Vector3 averageGradientDirection = new Vector3(
                 generatedGradientPoints.Average(x => x.Direction.x),
                 generatedGradientPoints.Average(x => x.Direction.y),
                 generatedGradientPoints.Average(x => x.Direction.z)
             );
 
-            // Check if we need to flip the normal to align with average gradient direction
+            // Flip the normal if it's pointing in the opposite direction
             float dotGradientNormal = Vector3.Dot(averageGradientDirection, normal);
             if (dotGradientNormal < 0)
             {
-                normal = -normal; // If the dot product is negative, flip the normal direction
+                normal = -normal;
             }
 
-            // Calculate average magnitude for scaling
+            // Compute average magnitude to normalize projection magnitude
             float averageMagnitude = generatedGradientPoints.Average(p => p.Magnitude);
 
-            // Project each gradient onto the rectangle plane - PARALLEL IMPLEMENTATION
+            // Project each gradient onto the plane and normalize it — in parallel
             Parallel.ForEach(generatedGradientPoints, point =>
             {
-                // Project the gradient onto the plane defined by the rectangle
+                // Remove the component of the gradient that's perpendicular to the plane
                 Vector3 projectedGradient = point.Direction - Vector3.Dot(point.Direction, normal) * normal;
 
-                // If the projected gradient is very small, set it to zero to avoid noise
+                // If the projection is too small, discard it
                 if (projectedGradient.magnitude < 1e-6f)
                 {
                     point.Direction = Vector3.zero;
                     point.Magnitude = 0f;
-                    return; // Using return instead of continue in Parallel.ForEach
+                    return;
                 }
 
                 // Normalize direction and scale magnitude proportionally
                 float projectedMagnitude = projectedGradient.magnitude;
                 point.Direction = projectedGradient.normalized;
 
-                // Scale magnitude proportionally based on average
+                // Scale magnitude to maintain relative strength
                 point.Magnitude = projectedMagnitude / averageMagnitude;
             });
 

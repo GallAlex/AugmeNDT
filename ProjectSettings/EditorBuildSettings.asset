@@ -6,8 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/_AugmeNDT/Scenes/AugmeNDTMainScene.unity
-    guid: 18b55f62808a0b74897e9b3db264a00a
+    path: Assets/_AugmeNDT/Scenes/TopologicalDataAnalysisScene.unity
+    guid: 78a350d069611284c992df4e2678a8b2
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 97256c6c62a3ef94899260fd60cee73f, type: 2}
     com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 61f5faf81f748e940a74c44a44b110c4, type: 2}

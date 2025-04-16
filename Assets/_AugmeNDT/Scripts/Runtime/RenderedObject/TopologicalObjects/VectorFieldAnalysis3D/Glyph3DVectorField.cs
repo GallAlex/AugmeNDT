@@ -15,10 +15,7 @@ namespace AugmeNDT
 
         private static Rectangle3DManager rectangle3DManager;
         private static CreateCriticalPoints createCriticalPointsInstance;
-
-        // Data collection for gradient and critical points
-        private List<GradientDataset> gradientPoints = new List<GradientDataset>();
-        private List<CriticalPointDataset> criticalPoints = new List<CriticalPointDataset>();
+        public bool onlyVisCriticalPoints = false;
 
         // Containers for visualization objects
         private Transform container;
@@ -27,6 +24,17 @@ namespace AugmeNDT
         private static float localScaleRateTo3DVectorVisualize;
         private static float localScaleRateTo3DCriticalPointsVisualize;
         private static int arrowsPerFrame = 50;
+
+        private Bounds cubeBounds;
+        private bool IsUpdated()
+        {
+            Bounds currentCubeBounds = rectangle3DManager.GetRectangleBounds();
+            if (cubeBounds == currentCubeBounds)
+                return false;
+
+            cubeBounds = currentCubeBounds;
+            return true;
+        }
 
         private void Awake()
         {
@@ -45,28 +53,28 @@ namespace AugmeNDT
                 localScaleRateTo3DVectorVisualize = 0.3f;
                 localScaleRateTo3DCriticalPointsVisualize = 0.006f;
             }
+
             createCriticalPointsInstance = CreateCriticalPoints.instance;
         }
 
         /// <summary>
         /// Displays the vector field visualization using arrows
         /// </summary>
-        public void ShowVectorField()
+        private void ShowVectorField()
         {
-            if (!arrows.Any() || rectangle3DManager.IsUpdated())
+            if (!arrows.Any() || IsUpdated())
             {
                 SetContainer();
                 ClearArrows();
-                Initialize();
 
-                // Çok sayıda ok varsa Coroutine kullan
-                if (gradientPoints.Count > 800)
+                List<GradientDataset> gradientPoints = rectangle3DManager.GetGradientPoints();
+                if (gradientPoints.Count > 200)
                 {
-                    StartCoroutine(CreateArrowsCoroutine());
+                    StartCoroutine(CreateArrowsCoroutine(gradientPoints));
                 }
                 else
                 {
-                    // Az sayıda ok için normal yöntemi kullan
+                    // For a small number of arrows, use the normal method
                     arrows = VectorObjectVis.instance.CreateArrows(gradientPoints, container, localScaleRateTo3DVectorVisualize);
                 }
             }
@@ -78,47 +86,60 @@ namespace AugmeNDT
         /// <summary>
         /// Hides the vector field visualization
         /// </summary>
-        public void HideVectorField()
+        private void HideVectorField()
         {
             arrows.ForEach(x => x.SetActive(false));
         }
 
-        /// <summary>
-        /// Displays the critical points using colored spheres
-        /// </summary>
-        public void ShowCriticalPoints()
+        private void ShowCriticalPoints(bool force = false)
         {
-            if (!spheres.Any() || rectangle3DManager.IsUpdated())
+            if (force || !spheres.Any() || IsUpdated())
             {
                 SetContainer();
 
                 ClearCriticalPoints();
-                Initialize();
-                spheres = createCriticalPointsInstance.CreateBasicCriticalPoint(criticalPoints,container, localScaleRateTo3DCriticalPointsVisualize);
+
+                spheres = createCriticalPointsInstance.CreateBasicCriticalPoint(rectangle3DManager.GetCriticalPoints(), container, localScaleRateTo3DCriticalPointsVisualize);
             }
             else
             {
                 spheres.ForEach(x => x.SetActive(true));
             }
-
         }
 
-        /// <summary>
-        /// Hides the critical points visualization
-        /// </summary>
-        public void HideCriticalPoints()
+        public void ShowVectorsAndCriticalPoints(bool force = false)
         {
-            spheres.ForEach(x => x.SetActive(false));
+            if (onlyVisCriticalPoints)
+            {
+                ShowCriticalPoints(force);
+                return;
+            }
+
+            bool createNewObjects = force || !arrows.Any() || !spheres.Any() || IsUpdated();
+            if (createNewObjects)
+            {
+                container = null;
+                SetContainer();
+
+                ClearArrows();
+                ClearCriticalPoints();
+
+                spheres = createCriticalPointsInstance.CreateBasicCriticalPoint(rectangle3DManager.GetCriticalPoints(), container, localScaleRateTo3DCriticalPointsVisualize);
+                arrows = VectorObjectVis.instance.CreateArrows(rectangle3DManager.GetGradientPoints(), container, localScaleRateTo3DVectorVisualize);
+            }
         }
 
         #region private
+
         /// <summary>
-        /// Initializes data by fetching current gradient and critical points
+        /// Creates a new container GameObject under the fiber object to hold all vector visuals.
         /// </summary>
-        private void Initialize()
+        private void SetContainer()
         {
-            gradientPoints = rectangle3DManager.GetGradientPoints();
-            criticalPoints = rectangle3DManager.GetCriticalPoints();
+            Destroy(GameObject.Find("3DVectorForce"));
+
+            container = new GameObject("3DVectorForce").transform;
+            container.transform.parent = rectangle3DManager.volumeTransform;
         }
 
         /// <summary>
@@ -138,41 +159,29 @@ namespace AugmeNDT
             spheres.ForEach(x => Destroy(x));
             spheres.Clear();
         }
-        
-        /// <summary>
-        /// Creates a new container GameObject under the fiber object to hold all vector visuals.
-        /// </summary>
-        private void SetContainer()
-        {
-            if (container != null)
-                return;
 
-            container = new GameObject("3DVectorForce").transform;
-            container.transform.parent = rectangle3DManager.GetRectangleContainer();
-        }
-
-        private IEnumerator CreateArrowsCoroutine()
+        private IEnumerator CreateArrowsCoroutine(List<GradientDataset> gradientPoints)
         {
-            // Toplam ok sayısı
+            // Total number of arrows
             int totalArrows = gradientPoints.Count;
             arrows = new List<GameObject>(totalArrows);
 
             for (int i = 0; i < totalArrows; i += arrowsPerFrame)
             {
-                // Bu frame'de işlenecek gradientPoints alt kümesini al
+                // Get the subset of gradientPoints to process in this frame
                 List<GradientDataset> batchPoints = gradientPoints
                     .Skip(i)
                     .Take(Mathf.Min(arrowsPerFrame, totalArrows - i))
                     .ToList();
 
-                // Bu grup için okları oluştur
+                // Create arrows for this batch
                 List<GameObject> batchArrows = VectorObjectVis.instance.CreateArrows(
                     batchPoints, container, localScaleRateTo3DVectorVisualize);
 
-                // Ana listeye ekle
+                // Add to the main list
                 arrows.AddRange(batchArrows);
 
-                // Bir sonraki frame'e geç
+                // Move to the next frame
                 yield return null;
             }
 

@@ -21,7 +21,7 @@ namespace AugmeNDT
         /// <param name="streamlineStepSize">Step size for the Runge-Kutta calculation</param>
         /// <param name="sphereSpeed">Movement speed of the flow object</param>
         /// <param name="lifetime">Maximum duration in seconds before the flow object is destroyed</param>
-        public void StartFlow(List<GradientDataset> gradientPoints, Bounds cubeBounds, 
+        public void StartFlow(List<GradientDataset> gradientPoints, Bounds cubeBounds,
             float streamlineStepSize, float sphereSpeed, float lifetime)
 
         {
@@ -56,7 +56,7 @@ namespace AugmeNDT
                     currentPosition,
                     gradientPoints,
                     streamlineStepSize,
-                    false  // Direction döndürsün, pozisyon değil
+                    false  // Return direction, not position
                 );
 
                 // Exit if magnitude is too small (converged or stagnant flow)

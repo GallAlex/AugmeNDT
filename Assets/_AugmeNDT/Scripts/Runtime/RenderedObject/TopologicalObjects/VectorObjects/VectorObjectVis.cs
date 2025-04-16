@@ -20,7 +20,7 @@ namespace AugmeNDT
         /// <param name="generatedGradientPoints">List of gradient data</param>
         /// <param name="container">Parent transform to organize created arrows</param>
         /// <returns>List of created arrow GameObjects</returns>
-        public List<GameObject> CreateArrows(List<GradientDataset> generatedGradientPoints, Transform container,float scaleFactor = 1.0f)
+        public List<GameObject> CreateArrows(List<GradientDataset> generatedGradientPoints, Transform container, float scaleFactor = 1.0f)
         {
             List<GameObject> vectors = new List<GameObject>();
 

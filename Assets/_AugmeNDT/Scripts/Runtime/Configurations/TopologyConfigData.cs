@@ -5,6 +5,9 @@ namespace AugmeNDT
     [System.Serializable]
     public class TopologyConfigData
     {
+        [Header("Scene Number")]
+        public int SceneNumber = 2;
+
         [Header("MHD Dimensions")]
         public Vector3 mhdDimension = new Vector3(24, 16, 45);
 

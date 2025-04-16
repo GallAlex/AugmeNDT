@@ -11,20 +11,5 @@ namespace AugmeNDT
         public int pointID;
         public int pointType;
         public Vector3 pointPosition;
-
-        /// <summary>
-        /// When a user clicks on the critical point, it sends the information
-        /// to the `CriticalPointPanelManager` for display.
-        /// </summary>
-        private void OnMouseDown()
-        {
-            if (CriticalPointPanelManager.Instance == null)
-            {
-                Debug.LogError("CriticalPointPanelManager is not found.");
-                return;
-            }
-
-            CriticalPointPanelManager.Instance.ShowPointInfo(pointID, pointType, pointPosition);
-        }
     }
 }

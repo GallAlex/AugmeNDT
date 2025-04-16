@@ -2,8 +2,6 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using UnityEditor;
-using UnityEngine;
 #if !UNITY_EDITOR && UNITY_WSA_10_0
 using Windows.Storage;
 #endif

@@ -28,9 +28,10 @@ namespace AugmeNDT
         private Vector3 originalDimensions;
         private Vector3 lastVolumePosition;
         private Vector3 lastVolumeScale;
+        public Quaternion lastVolumeRotation;
 
-        public Vector3 min3D = new Vector3(0,0,5);
-        public Vector3 max3D = new Vector3(24,8,40);
+        public Vector3 min3D = new Vector3(0, 0, 5);
+        public Vector3 max3D = new Vector3(24, 8, 40);
 
         private void Awake()
         {
@@ -38,6 +39,7 @@ namespace AugmeNDT
             volumeTransform = GameObject.Find("Volume").transform;
             lastVolumePosition = volumeTransform.position;
             lastVolumeScale = volumeTransform.lossyScale;
+            lastVolumeRotation = volumeTransform.rotation;
 
             LoadTopologyConfiguration();
 
@@ -49,8 +51,9 @@ namespace AugmeNDT
 
         public void UpdateData()
         {
-            // DONT CHANGE THE ORDER
+            // DON'T CHANGE THE ORDER
             UpdateDataPositions();
+            UpdateDataRotation();
             UpdateDataScale();
         }
 
@@ -60,15 +63,19 @@ namespace AugmeNDT
             if (volumeTransform.position == lastVolumePosition)
                 return;
 
-            // Paralel işleme ile gradient listesini güncelle
+            // Update gradient list using parallel processing
             System.Threading.Tasks.Parallel.ForEach(gradientList, gradient => {
                 gradient.Position += positionDelta;
             });
 
-            // Paralel işleme ile kritik nokta listesini güncelle
+            // Update critical point list using parallel processing
             System.Threading.Tasks.Parallel.ForEach(criticalPointList, criticalPoint => {
                 criticalPoint.Position += positionDelta;
             });
+
+            // Update min3D and max3D vectors in the same way
+            min3D += positionDelta;
+            max3D += positionDelta;
 
             lastVolumePosition = volumeTransform.position;
         }
@@ -87,18 +94,18 @@ namespace AugmeNDT
             Vector3 volumeCenter = volumeTransform.position;
 
             System.Threading.Tasks.Parallel.ForEach(gradientList, gradient => {
-                // Merkeze göre rölatif pozisyon hesapla
+                // Calculate position relative to center
                 Vector3 relativePos = gradient.Position - volumeCenter;
 
-                // Rölatif pozisyonu ölçeklendir
+                // Scale the relative position
                 relativePos.x *= scaleRatio.x;
                 relativePos.y *= scaleRatio.y;
                 relativePos.z *= scaleRatio.z;
 
-                // Yeni pozisyonu ayarla
+                // Set the new position
                 gradient.Position = volumeCenter + relativePos;
 
-                // Yön vektörünü ölçeklendir - DÜZELTİLMİŞ
+                // Scale the direction vector - FIXED
                 Vector3 newDirection = new Vector3(
                     gradient.Direction.x * scaleRatio.x,
                     gradient.Direction.y * scaleRatio.y,
@@ -106,11 +113,11 @@ namespace AugmeNDT
                 );
                 gradient.Direction = newDirection;
 
-                // Yeni magnitude'u hesapla
+                // Calculate new magnitude
                 gradient.Magnitude = gradient.Direction.magnitude;
             });
 
-            // Kritik nokta güncellemesi aynı kalabilir
+            // Critical point update remains the same
             System.Threading.Tasks.Parallel.ForEach(criticalPointList, criticalPoint => {
                 Vector3 relativePos = criticalPoint.Position - volumeCenter;
                 relativePos.x *= scaleRatio.x;
@@ -119,15 +126,79 @@ namespace AugmeNDT
                 criticalPoint.Position = volumeCenter + relativePos;
             });
 
-            // Maximum magnitude değerini güncelle
+            // Update min3D and max3D vectors
+            // Calculate position of min3D relative to center
+            Vector3 minRelativePos = min3D - volumeCenter;
+            // Scale the relative position
+            minRelativePos.x *= scaleRatio.x;
+            minRelativePos.y *= scaleRatio.y;
+            minRelativePos.z *= scaleRatio.z;
+            // Set the new min3D position
+            min3D = volumeCenter + minRelativePos;
+
+            // Calculate position of max3D relative to center
+            Vector3 maxRelativePos = max3D - volumeCenter;
+            // Scale the relative position
+            maxRelativePos.x *= scaleRatio.x;
+            maxRelativePos.y *= scaleRatio.y;
+            maxRelativePos.z *= scaleRatio.z;
+            // Set the new max3D position
+            max3D = volumeCenter + maxRelativePos;
+
+            // Update maximum magnitude value
             maxMag = 0;
             foreach (var gradient in gradientList)
             {
                 maxMag = maxMag >= gradient.Magnitude ? maxMag : gradient.Magnitude;
             }
 
-            // Scale'i son olarak güncelle
+            // Update scale last
             lastVolumeScale = volumeTransform.lossyScale;
+        }
+
+        private void UpdateDataRotation()
+        {
+            // Check if rotation has changed
+            if (Quaternion.Angle(volumeTransform.rotation, lastVolumeRotation) < 0.1f)
+                return;
+
+            // Calculate rotation delta
+            Quaternion rotationDelta = volumeTransform.rotation * Quaternion.Inverse(lastVolumeRotation);
+            Vector3 volumeCenter = volumeTransform.position;
+
+            // Update gradient positions and directions with rotation
+            System.Threading.Tasks.Parallel.ForEach(gradientList, gradient => {
+                // Calculate relative position from center
+                Vector3 relativePos = gradient.Position - volumeCenter;
+
+                // Apply rotation to relative position
+                relativePos = rotationDelta * relativePos;
+
+                // Update position
+                gradient.Position = volumeCenter + relativePos;
+
+                // Apply same rotation to direction vector
+                gradient.Direction = rotationDelta * gradient.Direction;
+            });
+
+            // Update critical points with rotation
+            System.Threading.Tasks.Parallel.ForEach(criticalPointList, criticalPoint => {
+                Vector3 relativePos = criticalPoint.Position - volumeCenter;
+                relativePos = rotationDelta * relativePos;
+                criticalPoint.Position = volumeCenter + relativePos;
+            });
+
+            // Update min3D and max3D vectors
+            Vector3 minRelativePos = min3D - volumeCenter;
+            minRelativePos = rotationDelta * minRelativePos;
+            min3D = volumeCenter + minRelativePos;
+
+            Vector3 maxRelativePos = max3D - volumeCenter;
+            maxRelativePos = rotationDelta * maxRelativePos;
+            max3D = volumeCenter + maxRelativePos;
+
+            // Update last rotation
+            lastVolumeRotation = volumeTransform.rotation;
         }
 
         private void LoadTopologyConfiguration()
@@ -141,8 +212,8 @@ namespace AugmeNDT
             else
             {
                 // Create a new configuration with default values
-                TopologyConfigData defaultConfig = new TopologyConfigData();
-                string jsonData = JsonUtility.ToJson(defaultConfig, true); // true = pretty formatting
+                config = new TopologyConfigData();
+                string jsonData = JsonUtility.ToJson(config, true); // true = pretty formatting
                 try
                 {
                     System.IO.File.WriteAllText(configPath, jsonData);
@@ -156,12 +227,12 @@ namespace AugmeNDT
             path = config.mhdPath;
             originalDimensions = config.mhdDimension;
         }
-        
+
         private void Initialize()
         {
             ConvertData(ttkCalculation.GetGradientAllVectorField(), ttkCalculation.GetCriticalPointAllVectorField());
             ConvertMinMax3DVectors();
-            TDAMenu.instance.ActivateTDAInfoPanel(config);
+            TDAHandler.instance.ActivateTDAScenes(config);
         }
 
         private void ConvertData(List<GradientDataset> orjGradientList, List<CriticalPointDataset> orjCriticalPointDataset)
@@ -189,14 +260,14 @@ namespace AugmeNDT
                     normalizedPos.z * volumeWorldScale.z
                 );
 
-                // Direction vektörünü dünya ölçeğine göre ayarla
+                // Adjust direction vector according to world scale
                 Vector3 scaledDirection = new Vector3(
                     gradient.Direction.x * volumeWorldScale.x / originalDimensions.x,
                     gradient.Direction.y * volumeWorldScale.y / originalDimensions.y,
                     gradient.Direction.z * volumeWorldScale.z / originalDimensions.z
                 );
 
-                // Ölçeklendirilen yön vektöründen yeni magnitude hesapla
+                // Calculate new magnitude from scaled direction vector
                 float scaledMagnitude = scaledDirection.magnitude;
 
                 // Add the world-space position of the Volume
@@ -246,29 +317,29 @@ namespace AugmeNDT
             criticalPointList = scaledCriticalPoints;
         }
         /// <summary>
-        /// Min3D ve Max3D vektörlerini ham veri koordinatlarından dünya koordinatlarına dönüştürür
+        /// Converts Min3D and Max3D vectors from raw data coordinates to world coordinates
         /// </summary>
         private void ConvertMinMax3DVectors()
         {
-            // Volume'ün dünya ölçeği ve pozisyonu
+            // Volume's world scale and position
             Vector3 volumeWorldScale = volumeTransform.lossyScale;
             Vector3 volumePosition = volumeTransform.position;
 
-            // Min3D'yi normalize et (0-1 aralığına dönüştür)
+            // Normalize Min3D (convert to 0-1 range)
             Vector3 normalizedMin = new Vector3(
                 min3D.x / originalDimensions.x,
                 min3D.y / originalDimensions.y,
                 min3D.z / originalDimensions.z
             );
 
-            // Max3D'yi normalize et (0-1 aralığına dönüştür)
+            // Normalize Max3D (convert to 0-1 range)
             Vector3 normalizedMax = new Vector3(
                 max3D.x / originalDimensions.x,
                 max3D.y / originalDimensions.y,
                 max3D.z / originalDimensions.z
             );
 
-            // Normalize edilmiş koordinatları dünya ölçeğine dönüştür
+            // Convert normalized coordinates to world scale
             Vector3 scaledMin = new Vector3(
                 normalizedMin.x * volumeWorldScale.x,
                 normalizedMin.y * volumeWorldScale.y,
@@ -281,11 +352,11 @@ namespace AugmeNDT
                 normalizedMax.z * volumeWorldScale.z
             );
 
-            // Volume'ün dünya konumunu ekle ve merkez pozisyonuna göre ayarla
+            // Add world position of the Volume and adjust according to center position
             Vector3 finalMin = volumePosition + scaledMin - (volumeWorldScale / 2f);
             Vector3 finalMax = volumePosition + scaledMax - (volumeWorldScale / 2f);
 
-            // Dönüştürülmüş değerleri atama
+            // Assign converted values
             min3D = finalMin;
             max3D = finalMax;
         }
