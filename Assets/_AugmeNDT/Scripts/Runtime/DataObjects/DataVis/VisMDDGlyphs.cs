@@ -1,4 +1,3 @@
-using Microsoft.MixedReality.Toolkit.UI;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -508,9 +507,9 @@ namespace AugmeNDT{
 
                 // Give selectionBox a Attribute ID for later selection and ref to class
                 SelectionBoxInteractable interactable = selectionBox.GetComponent<SelectionBoxInteractable>();
-                interactable.selectionBoxID = box;
-                interactable.refToMDDGlyph = this;
-                interactable.chartArea = visContainer.GetContainerBounds();
+                interactable.SelectionBoxId = box;
+                interactable.RefToMddGlyph = this;
+                interactable.ChartArea = visContainer.GetContainerBounds();
 
                 selectionBoxes.Add(selectionBox);
             }

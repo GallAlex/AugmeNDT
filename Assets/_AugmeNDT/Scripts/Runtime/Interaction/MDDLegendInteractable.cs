@@ -1,18 +1,21 @@
 using System.Collections.Generic;
-using Microsoft.MixedReality.Toolkit.UI;
+using TMPro;
 using UnityEngine;
 
 namespace AugmeNDT{
+    using MixedReality.Toolkit;
+    using MixedReality.Toolkit.UX;
+    using UnityEngine.XR.Interaction.Toolkit;
 
     /// <summary>
     /// Class handles the interaction with the MDDLegend and sets the text of the legend
     /// </summary>
     public class MDDLegendInteractable : MonoBehaviour
     {
-        public TextMesh xtitle;
-        public TextMesh ytitle;
-        public List<TextMesh> xRangeLabels;
-        public List<TextMesh> yRangeLabels;
+        public TextMeshPro xtitle;
+        public TextMeshPro ytitle;
+        public List<TextMeshPro> xRangeLabels;
+        public List<TextMeshPro> yRangeLabels;
 
         public List<GameObject> colorBars;  // Ordered from top to bottom and left to right 
 
@@ -27,9 +30,12 @@ namespace AugmeNDT{
         {
             for (int i = 0; i < colorBars.Count; i++)
             {
+                // TODO: MRTK3 Rework
                 var id = i;
-                var onTouchReceiver = colorBars[id].GetComponent<Interactable>().AddReceiver<InteractableOnTouchReceiver>();
-                onTouchReceiver.OnTouchStart.AddListener(() => mddGlyphColorLegend.ChangeView(id));
+                var onTouchReceiver = colorBars[id].GetComponent<PressableButton>();
+                onTouchReceiver.selectEntered.AddListener((onTouch) => mddGlyphColorLegend.ChangeView(id));
+
+                //onTouchReceiver.OnTouchStart.AddListener(() => mddGlyphColorLegend.ChangeView(id));
             }
 
         }

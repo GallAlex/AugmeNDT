@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.MixedReality.Toolkit.Utilities;
 using UnityEngine;
 
 namespace AugmeNDT
 {
+    using Microsoft.MixedReality.Toolkit.Utilities;
 
     /// <summary>
     /// Class groups & stores all loaded data & its derived representations for one (related/matching) dataset.
@@ -280,7 +280,11 @@ namespace AugmeNDT
         /// </summary>
         public void ArrangeObjectsSpatially()
         {
-            GridObjectCollection gridColl = dataVisGroupContainer.AddComponent<GridObjectCollection>();
+
+            // Add GridObjectCollection if not found
+            GridObjectCollection gridColl = dataVisGroupContainer.GetComponent<GridObjectCollection>();
+            if (gridColl == null) gridColl = dataVisGroupContainer.AddComponent<GridObjectCollection>();
+
             gridColl.CellWidth = 0.30f;     //Todo: Use biggest dimension of all representations
             gridColl.CellHeight = 0.30f;    //Todo: Use biggest dimension of all representations
             gridColl.SortType = CollationOrder.ChildOrder;
@@ -288,9 +292,9 @@ namespace AugmeNDT
             gridColl.Columns = 2;
             gridColl.Anchor = LayoutAnchor.BottomLeft;
             gridColl.AnchorAlongAxis = true;
-
+            
             gridColl.UpdateCollection();
-
+            
             GlobalScaleAndPos.SetToBestInitialStartPos(dataVisGroupContainer.transform);
         }
 

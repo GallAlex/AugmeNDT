@@ -45,7 +45,7 @@ namespace AugmeNDT
 
         private async Task Scenario0()
         {
-            string mainFolder = "D:\\TestData\\DemoData_Hololens\\4D_FiberData\\";
+            string mainFolder = GetPlatformDependentMainPath() + "\\4D_FiberData\\";
             List<string> filePaths = new List<string>(){
                 mainFolder + "10min_01.csv",
                 mainFolder + "60min_01.csv",
@@ -59,14 +59,14 @@ namespace AugmeNDT
 
             }
 
-            sceneUIHandler.ChangeVisTicks();
+            sceneUIHandler.Create4DVis();
 
             Debug.Log("Finished loading " + filePaths.Count + " Files");
         }
 
         private async Task Scenario1()
         {
-            string mainFolder = "D:\\TestData\\DemoData_Hololens\\FCP_Daten_Gall_sGFCR0\\";
+            string mainFolder = GetPlatformDependentMainPath() + "\\FCP_Daten_Gall_sGFCR0\\";
             List<string> filePaths = new List<string>(){
                 mainFolder + "0N.csv",
                 mainFolder + "132N.csv",
@@ -84,9 +84,25 @@ namespace AugmeNDT
 
             }
 
-            sceneUIHandler.ChangeVisTicks();
+            sceneUIHandler.Create4DVis();
 
             Debug.Log("Finished loading " + filePaths.Count + " Files");
+        }
+
+        private string GetPlatformDependentMainPath()
+        {
+            // Different Paths for different platforms
+            #if UNITY_EDITOR
+                                    return "D:\\TestData\\DemoData_Hololens";
+            #elif !UNITY_EDITOR && UNITY_ANDROID
+                        return "/storage/emulated/0/Datasets/";
+            #elif !UNITY_EDITOR && UNITY_WSA_10_0
+                                    throw new System.NotImplementedException("No main path for Hololens");
+            #elif !UNITY_EDITOR && UNITY_STANDALONE_WIN
+                                    return "D:\\TestData\\DemoData_Hololens";
+            #else
+                                    throw new System.NotImplementedException("No main path for this platform");
+            #endif
         }
 
     }

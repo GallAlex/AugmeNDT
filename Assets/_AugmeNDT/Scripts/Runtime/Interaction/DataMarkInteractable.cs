@@ -1,5 +1,3 @@
-using Microsoft.MixedReality.Toolkit.Input;
-using Microsoft.MixedReality.Toolkit.UI;
 using UnityEngine;
 
 namespace AugmeNDT{
@@ -7,7 +5,8 @@ namespace AugmeNDT{
     {
         public DataMark dataMark;
         public VisInteractor visInteractor;
-        public Interactable interactable;
+        //TODO: MRTK3 Rework
+        //public Interactable interactable;
 
         public string dataMarkID = "DataMark_";
 
@@ -20,16 +19,20 @@ namespace AugmeNDT{
 
         void Start()
         {
+            //TODO: MRTK3 Rework
+            /*
             var onTouchReceiver = interactable.AddReceiver<InteractableOnTouchReceiver>();
-            onTouchReceiver.OnTouchStart.AddListener(() => visInteractor.OnTouch(dataMarkID)); ;
+            onTouchReceiver.OnTouchStart.AddListener(() => visInteractor.OnTouch(dataMarkID));
+            */
         }
 
         public void DisableInteraction()
         {
             //Disable Collider, interactable,...
             GetComponent<Collider>().enabled = false;
-            GetComponent<NearInteractionTouchable>().enabled = false;
-            interactable.enabled = false;
+            //TODO: MRTK3 Rework
+            //GetComponent<NearInteractionTouchable>().enabled = false;
+            //interactable.enabled = false;
 
             //Disable Script
             this.enabled = false;

@@ -1,0 +1,5 @@
+C:/Tools/AugmeNDT/.utmp/RelWithDebInfo/6b4v1mt2/x86_64/CMakeFiles/edit_cache.dir
+C:/Tools/AugmeNDT/.utmp/RelWithDebInfo/6b4v1mt2/x86_64/CMakeFiles/rebuild_cache.dir
+C:/Tools/AugmeNDT/.utmp/RelWithDebInfo/6b4v1mt2/x86_64/FramePacing/CMakeFiles/swappywrapper.dir
+C:/Tools/AugmeNDT/.utmp/RelWithDebInfo/6b4v1mt2/x86_64/FramePacing/CMakeFiles/edit_cache.dir
+C:/Tools/AugmeNDT/.utmp/RelWithDebInfo/6b4v1mt2/x86_64/FramePacing/CMakeFiles/rebuild_cache.dir

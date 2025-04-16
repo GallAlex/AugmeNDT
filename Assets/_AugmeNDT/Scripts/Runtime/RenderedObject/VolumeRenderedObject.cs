@@ -1,9 +1,11 @@
-using Microsoft.MixedReality.Toolkit.UI.BoundsControl;
 using System.Threading.Tasks;
 using UnityEngine;
 
 namespace AugmeNDT
 {
+    using MixedReality.Toolkit.SpatialManipulation;
+    using UnityEngine.Rendering;
+
     public class VolumeRenderedObject
     {
         private GameObject containerPrefab;
@@ -66,6 +68,13 @@ namespace AugmeNDT
             meshRenderer.sharedMaterial = volumeMaterial;
             meshRenderer.sharedMaterial.SetTexture("_MainTex", tex);
 
+            //volumeContainer.transform.localScale = new Vector3(dataset.scaleX, dataset.scaleY, dataset.scaleZ);
+            //Debug.Log("scaleX: " + dataset.scaleX + " scaleY: " + dataset.scaleY + " scaleZ: " + dataset.scaleZ);
+
+            //Maintain Volume Scale Ratio
+            GlobalScaleAndPos.ResizeObjectRelative(volumeContainer.transform, 0.2f,
+                new Vector3(dataset.scaleX, dataset.scaleY, dataset.scaleZ));
+
             BoxCollider meshColl = volume.GetComponent<BoxCollider>() != null
                 ? volume.GetComponent<BoxCollider>()
                 : volume.AddComponent<BoxCollider>();
@@ -78,13 +87,9 @@ namespace AugmeNDT
                 : volumeContainer.AddComponent<BoxCollider>();
 
 
-            //TODO: Save scale change: dataset.scaleZ = maxScale;
-            //Maintain Volume Scale Ratio
-            GlobalScaleAndPos.ResizeRealtiveObject(volume.transform, 1.0f,
-                new Vector3(dataset.dimX, dataset.dimY, dataset.dimZ));
-            GlobalScaleAndPos.ResizeBoxCollider(volume.transform, boundsColl, meshColl.size, meshColl.center);
+            //GlobalScaleAndPos.ResizeBoxCollider(volume.transform, boundsColl, meshColl.size, meshColl.center);
             //GlobalScaleAndPos.MoveOriginToLowerFrontLeftPoint(volume.transform);
-            GlobalScaleAndPos.SetToBestInitialScale(volumeContainer.transform, volumeContainer.transform.localScale);
+            //GlobalScaleAndPos.SetToBestInitialScale(volumeContainer.transform, volumeContainer.transform.localScale);
 
             GlobalScaleAndPos.SetToBestInitialStartPos(volumeContainer.transform);
         }

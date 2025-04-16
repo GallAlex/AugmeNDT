@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-//[ExecuteAlways]
 namespace AugmeNDT{
     public class CylinderObjectVis
     {
@@ -9,8 +8,8 @@ namespace AugmeNDT{
 
         public float cylinderRadius = 0.2f;
         public float elbowRadius = 0.5f;
-        [Range(3, 32)] public int cylinderSegments = 8;
-        [Range(3, 32)] public int elbowSegments = 6;
+        public int cylinderSegments = 8;
+        public int elbowSegments = 6;
 
         public bool flatShading = false;
         public bool avoidStrangling = false;

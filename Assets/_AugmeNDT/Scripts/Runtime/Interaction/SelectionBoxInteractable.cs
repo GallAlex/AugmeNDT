@@ -1,33 +1,37 @@
-using Microsoft.MixedReality.Toolkit.Input;
-using Microsoft.MixedReality.Toolkit.UI;
-using System;
 using UnityEngine;
+using MixedReality.Toolkit.SpatialManipulation;
+using UnityEngine.XR.Interaction.Toolkit;
 
 namespace AugmeNDT{
-    
+
     public class SelectionBoxInteractable : MonoBehaviour
     {
-        public VisibleOnCloseInteraction visibleOnCloseInteractionScript;
-        public Interactable interactable;
+        public VisibleOnCloseInteraction VisibleOnCloseInteractionScript;
+        public VisMDDGlyphs RefToMddGlyph;
+        public Bounds ChartArea;
+        public int SelectionBoxId;
 
-        public VisMDDGlyphs refToMDDGlyph;
-        public Bounds chartArea;
-
-        public int selectionBoxID;
+        private ObjectManipulator objectManipulator;
 
         private Vector3 initalSelectionBoxPos;
         private Quaternion initalSelectionBoxRot;
 
-        private Vis refToVis; 
+        private Vis refToVis;
 
         void Start()
         {
-            var onGrabReceiver = interactable.AddReceiver<InteractableOnGrabReceiver>();
+            // Create a new interactable
+            objectManipulator = GetComponent<ObjectManipulator>();
+
+            if(objectManipulator != null)
+            {
+                objectManipulator.selectEntered.AddListener(OnGrab);
+                objectManipulator.selectExited.AddListener(OnGrabRelease);
+            }
+
             initalSelectionBoxPos = this.transform.localPosition;
             initalSelectionBoxRot = this.transform.localRotation;
 
-            onGrabReceiver.OnGrab.AddListener(() => OnGrab());
-            onGrabReceiver.OnRelease.AddListener(() => OnGrabRelease());
         }
 
         void Update()
@@ -41,16 +45,14 @@ namespace AugmeNDT{
             }
         }
 
-        public void OnGrab()
+        private void OnGrab(SelectEnterEventArgs args)
         {
-            //Debug.Log("Grabbed Box: " + this.selectionBoxID);
-            visibleOnCloseInteractionScript.EnableInteraction(false);
-            visibleOnCloseInteractionScript.ShowObject(true);
+            VisibleOnCloseInteractionScript.EnableInteraction(false);
+            VisibleOnCloseInteractionScript.ShowObject(true);
         }
 
-        public void OnGrabRelease()
+        private void OnGrabRelease(SelectExitEventArgs args)
         {
-            //Debug.Log("Released Grab: " + this.selectionBoxID);
             var check = CheckDraggedDistanceReached(this.transform.localPosition);
             //Debug.Log("CheckDraggedDistanceReached: " + check);
 
@@ -59,22 +61,23 @@ namespace AugmeNDT{
                 //Reset Selection Box
                 this.transform.localPosition = initalSelectionBoxPos;
                 this.transform.localRotation = initalSelectionBoxRot;
-                visibleOnCloseInteractionScript.EnableInteraction(true);
-                visibleOnCloseInteractionScript.ShowObject(false);
+                VisibleOnCloseInteractionScript.EnableInteraction(true);
+                VisibleOnCloseInteractionScript.ShowObject(false);
             }
             else
             {
                 // Move Pos to the left front corner of the selection box
-                Vector3 newPos = new Vector3(this.transform.localPosition.x, this.transform.localPosition.y - 0.5f, this.transform.localPosition.z - 0.5f);
+                Vector3 newPos = new Vector3(this.transform.localPosition.x, this.transform.localPosition.y - 0.5f,
+                    this.transform.localPosition.z - 0.5f);
 
                 // Hide selection box
-                visibleOnCloseInteractionScript.EnableInteraction(false);
-                visibleOnCloseInteractionScript.ShowObject(false);
+                VisibleOnCloseInteractionScript.EnableInteraction(false);
+                VisibleOnCloseInteractionScript.ShowObject(false);
 
-                refToVis = refToMDDGlyph.CreateNewVis(selectionBoxID, newPos);
+                refToVis = RefToMddGlyph.CreateNewVis(SelectionBoxId, newPos);
             }
 
-            
+
         }
 
         /// <summary>
@@ -83,14 +86,14 @@ namespace AugmeNDT{
         /// <returns></returns>
         private bool CheckDraggedDistanceReached(Vector3 currentPos)
         {
-            bool reached = !chartArea.Contains(currentPos);
+            bool reached = !ChartArea.Contains(currentPos);
             //Debug.Log("Reached?: " + reached + "\nchartArea: " + chartArea + "\n currentPos: " + currentPos);
 
             return reached;
         }
 
 
-        // If the selection box is not dragged out of the area it gets resetted to its initial position
+        // If the selection box is not dragged out of the area it gets reset to its initial position
         private void RemoveDraggedOutVis()
         {
             if (refToVis != null)
@@ -100,13 +103,22 @@ namespace AugmeNDT{
             }
 
             // Show selection box
-            visibleOnCloseInteractionScript.EnableInteraction(true);
-            visibleOnCloseInteractionScript.ShowObject(true);
+            VisibleOnCloseInteractionScript.EnableInteraction(true);
+            VisibleOnCloseInteractionScript.ShowObject(true);
 
             this.transform.localPosition = initalSelectionBoxPos;
             this.transform.localRotation = initalSelectionBoxRot;
         }
 
+        private void OnDestroy()
+        {
+            // Clean up listeners to avoid memory leaks
+            if (objectManipulator != null)
+            {
+                objectManipulator.selectEntered.RemoveListener(OnGrab);
+                objectManipulator.selectExited.RemoveListener(OnGrabRelease);
+            }
 
+        }
     }
 }

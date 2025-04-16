@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.MixedReality.Toolkit.Utilities;
 using UnityEngine;
 
 namespace AugmeNDT{
+    using Microsoft.MixedReality.Toolkit.Utilities;
 
     /// <summary>
     /// Class handles the loaded datasets and their respective renderings and data visualizations
@@ -17,7 +17,7 @@ namespace AugmeNDT{
         // Parent Container which stores all DataVisGroups in the scene
         [SerializeField]
         private GameObject sceneObjectsContainer;
-        // GridObjectCollection used to arrange all DataVisGroups in the scene
+        //GridObjectCollection used to arrange all DataVisGroups in the scene
         private GridObjectCollection gridColl;
 
         // Stores all loaded data & its derived representations
@@ -79,8 +79,6 @@ namespace AugmeNDT{
             {
                 return null;
             }
-
-            Debug.Log("Filepath found is: " + filePath);
 
             bool loadingSucceded = await fileLoadingManager.LoadDataset();
 
@@ -173,7 +171,7 @@ namespace AugmeNDT{
                     group.ArrangeObjectsSpatially();
                 }
             }
-
+            
             if (gridColl == null)
             {
                 gridColl = sceneObjectsContainer.AddComponent<GridObjectCollection>();
@@ -188,7 +186,7 @@ namespace AugmeNDT{
             }
 
             gridColl.UpdateCollection();
-
+            
             GlobalScaleAndPos.SetToBestInitialStartPos(sceneObjectsContainer.transform);
         }
 
@@ -264,7 +262,12 @@ namespace AugmeNDT{
             }
 
             vis.multiGroups = multiGroups;
-            vis.CreateVis(new GameObject("MultiGroupVis"));
+            GameObject parentContainer = new GameObject("MultiGroupVis");
+            vis.CreateVis(parentContainer);
+
+            GlobalScaleAndPos.SetToBestInitialStartPos(parentContainer.transform);
+            parentContainer.transform.localPosition = new Vector3(parentContainer.transform.localPosition.x,
+                parentContainer.transform.localPosition.y, 0f);
         }
 
         public void ChangeAxis(int selectedGroup, int selectedVis, int axisID, int selectedDimension, int numberOfTicks)

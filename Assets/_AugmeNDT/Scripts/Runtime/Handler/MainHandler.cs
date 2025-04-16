@@ -1,6 +1,8 @@
 using UnityEngine;
 
 namespace AugmeNDT{
+    using System.IO;
+
     /// <summary>
     /// Class handles settings needed at the start of the application and acts as main class for the application
     /// </summary>
@@ -28,16 +30,26 @@ namespace AugmeNDT{
 
         void Start()
         {
-            Debug.Log("DeviceName: " + SystemInfo.deviceName);
-            Debug.Log("GraphicsMemorySize: " + (double)SystemInfo.graphicsMemorySize + " MB");
-            Debug.Log("MaxTextureSize: " + (double)SystemInfo.maxTextureSize);
-            Debug.Log("MaxGraphicsBufferSize: " + (double)SystemInfo.maxGraphicsBufferSize / 1024.0f / 1024.0f + " MB");
+            OuputDeviceInformation();
         }
     
         // Initialize and assign the classes to the handlers
         public void Initialize()
         {
             sceneUIHandler.SetSceneObjectHandler(sceneObjectHandler);
+        }
+
+        private void OuputDeviceInformation()
+        {
+            string deviceName = SystemInfo.deviceName;
+            double graphicsMemorySizeMB = SystemInfo.graphicsMemorySize;
+            int maxTextureSize = SystemInfo.maxTextureSize;
+            double maxGraphicsBufferSizeMB = (double)SystemInfo.maxGraphicsBufferSize / 1024.0f / 1024.0f;
+            string persistentDataPath = Application.persistentDataPath;
+
+            string deviceInformation = $"DeviceName: {deviceName}, GraphicsMemorySize: {graphicsMemorySizeMB} MB, MaxTextureSize: {maxTextureSize}, MaxGraphicsBufferSize: {maxGraphicsBufferSizeMB:F2} MB, Application.persistentDataPath is: {persistentDataPath}";
+
+            Debug.Log("########## Device Information ##########\n" + deviceInformation);
         }
 
     }

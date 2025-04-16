@@ -107,7 +107,21 @@ namespace AugmeNDT{
         public Attribute GetAttribute(int attrId)
         {
             return attributeValues[attrId];
+        }
 
+        /// <summary>
+        /// Returns the id of an Attribute with the given name. Looks in the attributeNames List
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public int GetAttributeId(string name)
+        {
+            int attrId = attributeNames.IndexOf(name);
+            if (attrId == -1)
+            {
+                throw new IndexOutOfRangeException("Attribute [" + name + "] does not exit in the dataset");
+            }
+            return attrId;
         }
 
         /// <summary>

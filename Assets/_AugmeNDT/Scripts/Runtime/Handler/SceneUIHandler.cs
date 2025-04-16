@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.MixedReality.Toolkit.UI;
+using MixedReality.Toolkit;
 using TMPro;
 using UnityEngine;
 
@@ -12,13 +12,10 @@ namespace AugmeNDT{
     public class SceneUIHandler : MonoBehaviour
     {
         [SerializeField]
-        private GameObject indicatorObject;
-        private IProgressIndicator indicator;
+        private GameObject DebuggerWindow;
 
         [SerializeField]
         public TMP_Text textLabel;
-
-        public ScrollGridUtility scrollGridUtility;
 
         public List<Shader> listOfShaders;
 
@@ -70,10 +67,6 @@ namespace AugmeNDT{
 
             textLabel.text = "Loading ...";
 
-            //Progress Bar
-            //indicator = indicatorObject.GetComponent<IProgressIndicator>();
-            //StartProgressIndicator(asyncLoadingTask);
-
             string path = await asyncLoadingTask;
             textLabel.text = path;
         }
@@ -91,7 +84,7 @@ namespace AugmeNDT{
 
         }
 
-        public void ChangeVisTicks()
+        public void Create4DVis()
         {
 
             List<int> selectedGroups = new List<int>();
@@ -108,40 +101,9 @@ namespace AugmeNDT{
         
         }
 
-        public void FillGridObject()
+        public void ShowDebugger()
         {
-            /*
-    
-        Dictionary<string, double[]> dataVal = sceneObjectHandler.visObjectList[0].dataValues;
-        scrollGridUtility.FillScrollGrid(dataVal.Keys.ToList());
-
-        //// Load Button Prefab
-        //GameObject buttonPrefab = (GameObject)Resources.Load("Prefabs/Button_32x96");
-
-        //Debug.Log("visList count: " + fileLoadingManager.visList.Count);
-        ////TODO: Change to dynamic loading based on looked at Vis
-        //Dictionary<string, double[]> dataVal = fileLoadingManager.visList[0].dataValues;
-
-        //// Create Buttons for each Letter and add them to the Grid
-        //for (int i = 0; i < dataVal.Count; i++)
-        //{
-        //    GameObject buttonInstance = Instantiate(buttonPrefab, gridObjectContainer.transform);
-        //    buttonInstance.name = dataVal.ElementAt(i).Key;
-        //    buttonInstance.transform.SetParent(gridObjectContainer.transform, false);
-        //    buttonInstance.GetComponentInChildren<TextMeshPro>().text = dataVal.ElementAt(i).Key;
-        //}
-
-        //// Add all the element's renderers to the clipping box
-        //Renderer[] renderersToClip = gridObjectContainer.GetComponentsInChildren<Renderer>();
-        //for (int i = 0; i < renderersToClip.Length; i++)
-        //{
-        //    clippingBox.AddRenderer(renderersToClip[i]);
-        //}
-
-        //gridObjectContainer.GetComponentInChildren<GridObjectCollection>().UpdateCollection();
-        //scrollingObjectColl.UpdateContent();
-        
-        */
+            ToggleObjectVisibility(DebuggerWindow);
         }
 
         public void ChangeShader()
@@ -170,21 +132,6 @@ namespace AugmeNDT{
                 }
             }
             //### List Drives/Folders ###//
-        }
-
-        private async void StartProgressIndicator(Task trackedTask)
-        {
-            indicator.Message = "Opening File...";
-            await indicator.OpenAsync();
-
-            indicator.Message = "Waiting for loading to complete...";
-            while (!trackedTask.IsCompleted)
-            {
-                await Task.Yield();
-            }
-
-            indicator.Message = "Loading File completed!";
-            await indicator.CloseAsync();
         }
 
 

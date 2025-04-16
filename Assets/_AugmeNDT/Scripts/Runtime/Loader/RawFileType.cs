@@ -29,6 +29,9 @@ namespace AugmeNDT{
         private int dimX;
         private int dimY;
         private int dimZ;
+        private float spacingX;
+        private float spacingY;
+        private float spacingZ;
         private DataContentFormat contentFormat;
         private Endianness endianness;
         private int skipBytes;
@@ -38,6 +41,10 @@ namespace AugmeNDT{
         public int DimX { get => dimX; set => dimX = value; }
         public int DimY { get => dimY; set => dimY = value; }
         public int DimZ { get => dimZ; set => dimZ = value; }
+        public float SpacingX { get => spacingX; set => spacingX = value; }
+        public float SpacingY { get => spacingY; set => spacingY = value; }
+        public float SpacingZ { get => spacingZ; set => spacingZ = value; }
+        
         public DataContentFormat ContentFormat { get => contentFormat; set => contentFormat = value; }
         public Endianness Endianness { get => endianness; set => endianness = value; }
         public int SkipBytes { get => skipBytes; set => skipBytes = value; }
@@ -50,13 +57,16 @@ namespace AugmeNDT{
     
         }
 
-        public RawFileType(string filePath, int dimX, int dimY, int dimZ, DataContentFormat contentFormat, Endianness endianness, int skipBytes)
+        public RawFileType(string filePath, int dimX, int dimY, int dimZ, float spacingX, float spacingY, float spacingZ, DataContentFormat contentFormat, Endianness endianness, int skipBytes)
         {
             FilePath = filePath;
 
             DimX = dimX;
             DimY = dimY;
             DimZ = dimZ;
+            SpacingX = spacingX;
+            SpacingY = spacingY;
+            SpacingZ = spacingZ;
             ContentFormat = contentFormat;
             Endianness = endianness;
             SkipBytes = skipBytes;
@@ -68,6 +78,9 @@ namespace AugmeNDT{
             string values = "DimX = " + DimX.ToString() + "\n";
             values += "DimY = " + DimY.ToString() + "\n";
             values += "DimZ = " + DimZ.ToString() + "\n";
+            values += "SpacingX = " + SpacingX.ToString() + "\n";
+            values += "SpacingY = " + SpacingY.ToString() + "\n";
+            values += "SpacingZ = " + SpacingZ.ToString() + "\n";
             values += "ContentFormat = " + contentFormat.ToString() + "\n";
             values += "Endianness = " + Endianness.ToString() + "\n";
             values += "skipBytes = " + SkipBytes.ToString() + "\n";

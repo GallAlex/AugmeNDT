@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MixedReality.Toolkit.SpatialManipulation;
 using UnityEngine;
 
 namespace AugmeNDT{
@@ -18,6 +19,7 @@ namespace AugmeNDT{
 
         //Data
         private PolyFiberData polyFiberDataset;
+        float scaleFactor = 1f; //TODO: Metric unit (mm, cm, m,...) get from dataset/global setting or user
 
         private bool useMeshManager = true;
         private MeshManager meshManager;
@@ -72,14 +74,26 @@ namespace AugmeNDT{
                 meshManager = new MeshManager();
 
                 CreateCombinedCylinderRepresentation(dataset);
+
                 //Resize to whole size of all meshes
                 Bounds wholeFiberObjBounds = GlobalScaleAndPos.GetBoundsOfParentAndChildren(polyModel);
+                
+                BoxCollider boxColl = polyModelContainer.GetComponent<BoxCollider>() != null ? polyModelContainer.GetComponent<BoxCollider>() : polyModelContainer.AddComponent<BoxCollider>();
 
-                //BoundsControl boundsCon = polyModelContainer.GetComponent<BoundsControl>() != null ? polyModelContainer.GetComponent<BoundsControl>() : polyModelContainer.AddComponent<BoundsControl>();
-                BoxCollider boundsColl = polyModelContainer.GetComponent<BoxCollider>() != null ? polyModelContainer.GetComponent<BoxCollider>() : polyModelContainer.AddComponent<BoxCollider>();
+                // Fibers are drawn in different coordinate system and need to be reduced to be in meters
+                float maxScale = Mathf.Max(wholeFiberObjBounds.size.x, wholeFiberObjBounds.size.y, wholeFiberObjBounds.size.z);
+                float scaleFactor = 1f / maxScale;
+                polyModel.transform.localScale = new Vector3(scaleFactor, scaleFactor, scaleFactor);
 
-                GlobalScaleAndPos.ResizeAbsolutMeshObject(polyModel.transform, 1.0f, wholeFiberObjBounds.size);
-                GlobalScaleAndPos.ResizeBoxCollider(polyModel.transform, boundsColl, wholeFiberObjBounds.size, wholeFiberObjBounds.center);
+                //Move bounding box
+                polyModel.transform.localPosition = new Vector3(-0.5f, -0.5f, 0.5f);
+
+                BoundsControl boundsControl = polyModelContainer.GetComponent<BoundsControl>() != null ? polyModelContainer.GetComponent<BoundsControl>() : polyModelContainer.AddComponent<BoundsControl>();
+                boundsControl.OverrideBounds = true;
+                boundsControl.BoundsOverride = polyModel.transform;
+
+                //GlobalScaleAndPos.ResizeObjectRelative(polyModel.transform, 1f, wholeFiberObjBounds.size);
+                GlobalScaleAndPos.ResizeBoxCollider(polyModel.transform, boxColl, wholeFiberObjBounds.size, wholeFiberObjBounds.center);
 
             }
             else
@@ -102,6 +116,7 @@ namespace AugmeNDT{
         private void CreateCylinderRepresentation(PolyFiberData dataset)
         {
             cylinderVis = new CylinderObjectVis();
+
             //combine = new CombineInstance[polyFiberDataset.NumberOfFibers];
 
             for (int fiber = 0; fiber < dataset.NumberOfFibers; fiber++)

@@ -21,7 +21,7 @@ namespace AugmeNDT{
         public int dimX, dimY, dimZ;
 
         [SerializeField]
-        public float scaleX = 0.0f, scaleY = 0.0f, scaleZ = 0.0f;
+        public float scaleX = 1f, scaleY = 1f, scaleZ = 1f;
 
 
         private int minDataValue = int.MaxValue;

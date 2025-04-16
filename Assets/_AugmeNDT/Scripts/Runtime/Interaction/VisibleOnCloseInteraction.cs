@@ -1,35 +1,41 @@
 using UnityEngine;
-using Microsoft.MixedReality.Toolkit.Utilities;
-using Microsoft.MixedReality.Toolkit.Input;
-using Microsoft.MixedReality.OpenXR;
-using Handedness = Microsoft.MixedReality.Toolkit.Utilities.Handedness;
 using System.Collections.Generic;
 using UnityEngine.XR;
 
 namespace AugmeNDT
 {
+    using MixedReality.Toolkit;
+    using MixedReality.Toolkit.Input;
+    using MixedReality.Toolkit.Subsystems;
+
     public class VisibleOnCloseInteraction : MonoBehaviour
     {
-        //public float visibilityRange = 0.2f; // The range in which hands affect object visibility
-        public List<MonoBehaviour> affectedScripts;
+        //TODO: MRTK3 Rework set scripts
+        //public float VisibilityRange = 0.2f; // The range in which hands affect object visibility
+        public List<MonoBehaviour> AffectedScripts;
 
         private bool interactionEnabled = true;
         private Renderer objectRenderer;
         private Collider objectColl;
 
+        private IHandsAggregatorSubsystem handsAggregator;
+        
+
         private void Start()
         {
+            handsAggregator = XRSubsystemHelpers.GetFirstRunningSubsystem<IHandsAggregatorSubsystem>();
             objectRenderer = GetComponent<Renderer>();
             objectColl = this.gameObject.GetComponent<Collider>();
         }
 
         private void Update()
         {
+
             if (interactionEnabled)
             {
                 // Check if any hand is in range
-                bool leftHandInRange = IsHandInRange(Handedness.Left);
-                bool rightHandInRange = IsHandInRange(Handedness.Right);
+                bool leftHandInRange = IsHandInRange(XRNode.LeftHand);
+                bool rightHandInRange = IsHandInRange(XRNode.RightHand);
 
                 // If no hand is in range, set the object invisible
                 if (!leftHandInRange && !rightHandInRange)
@@ -59,26 +65,27 @@ namespace AugmeNDT
             ToggleScripts(show);
         }
 
-        private bool IsHandInRange(Handedness hand)
+        private bool IsHandInRange(XRNode hand)
         {
-            // Get the hand joint position
-            MixedRealityPose pose;
-            HandJointUtils.TryGetJointPose(TrackedHandJoint.IndexDistalJoint, hand, out pose);
+            handsAggregator.TryGetJoint(TrackedHandJoint.IndexDistal, hand, out HandJointPose jointPose);
 
-            Vector3 handPosition = pose.Position;
-
+            Vector3 handPosition = jointPose.Pose.position;
             return objectColl.bounds.Contains(handPosition);
+
         }
 
         // Methods enables/disables all scripts/components in the list
         private void ToggleScripts(bool enable)
         {
+            // Sets visibility of the object
             objectRenderer.enabled = enable;
 
             // Run through all scripts in the list and enable/disable them
-            foreach (MonoBehaviour script in affectedScripts)
+            foreach (MonoBehaviour script in AffectedScripts)
             {
-                script.enabled = enable;
+                if(script != null){
+                    script.enabled = enable;
+                }
             }
 
         }

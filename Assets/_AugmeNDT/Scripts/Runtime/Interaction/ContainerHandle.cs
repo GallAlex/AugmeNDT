@@ -1,13 +1,22 @@
-using System.Collections;
+using TMPro;
 using System.Collections.Generic;
 using UnityEngine;
+using MixedReality.Toolkit.SpatialManipulation;
 
 namespace AugmeNDT
 {
+    
     public class ContainerHandle : MonoBehaviour
     {
         public GameObject handle;
-        public List<TextMesh> sideText;
+        public BoundsControl boundsControl;
+        public List<TextMeshPro> sideText;
+
+        void Start()
+        {
+            //Set the bounds control to the container (parent object)
+            boundsControl.Target = this.transform;
+        }
 
         public void Remove()
         {
@@ -17,7 +26,7 @@ namespace AugmeNDT
 
         public void SetSideText(string text)
         {
-            foreach (TextMesh textMesh in sideText)
+            foreach (TextMeshPro textMesh in sideText)
             {
                 textMesh.text = text;
             }

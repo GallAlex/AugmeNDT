@@ -1,6 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 namespace AugmeNDT
 {
@@ -12,7 +11,7 @@ namespace AugmeNDT
         public GameObject colorBar;     // Colored 3d object
 
         public GameObject[] ticks;      // Tick marks (Upper, Center, Lower)
-        public TextMesh[] tickText;     // Tick text (Upper, Center, Lower)
+        public TextMeshPro[] tickText;     // Tick text (Upper, Center, Lower)
 
         private float xOffset = 0.05f;        // Offset for the tick
 

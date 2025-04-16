@@ -174,6 +174,8 @@ namespace AugmeNDT{
 
         public void ChangeView(int colorBar)
         {
+            Debug.Log("ChangeView: " + colorBar);
+
             if (detailedViewOn)
             {
                 SetCategoricView(colorBar);

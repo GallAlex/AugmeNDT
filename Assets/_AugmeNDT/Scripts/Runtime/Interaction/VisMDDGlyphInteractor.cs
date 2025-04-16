@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//TODO: Remove Class
 namespace AugmeNDT{
     /// <summary>
     /// The class controls what happens during an interaction with the VisMDDGlyph visualization. 

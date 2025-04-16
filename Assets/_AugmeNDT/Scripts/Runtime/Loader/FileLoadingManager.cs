@@ -1,8 +1,14 @@
 using System;
+using System.Collections;
 using System.IO;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Android;
+
+
+using SimpleFileBrowser;
+
 
 #if !UNITY_EDITOR && UNITY_WSA_10_0
 using Windows.Storage;
@@ -12,6 +18,7 @@ using Windows.Storage.Pickers;
 
 namespace AugmeNDT
 {
+
     /// <summary>
     /// Concrete class for loading a file based on its extension and selects the appropriate loader (factory) for it.
     /// Loader depends on System (Hololens2, Windows,...)
@@ -143,7 +150,7 @@ namespace AugmeNDT
 
             if (startImport)
             {
-                loaderFactory = new RawFileLoader(filePath, rawFileWindow.XDim, rawFileWindow.YDim, rawFileWindow.ZDim, rawFileWindow.DataFormat, rawFileWindow.Endianness, rawFileWindow.BytesToSkip);
+                loaderFactory = new RawFileLoader(filePath, rawFileWindow.XDim, rawFileWindow.YDim, rawFileWindow.ZDim, 1, 1,1, rawFileWindow.DataFormat, rawFileWindow.Endianness, rawFileWindow.BytesToSkip);
             }
             else
             {
@@ -210,15 +217,21 @@ namespace AugmeNDT
         public async Task<String> StartPicker()
         {
             filePath = ""; //Clear filePath
+
 #if !UNITY_EDITOR && UNITY_WSA_10_0
-            Debug.Log("HOLOLENS 2 PICKER");
-            return await FilePicker_Hololens();
+                Debug.Log("HOLOLENS 2 PICKER");
+                return await FilePicker_Hololens();
 
 #endif
 
+#if !UNITY_EDITOR && UNITY_ANDROID
+                Debug.Log("Android PICKER");
+                return await FilePicker_Android();
+#endif
+
 #if UNITY_EDITOR
-        Debug.Log("UNITY_STANDALONE PICKER");
-        return await FilePicker_Win();
+            Debug.Log("UNITY_STANDALONE PICKER");
+                return await FilePicker_Win();
 #endif
 
         }
@@ -262,28 +275,131 @@ namespace AugmeNDT
 
             }, true);
         
-            return await completionSource.Task;
+            return "";
         }
 #endif
 
 
-#if UNITY_EDITOR
-    private async Task<String> FilePicker_Win()
-    {
+#if !UNITY_EDITOR && UNITY_ANDROID
 
-        string path = EditorUtility.OpenFilePanel("Open File...", "", "");
-        if (path.Length != 0)
+        /// <summary>
+        /// Request the storage permission during Runtime for Android
+        /// </summary>
+        private void RequestStoragePermission()
         {
-            filePath = path;
+            if (!Permission.HasUserAuthorizedPermission(Permission.ExternalStorageRead) ||
+                !Permission.HasUserAuthorizedPermission(Permission.ExternalStorageWrite))
+            {
+                Permission.RequestUserPermission(Permission.ExternalStorageRead);
+                Permission.RequestUserPermission(Permission.ExternalStorageWrite);
+            }
         }
 
-        Debug.Log("WIN Picker Path = " + filePath);
+        private async Task<String> FilePicker_Android()
+        {
+            RequestStoragePermission();
 
-        //var fileBrowser = FileBrowser.ShowLoadDialog((path) => { filePath = path[0]; }, () => { filePath = ""; }, FileBrowser.PickMode.Files, false, null, null, "Open File", "Load");
-        //StandaloneFileBrowser.OpenFilePanelAsync("Open File", "", "", false, (string[] paths) => { filePath = paths[0]; });
+            // Set Storage Permission in Magic Leap Settings (on device) then use the following path works
+            //filePath = "/storage/emulated/0/Datasets/10min_01.csv";
+            //return filePath;
+            
+            filePath = await ShowFileBrowser();
+            Debug.Log("ANDROID Picker Path = " + filePath);
 
-        return filePath;
-    }
+            return filePath;
+        }
+
+        public async Task<String> ShowFileBrowser()
+        {
+            var tcs = new TaskCompletionSource<string>();
+
+            // Get SimpleFileBrowserVRCanvas GamObject
+            FileBrowser.CustomPrefabName = "Prefabs/UIPrefabs/SimpleFileBrowserVRCanvas";
+
+            FileBrowser.SetFilters(true, new FileBrowser.Filter("Volumes", ".mhd", ".raw"), new FileBrowser.Filter("Datasets", ".csv"));
+            //FileBrowser.SetDefaultFilter(".jpg");
+            FileBrowser.AddQuickLink("Datasets", "/storage/emulated/0/Datasets/", null);
+            // Show the file
+            string initialPath = "/storage/emulated/0/Datasets/";
+            FileBrowser.ShowLoadDialog((paths) =>
+                {
+                    if (paths.Length > 0)
+                    {
+                        string selectedFile = paths[0]; // Takes the first selected file
+
+                        UnityEngine.Debug.Log("Selected file: " + selectedFile);
+                        filePath = selectedFile;
+                        tcs.SetResult(filePath);
+                    }
+                },
+                () => {
+                    UnityEngine.Debug.Log("File selection cancelled");
+                    tcs.SetResult("");
+                },  // Canceled
+                FileBrowser.PickMode.Files, false, initialPath, null, "Select a file", "Load");
+
+            return await tcs.Task;
+        }
+
+#endif
+
+
+#if UNITY_EDITOR
+
+        private async Task<String> FilePicker_Win()
+        {
+            /*
+            // FileBrowser Solution
+            var tcs = new TaskCompletionSource<string>();
+            MonoBehaviour mono = GameObject.FindAnyObjectByType<MonoBehaviour>();
+            mono.StartCoroutine(ShowLoadDialogCoroutine(tcs));
+
+            filePath = await tcs.Task;
+            */
+
+            string path = EditorUtility.OpenFilePanel("Open File...", "", "");
+            if (path.Length != 0)
+            {
+                filePath = path;
+            }
+
+            Debug.Log("WIN Picker Path = " + filePath);
+
+            return filePath;
+        }
+
+        IEnumerator ShowLoadDialogCoroutine(TaskCompletionSource<string> tcs)
+        {
+            FileBrowser.CustomPrefabName = "Prefabs/UIPrefabs/SimpleFileBrowserVRCanvas";
+
+            // Show a load file dialog and wait for a response from user
+            // Load file/folder: file, Allow multiple selection: true
+            // Initial path: default (Documents), Initial filename: empty
+            // Title: "Load File", Submit button text: "Load"
+            yield return FileBrowser.WaitForLoadDialog(FileBrowser.PickMode.Files, true, null, null, "Select Files", "Load");
+
+            // Dialog is closed
+            // Print whether the user has selected some files or cancelled the operation (FileBrowser.Success)
+            Debug.Log(FileBrowser.Success);
+
+            if (FileBrowser.Success)
+            {
+                OnFilesSelected(FileBrowser.Result, tcs); // FileBrowser.Result is null, if FileBrowser.Success is false
+            }
+            else
+            {
+                tcs.SetResult("");
+            }
+
+        }
+
+        void OnFilesSelected(string[] filePaths, TaskCompletionSource<string> tcs)
+        {
+            // Get the file path of the first selected file
+            filePath = filePaths[0];
+            tcs.SetResult(filePath);
+        }
+        
 
 #endif
 

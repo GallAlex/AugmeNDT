@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -118,10 +119,10 @@ namespace AugmeNDT{
                     mhdFile.CenterOfRotation = numbers;
 
                 }
-                else if (name == "ElementSpacing") // for now skips AnatomicalOrientation
+                else if (name == "ElementSpacing") 
                 {
-                    Char[] charNumbers = value.Where(Char.IsDigit).ToArray();
-                    int[] numbers = charNumbers.Select(x => Convert.ToInt32(x.ToString())).ToArray();
+                    float[] numbers = value.Split(' ').Select(x => float.Parse(x, CultureInfo.InvariantCulture)).ToArray();
+                    Debug.Log("Element Spacing: " + numbers[0] + " " + numbers[1] + " " + numbers[2]);
                     mhdFile.ElementSpacing = numbers;
 
                 }
@@ -151,7 +152,7 @@ namespace AugmeNDT{
         private void CreateRawFileType(string rawFilePath)
         {
             //Read Info and store in Raw File with path to raw file
-            rawFile = new RawFileType(rawFilePath, mhdFile.DimSize[0], mhdFile.DimSize[1], mhdFile.DimSize[2], MhdFileType.GetFormatByName(mhdFile.ElementType), (Endianness)mhdFile.ByteOrderMSB, mhdFile.HeaderSize);
+            rawFile = new RawFileType(rawFilePath, mhdFile.DimSize[0], mhdFile.DimSize[1], mhdFile.DimSize[2], mhdFile.ElementSpacing[0], mhdFile.ElementSpacing[1], mhdFile.ElementSpacing[2], MhdFileType.GetFormatByName(mhdFile.ElementType), (Endianness)mhdFile.ByteOrderMSB, mhdFile.HeaderSize);
 
         }
 

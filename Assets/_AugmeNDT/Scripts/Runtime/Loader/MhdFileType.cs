@@ -14,7 +14,7 @@ namespace AugmeNDT{
         private int[] transformMatrix;
         private int[] offset;
         private int[] centerOfRotation;
-        private int[] elementSpacing;
+        private float[] elementSpacing;
         private int[] dimSize;
         private string elementDataFile = ""; // raw file name
         private string elementType = ""; // Format name
@@ -27,7 +27,7 @@ namespace AugmeNDT{
         public int[] TransformMatrix { get => transformMatrix; set => transformMatrix = value; }
         public int[] Offset { get => offset; set => offset = value; }
         public int[] CenterOfRotation { get => centerOfRotation; set => centerOfRotation = value; }
-        public int[] ElementSpacing { get => elementSpacing; set => elementSpacing = value; }
+        public float[] ElementSpacing { get => elementSpacing; set => elementSpacing = value; }
         public int[] DimSize { get => dimSize; set => dimSize = value; }
         public string ElementDataFile { get => elementDataFile; set => elementDataFile = value; }
         public int ByteOrderMSB { get => byteOrderMSB; set => byteOrderMSB = value; }
@@ -81,7 +81,7 @@ namespace AugmeNDT{
             transformMatrix = new int[9];
             offset = new int[3];
             centerOfRotation = new int[3];
-            elementSpacing = new int[3];
+            elementSpacing = new float[3];
             dimSize = new int[3];
         }
 

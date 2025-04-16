@@ -1,19 +1,9 @@
-using MathNet.Numerics.Distributions;
-using MathNet.Numerics.LinearAlgebra.Factorization;
-using MathNet.Numerics.Random;
-using Newtonsoft.Json.Linq;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using Unity.VisualScripting;
-using UnityEditor;
+using MixedReality.Toolkit.UX;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UIElements;
-using static UnityEngine.EventSystems.EventTrigger;
-using static UnityEngine.Rendering.DebugUI;
-using static UnityEngine.XR.ARSubsystems.XRFaceMesh;
 
 namespace AugmeNDT
 {
@@ -257,7 +247,7 @@ namespace AugmeNDT
                     //Set Interaction details
                     ChangeIndicatorInteractable interactable = indicator.GetComponent<ChangeIndicatorInteractable>();
                     interactable.indicatorID = entry.Key + "_" + dataSet + "_" + (dataSet + 1);
-                    interactable.refToClass = this;
+                    interactable.RefToClass = this;
 
                     var meshFilter = indicator.GetComponent<MeshFilter>();
                     var meshCollider = indicator.GetComponent<MeshCollider>();
@@ -315,6 +305,7 @@ namespace AugmeNDT
 
                     // Add to collider
                     meshCollider.sharedMesh = mesh;
+
                 }
 
             }
@@ -517,18 +508,18 @@ namespace AugmeNDT
             //double[] valueRangeOfBinInDataset = new[] { histograms[dataSet].GetLowerBinBound(binIndex), histograms[dataSet].GetUpperBinBound(binIndex) };
             //double[] valueRangeOfBinInNextDataset = new[] { histograms[nextDataSet].GetLowerBinBound(binIndex), histograms[nextDataSet].GetUpperBinBound(binIndex) };
 
-            string temp = "Bin : " + binIndex + " touched from timeStep: " + dataSet + " to " + nextDataSet + "\n";
-            temp += "Bin " + binIndex + " of Dataset " + dataSet + " has frequency: " + frequencies.GetNumericalVal()[binIndex + (dataSet * binCount)] + "\n";
-            temp += "Bin " + binIndex + " of Dataset " + nextDataSet + " has frequency: " + frequencies.GetNumericalVal()[binIndex + (nextDataSet * binCount)] + "\n";
-            temp += "Bin Range: " + valueRangeOfBin[0] + " - " + valueRangeOfBin[1];
-            Debug.Log(temp);
+            //string temp = "Bin : " + binIndex + " touched from timeStep: " + dataSet + " to " + nextDataSet + "\n";
+            //temp += "Bin " + binIndex + " of Dataset " + dataSet + " has frequency: " + frequencies.GetNumericalVal()[binIndex + (dataSet * binCount)] + "\n";
+            //temp += "Bin " + binIndex + " of Dataset " + nextDataSet + " has frequency: " + frequencies.GetNumericalVal()[binIndex + (nextDataSet * binCount)] + "\n";
+            //temp += "Bin Range: " + valueRangeOfBin[0] + " - " + valueRangeOfBin[1];
+            //Debug.Log(temp);
 
             // Select all values == fibers which are covered by the encoded range in the bins 
             //List<int> selectedFiberIds = visMddGlyphs.GetFiberIDsFromIQRRange(selectedGlyph);
             List<int> fiberIDsDataset = dataEnsemble.GetIndexOfAttrValRange(dataSet, attr, valueRangeOfBin, false);
             List<int> fiberIDsNextDataset = dataEnsemble.GetIndexOfAttrValRange(nextDataSet, attr, valueRangeOfBin, false);
 
-            Debug.Log("Dataset [" + dataSet + "] " + "Selected <" + fiberIDsDataset.Count + "> Fibers \n" + "Dataset [" + nextDataSet + "] " + "Selected <" + fiberIDsNextDataset.Count + "> Fibers");
+            //Debug.Log("Dataset [" + dataSet + "] " + "Selected <" + fiberIDsDataset.Count + "> Fibers \n" + "Dataset [" + nextDataSet + "] " + "Selected <" + fiberIDsNextDataset.Count + "> Fibers");
 
             // Color Polyfibers of selected FiberIds in the respective DataVisGroup
             var groupDataset = multiGroups.Values.ElementAt(dataSet);
@@ -542,9 +533,11 @@ namespace AugmeNDT
         private void CreateValueText(Vector3 position, Transform transform, string text)
         {
             GameObject colorBarText = GameObject.Instantiate(text3DPrefab, position, Quaternion.identity, transform);
-            TextMesh barText = colorBarText.GetComponent<TextMesh>();
+            TextMeshPro barText = colorBarText.GetComponent<TextMeshPro>();
+            barText.rectTransform.pivot = new Vector2(0.0f, 0.5f);
+            barText.margin = new Vector4(2, 0, 0, 0);
             barText.text = text;
-            barText.anchor = TextAnchor.MiddleLeft;
+            barText.alignment = TextAlignmentOptions.MidlineLeft;
             barText.fontSize = 50;
         }
 

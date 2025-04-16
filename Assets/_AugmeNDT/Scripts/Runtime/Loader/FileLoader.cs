@@ -103,6 +103,72 @@ namespace AugmeNDT
     }
 #endif
 
+#if  !UNITY_EDITOR && (UNITY_ANDROID || MAGIC_LEAP_2)
+        protected static async Task<StreamReader> GetStreamReader(string filePath)
+        {
+            Debug.Log("Opening file: " + filePath);
+            try
+            {
+                Stream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+                StreamReader reader = new StreamReader(stream, Encoding.GetEncoding(DetectFileEncoding(stream)));
+                return reader;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Error opening file: " + e.Message);
+                return null;
+            }
+
+        }
+
+        protected static async Task<BinaryReader> GetBinaryReader(string filePath)
+        {
+            Debug.Log("Opening Binary file: " + filePath);
+            try
+            {
+                Stream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+                BinaryReader reader = new BinaryReader(stream);
+                return reader;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Error opening file: " + e.Message);
+                return null;
+            }
+        }
+
+        protected static async Task<bool> CheckIfFileExists(string filePath)
+        {
+            return File.Exists(filePath);
+        }
+
+        protected static string DetectFileEncoding(Stream fileStream)
+        {
+            var Utf8EncodingVerifier = Encoding.GetEncoding("utf-8", new EncoderExceptionFallback(), new DecoderExceptionFallback());
+            using (var reader = new StreamReader(fileStream, Utf8EncodingVerifier,
+                       detectEncodingFromByteOrderMarks: true, leaveOpen: true, bufferSize: 1024))
+            {
+                string detectedEncoding;
+                try
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                    }
+                    detectedEncoding = reader.CurrentEncoding.BodyName;
+                }
+                catch (Exception e)
+                {
+                    // Failed to decode the file using the BOM/UT8. 
+                    // Assume it's local ANSI
+                    detectedEncoding = "ISO-8859-1";
+                }
+                // Rewind the stream
+                fileStream.Seek(0, SeekOrigin.Begin);
+                return detectedEncoding;
+            }
+        }
+#endif
 
 #if !UNITY_EDITOR && UNITY_WSA_10_0
 

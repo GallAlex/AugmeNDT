@@ -13,6 +13,7 @@ namespace AugmeNDT{
         private string dataSetName;
         private long numberOfFibers = -1;
         private Dictionary<string, double[]> data; //Used for DataVis
+        private AbstractDataset abstractFiberDataset; //Used for Statistics
 
         private int[] label;
         private double[] realX1;
@@ -28,6 +29,18 @@ namespace AugmeNDT{
         private double[] volume;
         private int[] seperatedFibre;
         private int[] curvedFibre;
+
+        // Values for drawing
+        private float[] maxDimension;
+        private float[] minDimension;
+        private float maxDiameter;
+        private float minDiameter;
+
+        private float targetSize = 1f;
+        private ScaleLinear scalingX;
+        private ScaleLinear scalingY;
+        private ScaleLinear scalingZ;
+        private ScaleLinear scalingDiameter;
 
         #region Getter/Setter
 
@@ -156,6 +169,11 @@ namespace AugmeNDT{
                     case "RealZ1 [µm]":
                         realZ1 = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
                         data.Add("RealZ1 [µm]", realZ1);
+                        // flip z axis (*-1) to make it work with the Unity coordinate system
+                        for (int i = 0; i < realZ1.Length; i++)
+                        {
+                            realZ1[i] *= -1;
+                        }
                         break;
                     case "RealX2 [µm]":
                         realX2 = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
@@ -168,6 +186,11 @@ namespace AugmeNDT{
                     case "RealZ2 [µm]":
                         realZ2 = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
                         data.Add("RealZ2 [µm]", realZ2);
+                        // flip z axis (*-1) to make it work with the Unity coordinate system
+                        for (int i = 0; i < realZ2.Length; i++)
+                        {
+                            realZ2[i] *= -1;
+                        }
                         break;
                     case "StraightLength [µm]":
                         straightLength = Array.ConvertAll(valuesWithoutHeader, s => double.Parse(s, CultureInfo.InvariantCulture));
@@ -199,6 +222,10 @@ namespace AugmeNDT{
                 }
             }
 
+            // For drawing the fibers, we need to calculate the min and max values of the drawing properties
+            CalculateMinMax();
+            CalculateScaling(targetSize);
+
         }
 
         /// <summary>
@@ -216,6 +243,22 @@ namespace AugmeNDT{
             return linePoints;
         }
 
+        public List<Vector3> GetScaledFiberCoordinates(int fiberId, float targetSize)
+        {
+            
+            Debug.Log("RealX1: " + realX1[fiberId] + " RealY1: " + realY1[fiberId] + " RealZ1: " + realZ1[fiberId]);
+            Debug.Log("RealX2: " + realX2[fiberId] + " RealY2: " + realY2[fiberId] + " RealZ2: " + realZ2[fiberId]);
+
+            List<Vector3> linePoints = new List<Vector3>();
+            linePoints.Add(new Vector3((float)scalingX.GetScaledValue(realX1[fiberId]), (float)scalingY.GetScaledValue(realY1[fiberId]), (float)scalingZ.GetScaledValue(realZ1[fiberId])));
+            linePoints.Add(new Vector3((float)scalingX.GetScaledValue(realX2[fiberId]), (float)scalingY.GetScaledValue(realY2[fiberId]), (float)scalingZ.GetScaledValue(realZ2[fiberId])));
+
+            Debug.Log("Scaled RealX1: " + linePoints[0].x + " RealY1: " + linePoints[0].y + " RealZ1: " + linePoints[0].z);
+            Debug.Log("Scaled RealX2: " + linePoints[1].x + " RealY2: " + linePoints[1].y + " RealZ2: " + linePoints[1].z);
+
+            return linePoints;
+        }
+
         /// <summary>
         /// Returns the radius of a fiber
         /// </summary>
@@ -227,15 +270,68 @@ namespace AugmeNDT{
             return (float)diameter[fiberId] / 2.0f;
         }
 
+        public float GetScaledFiberRadius(int fiberId, float targetSize)
+        {
+            float scaleFactorDiamter = targetSize / maxDiameter;
+            return ((float)diameter[fiberId] * scaleFactorDiamter) / 2.0f;
+        }
+
         public AbstractDataset ExportForDataVis()
         {
-            //TODO: Make specific method to remove entries from file
-            Dictionary<string, double[]> reducedData = data; //Used for Vis
-            reducedData.Remove("Label");
-            reducedData.Remove("Seperated Fibre");
-            reducedData.Remove("Curved Fibre");
+            if (abstractFiberDataset == null)
+            {
+                //TODO: Make specific method to remove entries from file
+                Dictionary<string, double[]> reducedData = data; //Used for Vis
+                reducedData.Remove("Label");
+                reducedData.Remove("Seperated Fibre");
+                reducedData.Remove("Curved Fibre");
 
-            return new AbstractDataset(dataSetName, reducedData.Keys.ToList(), reducedData);
+                abstractFiberDataset = new AbstractDataset(dataSetName, reducedData.Keys.ToList(), reducedData);
+            }
+
+            return abstractFiberDataset;
+        }
+
+        /// <summary>
+        /// Calculates the min and max values of the drawing properties (Position, Diameter)
+        /// </summary>
+        private void CalculateMinMax()
+        {
+            // Calculate min/max values between realX1, realX2, realY1, realY2, realZ1, realZ2
+            double maxX = Math.Max(realX1.Max(), realX2.Max());
+            double minX = Math.Min(realX1.Min(), realX2.Min());
+
+            double maxY = Math.Max(realY1.Max(), realY2.Max());
+            double minY = Math.Min(realY1.Min(), realY2.Min());
+
+            double maxZ = Math.Max(realZ1.Max(), realZ2.Max());
+            double minZ = Math.Min(realZ1.Min(), realZ2.Min());
+
+            // Calculate the biggest Pos value
+            maxDimension = new[] {(float)maxX, (float)maxY, (float)maxZ};
+            minDimension = new[] { (float)minX, (float)minY, (float)minZ };
+
+            // Get the maximum absolut diameter
+            maxDiameter = (float)diameter.Max();
+            minDiameter = (float)diameter.Min();
+        }
+
+        /// <summary>
+        /// Calculates the Scaling for the drawing properties (Position)
+        /// </summary>
+        private void CalculateScaling(float targeSize)
+        {
+            List<double> domainX = new List<double> { minDimension[0], maxDimension[0] };
+            scalingX = new ScaleLinear(domainX);
+
+            List<double> domainY = new List<double> { minDimension[1], maxDimension[1] };
+            scalingY = new ScaleLinear(domainY);
+
+            List<double> domainZ = new List<double> { minDimension[2], maxDimension[2] };
+            scalingZ = new ScaleLinear(domainZ);
+
+            List<double> dia = new List<double> { minDiameter, maxDiameter };
+            scalingDiameter = new ScaleLinear(dia);
         }
 
         public override string ToString()

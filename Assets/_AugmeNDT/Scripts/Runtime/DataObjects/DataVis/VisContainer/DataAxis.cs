@@ -1,4 +1,3 @@
-using Microsoft.MixedReality.Toolkit.UI;
 using TMPro;
 using UnityEngine;
 
@@ -38,19 +37,20 @@ namespace AugmeNDT{
 
         public GameObject CreateAxis(Transform visContainer, string axisTitle, Scale dataScale, Direction direction, int numberOfTicks)
         {
-            axisLinePrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Axis2");
+            axisLinePrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/VisContainer/Axis");
 
             axisInstance = GameObject.Instantiate(axisLinePrefab, visContainer.position, Quaternion.identity, visContainer);
 
-            //axisLabel = axisInstance.GetComponent<TextMesh>();
             //TODO: Add as reference?
-            //axisLabel = axisInstance.GetComponentInChildren<TextMesh>();
-            //axisLabel.text = axisTitle;
-        
+            //axisLabel = axisInstance.GetComponent<TextMesh>();
             axisLabel = axisInstance.GetComponentInChildren<TextMeshPro>();
             axisLabel.text = axisTitle;
-            ConnectAttributeButton();
-            
+
+            // For Axis2
+            //axisLabel = axisInstance.GetComponentInChildren<TextMeshPro>();
+            //axisLabel.text = axisTitle;
+            //ConnectAttributeButton();
+
             this.dataScale = dataScale;
 
             axisDirection = direction;
@@ -103,36 +103,35 @@ namespace AugmeNDT{
                     break;
 
                 case Direction.Y:
-                    axis.transform.Rotate(0, 0, 90);    //Rotate 90 degree in z
-                    Transform yAxisTitle = axis.transform.Find("Title");
-                    yAxisTitle.localPosition = new Vector3(yAxisTitle.localPosition.x, (-yAxisTitle.localPosition.y), yAxisTitle.localPosition.z);
+                    // Rotate Axis Line 90 degree in z
+                    axis.transform.Rotate(0, 0, 90);
 
+                    // Move all tick labels
                     foreach (var tickObject in axisTicks.tickList)
                     {
+                        // Move labels to the left
                         Transform tickLabel = tickObject.transform.Find("TickLabel");
                         tickLabel.localPosition = new Vector3(tickLabel.localPosition.x, -tickLabel.localPosition.y, tickLabel.localPosition.z);
 
-                        TextMesh yTickLabelsTextMesh = tickObject.GetComponentInChildren(typeof(TextMesh)) as TextMesh;
-                        yTickLabelsTextMesh.anchor = TextAnchor.MiddleRight;
+                        //Change Pivot Point and Alignment
+                        TextMeshPro yTickLabelsTextMesh = tickObject.GetComponentInChildren(typeof(TextMeshPro)) as TextMeshPro;
+                        yTickLabelsTextMesh.rectTransform.pivot = new Vector2(1, 0.5f);
+                        yTickLabelsTextMesh.alignment = TextAlignmentOptions.MidlineRight;
                     }
                     break;
 
                 case Direction.Z:
-                    axis.transform.Rotate(0, -90, 0);    //Rotate 90 degree in y
-                    //Transform zAxisTitle = axis.transform.Find("Title");
-                    //zAxisTitle.localPosition = new Vector3(-zAxisTitle.localPosition.x, zAxisTitle.localPosition.y, zAxisTitle.localPosition.z);
-                    //zAxisTitle.Rotate(0, 180, 0);
+                    // Rotate Axis Line 90 degree in y
+                    axis.transform.Rotate(0, -90, 0);
 
-                    //Todo: Speed up by saving?
-                    //TextMesh titleTextMesh = axis.GetComponentInChildren(typeof(TextMesh)) as TextMesh;
-                    //titleTextMesh.transform.Rotate(0, 180, 0);
-                    //titleTextMesh.anchor = TextAnchor.MiddleRight;
-                
-                    Transform zAttrButton = axis.transform.Find("Title").Find("AttributeButton");
-                    zAttrButton.Rotate(0, 180, 0);
-                    var buttonTextMeshPro = axis.GetComponentInChildren(typeof(TextMeshPro)) as TextMeshPro;
-                    buttonTextMeshPro.alignment = TextAlignmentOptions.MidlineRight;
-                
+                    // Move Axis Title
+                    TextMeshPro titleTextMesh = axis.GetComponentInChildren(typeof(TextMeshPro)) as TextMeshPro;
+                    titleTextMesh.transform.Rotate(0, 180, 0);
+                    //Change Pivot Point and Alignment
+                    titleTextMesh.rectTransform.pivot = new Vector2(1, 0.5f);
+                    titleTextMesh.alignment = TextAlignmentOptions.CaplineRight;
+
+                    // Rotate all tick labels
                     foreach (var tickObject in axisTicks.tickList)
                     {
                         Transform tickLabel = tickObject.transform.Find("TickLabel");
@@ -148,8 +147,8 @@ namespace AugmeNDT{
 
         private void ConnectAttributeButton()
         {
-            ButtonConfigHelper button = axisInstance.GetComponentInChildren(typeof(ButtonConfigHelper)) as ButtonConfigHelper;
-            button.OnClick.AddListener(() => { Debug.Log("Axis " + (int)axisDirection + "pressed"); });
+            //ButtonConfigHelper button = axisInstance.GetComponentInChildren(typeof(ButtonConfigHelper)) as ButtonConfigHelper;
+            //button.OnClick.AddListener(() => { Debug.Log("Axis " + (int)axisDirection + "pressed"); });
         }
     }
 }

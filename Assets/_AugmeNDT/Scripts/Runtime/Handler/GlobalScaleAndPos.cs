@@ -6,6 +6,8 @@ namespace AugmeNDT{
     /// </summary>
     public static class GlobalScaleAndPos
     {
+        // Head height as defined by XROrigin 
+        public static float HeadHeight = 1.6f;
 
         /// <summary>
         /// Sets the gameobject to the best viewing position for the  Hololens 2
@@ -13,7 +15,7 @@ namespace AugmeNDT{
         /// <param name="gameObjecTransform"></param>
         public static void SetToBestInitialStartPos(Transform gameObjecTransform)
         {
-            gameObjecTransform.position = new Vector3(-0.2f, 0.1f, 0.5f);
+            gameObjecTransform.position = new Vector3(0f, HeadHeight, 0.5f);
         }
 
         /// <summary>
@@ -23,38 +25,24 @@ namespace AugmeNDT{
         /// <param name="currentSize"></param>
         public static void SetToBestInitialScale(Transform gameObjecTransform, Vector3 currentSize)
         {
-            ResizeRealtiveObject(gameObjecTransform, 0.2f, currentSize);
+            ResizeObjectRelative(gameObjecTransform, 0.2f, currentSize);
         }
 
         /// <summary>
-        /// Rescales Object size based on the biggest side length. The biggest side length equals the targetSize.
+        /// Rescales a GameObject by calculating a scaling factor based on the ratio between the target size and the object's largest current dimension.
+        /// The dimensions of the object are increased by the ratio maintaining the original proportions.
         /// </summary>
         /// <param name="gameObjecTransform"></param>
         /// <param name="targetSize">New Sidelength of the Maximum sidelength</param>
-        /// <param name="currentSize">Current size (not scale) aof the object</param>
-        public static void ResizeRealtiveObject(Transform gameObjecTransform, float targetSize, Vector3 currentSize)
+        /// <param name="currentSize">Current size (not scale) of the object</param>
+        public static void ResizeObjectRelative(Transform gameObjecTransform, float targetSize, Vector3 currentSize)
         {
             float maxScale = Mathf.Max(currentSize.x, currentSize.y, currentSize.z);
             float scaleFactor = targetSize / maxScale;
-
             gameObjecTransform.localScale = new Vector3(currentSize.x * scaleFactor, currentSize.y * scaleFactor, currentSize.z * scaleFactor);
 
         }
 
-        /// <summary>
-        /// Rescales Uniform and Non-Uniform Object based on their size to given scale.
-        /// Devides  by the biggest side length
-        /// </summary>
-        /// <param name="gameObjecTransform"></param>
-        /// <param name="targetSize">Maximum size a sidelength can have</param>
-        /// <param name="currentSize">Current size (not scale) aof the object</param>
-        public static void ResizeAbsolutMeshObject(Transform gameObjecTransform, float targetSize, Vector3 currentSize)
-        {
-            float maxScale = Mathf.Max(currentSize.x, currentSize.y, currentSize.z);
-            float scaleFactor = targetSize / maxScale;
-
-            gameObjecTransform.localScale = new Vector3(scaleFactor, scaleFactor, scaleFactor);
-        }
 
         public static void ResizeBoxCollider(Transform gameObjecTransform, BoxCollider boxColl, Vector3 currentSize, Vector3 currentCenter)
         {

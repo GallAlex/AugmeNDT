@@ -1,8 +1,10 @@
 using MathNet.Numerics;
 using System.Linq;
 using UnityEngine;
+using TMPro;
 
 namespace AugmeNDT{
+
     /// <summary>
     /// Class is responsible to create a color scalar bar for a visualization
     /// </summary>
@@ -60,9 +62,11 @@ namespace AugmeNDT{
 
             //Add title
             GameObject colorScalarBarTitle = GameObject.Instantiate(text3DPrefab, currentPosition + new Vector3(0f, spacing, 0f), Quaternion.identity, colorScalarBarContainer.transform);
-            TextMesh titleText = colorScalarBarTitle.GetComponent<TextMesh>();
+            colorScalarBarTitle.name = "Color ScalarBar Title";
+            TextMeshPro titleText = colorScalarBarTitle.GetComponent<TextMeshPro>();
             titleText.text = title;
-            titleText.anchor = TextAnchor.LowerCenter;
+            titleText.rectTransform.pivot = new Vector2(0.5f, 0.0f);
+            titleText.alignment = TextAlignmentOptions.Bottom;
             titleText.fontSize = 250;
 
             return colorScalarBarContainer;
@@ -106,9 +110,11 @@ namespace AugmeNDT{
 
             //Add title
             GameObject colorScalarBarTitle = GameObject.Instantiate(text3DPrefab, currentPosition + new Vector3(0f, spacing, 0f), Quaternion.identity, colorScalarBarContainer.transform);
-            TextMesh titleText = colorScalarBarTitle.GetComponent<TextMesh>();
+            colorScalarBarTitle.name = "Color ScalarBar Title";
+            TextMeshPro titleText = colorScalarBarTitle.GetComponent<TextMeshPro>();
             titleText.text = title;
-            titleText.anchor = TextAnchor.LowerCenter;
+            titleText.rectTransform.pivot = new Vector2(0.5f, 0f);
+            titleText.alignment = TextAlignmentOptions.BottomJustified;
             titleText.fontSize = 250;
 
             return colorScalarBarContainer;
@@ -117,10 +123,11 @@ namespace AugmeNDT{
         private void CreateValueText(Vector3 position, string text)
         {
             GameObject colorBarText = GameObject.Instantiate(text3DPrefab, position, Quaternion.identity, colorScalarBarContainer.transform);
-            TextMesh barText = colorBarText.GetComponent<TextMesh>();
+            TextMeshPro barText = colorBarText.GetComponent<TextMeshPro>();
             barText.text = text;
-            barText.anchor = TextAnchor.MiddleLeft;
-            barText.fontSize = 150;
+            barText.rectTransform.pivot = new Vector2(0.0f,0.5f);
+            barText.alignment = TextAlignmentOptions.MidlineLeft;
+            barText.fontSize = 100;
         }
 
     }

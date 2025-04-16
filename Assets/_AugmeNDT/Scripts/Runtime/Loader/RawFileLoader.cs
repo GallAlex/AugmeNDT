@@ -20,11 +20,11 @@ namespace AugmeNDT{
             voxelDataset = ScriptableObject.CreateInstance<VoxelDataset>();
         }
 
-        public RawFileLoader(string filePath, int dimX, int dimY, int dimZ, DataContentFormat contentFormat, Endianness endianness, int skipBytes)
+        public RawFileLoader(string filePath, int dimX, int dimY, int dimZ, float spacingX, float spacingY, float spacingZ, DataContentFormat contentFormat, Endianness endianness, int skipBytes)
         {
             //Has to happen on main thread
             voxelDataset = ScriptableObject.CreateInstance<VoxelDataset>();
-            rawFile = new RawFileType(filePath, dimX, dimY, dimZ, contentFormat, endianness, skipBytes);
+            rawFile = new RawFileType(filePath, dimX, dimY, dimZ, spacingX, spacingY, spacingZ, contentFormat, endianness, skipBytes);
         }
 
 
@@ -93,6 +93,10 @@ namespace AugmeNDT{
             voxelDataset.dimX = rawFile.DimX;
             voxelDataset.dimY = rawFile.DimY;
             voxelDataset.dimZ = rawFile.DimZ;
+            // Apply spacing -> mm to m
+            voxelDataset.scaleX = (float)(rawFile.SpacingX * rawFile.DimX) / 1000.0f;
+            voxelDataset.scaleY = (float)(rawFile.SpacingY * rawFile.DimY) / 1000.0f;
+            voxelDataset.scaleZ = (float)(rawFile.SpacingZ * rawFile.DimZ) / 1000.0f;
         }
 
         private int ReadDataValue(BinaryReader reader)

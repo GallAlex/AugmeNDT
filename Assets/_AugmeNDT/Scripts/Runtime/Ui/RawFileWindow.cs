@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.MixedReality.Toolkit.Experimental.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using MixedReality.Toolkit.UX;
 
 namespace AugmeNDT{
+    
+
     /// <summary>
     /// Class reads Values of the RawFileWindow Inputs
     /// </summary>
@@ -21,6 +23,12 @@ namespace AugmeNDT{
         private MRTKUGUIInputField yDimField;
         [SerializeField]
         private MRTKUGUIInputField zDimField;
+        [SerializeField]
+        private MRTKUGUIInputField xSpacingField;
+        [SerializeField]
+        private MRTKUGUIInputField ySpacingField;
+        [SerializeField]
+        private MRTKUGUIInputField zSpacingField;
         [SerializeField]
         private MRTKUGUIInputField bytesToSkipField;
         [SerializeField]
@@ -77,6 +85,22 @@ namespace AugmeNDT{
         {
             get => int.Parse(zDimField.text);
             set => zDimField.text = value.ToString();
+        }
+
+        public int XSpacing
+        {
+            get => int.Parse(xSpacingField.text);
+            set => xSpacingField.text = value.ToString();
+        }
+        public int YSpacing
+        {
+            get => int.Parse(ySpacingField.text);
+            set => ySpacingField.text = value.ToString();
+        }
+        public int ZSpacing
+        {
+            get => int.Parse(zSpacingField.text);
+            set => zSpacingField.text = value.ToString();
         }
 
         public int BytesToSkip

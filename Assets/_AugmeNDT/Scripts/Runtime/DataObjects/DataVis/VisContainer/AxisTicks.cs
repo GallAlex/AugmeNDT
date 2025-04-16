@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using MathNet.Numerics;
 using UnityEngine;
+using TMPro;
 
 namespace AugmeNDT{
+
     public class AxisTicks
     {
         public GameObject tickMarkPrefab;
@@ -141,7 +143,7 @@ namespace AugmeNDT{
             var tickObj = tickList[tickID];
             tickObj.SetActive(true);
 
-            var label = tickObj.GetComponentInChildren<TextMesh>();
+            var label = tickObj.GetComponentInChildren<TextMeshPro>();
             tickObj.transform.localPosition = newPos;
 
             if (scale.dataScaleType == Scale.DataScaleType.Linear)
@@ -169,7 +171,7 @@ namespace AugmeNDT{
             tickInstance.transform.localPosition = newPos;
             tickInstance.name = "Tick " + tickID;
 
-            TextMesh tickLabel = tickInstance.GetComponentInChildren<TextMesh>();
+            TextMeshPro tickLabel = tickInstance.GetComponentInChildren<TextMeshPro>();
 
             if (scale.dataScaleType == Scale.DataScaleType.Linear)
             {
