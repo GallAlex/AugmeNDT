@@ -53,7 +53,7 @@ namespace AugmeNDT
         }
 
 
-#if UNITY_EDITOR 
+#if UNITY_EDITOR || UNITY_STANDALONE
     protected static async Task<StreamReader> GetStreamReader(string filePath)
     {
         Stream stream = File.OpenRead(filePath);

@@ -1,14 +1,10 @@
-﻿using Microsoft.MixedReality.Toolkit.Utilities;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
-using static Unity.VisualScripting.Member;
-using static UnityEditor.Progress;
 
 namespace AugmeNDT
 {

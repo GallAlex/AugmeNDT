@@ -1,10 +1,6 @@
 ﻿using Assets.Scripts.DataStructure;
-using Microsoft.MixedReality.Toolkit.Experimental.Physics;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace AugmeNDT
 {
