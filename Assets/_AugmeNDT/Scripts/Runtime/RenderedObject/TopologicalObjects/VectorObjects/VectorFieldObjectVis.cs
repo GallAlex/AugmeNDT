@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace AugmeNDT
@@ -28,10 +27,6 @@ namespace AugmeNDT
         private Transform container;
         // Volume Transform to set container's parent
         private static Transform volumeTransform;
-
-        // Flags to check if arrows are already created and if they are currently hidden
-        private bool arrowscalculated = false;
-        private bool arrowshidden = false;
 
         //Scale factor for arrow size
         private float localScaleRate = 0.3f; // default
@@ -69,40 +64,7 @@ namespace AugmeNDT
         /// </summary>
         public void Visualize()
         {
-            if (arrowscalculated)
-            {
-                ShowVectorField();
-            }
-            else
-            {
-                arrowscalculated = true;
-                arrowshidden = false;
-                StartCoroutine(CreateArrowsCoroutine());
-            }
-        }
-
-        /// <summary>
-        /// Makes all arrows in the vector field visible again.
-        /// </summary>
-        public void ShowVectorField()
-        {
-            if (!arrowshidden)
-                return;
-
-            arrows.ForEach(x => x.SetActive(true));
-            arrowshidden = false;
-        }
-
-        /// <summary>
-        /// Hides all arrows in the vector field without destroying them.
-        /// </summary>
-        public void HideVectorField()
-        {
-            if (arrowshidden)
-                return;
-
-            arrows.ForEach(x => x.SetActive(false));
-            arrowshidden = true;
+            StartCoroutine(CreateArrowsCoroutine());
         }
 
         private IEnumerator CreateArrowsCoroutine()
@@ -138,7 +100,7 @@ namespace AugmeNDT
         {
             GameObject generalVectorFieldArrows = new GameObject("GeneralVectorFieldArrows");
             container = generalVectorFieldArrows.transform;
-            container.SetParent(volumeTransform);
+            container.SetParent(volumeTransform,true);
         }
     }
 }

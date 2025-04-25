@@ -7,6 +7,7 @@ namespace AugmeNDT
     /// <summary>
     /// Manages topological data, including critical points and gradient information.
     /// Loads data from CSV files and makes it accessible to visualization components.
+    /// Handles transformations for rotation, position and scale changes.
     /// </summary>
     public class TopologicalDataObject : MonoBehaviour
     {
@@ -18,16 +19,22 @@ namespace AugmeNDT
         // Transformed versions of the datasets, scaled and centered for visualization
         public List<GradientDataset> gradientList = new List<GradientDataset>();
         public List<CriticalPointDataset> criticalPointList = new List<CriticalPointDataset>();
-        public float maxMag = 0; // Maximum gradient magnitude used for normalization or color mapping
 
         private string path;
         private Vector3 originalDimensions;
         private Vector3 lastVolumePosition;
         private Vector3 lastVolumeScale;
-        public Quaternion lastVolumeRotation;
+        private Quaternion lastVolumeRotation;
 
         public Vector3 min3D = new Vector3(0, 0, 5);
         public Vector3 max3D = new Vector3(24, 8, 40);
+
+        // Store initial local positions relative to volume for proper transformation
+        private List<Vector3> gradientLocalPositions = new List<Vector3>();
+        private List<Vector3> gradientLocalDirections = new List<Vector3>();
+        private List<Vector3> criticalPointLocalPositions = new List<Vector3>();
+        private Vector3 minLocalPosition;
+        private Vector3 maxLocalPosition;
 
         private void Awake()
         {
@@ -47,154 +54,69 @@ namespace AugmeNDT
 
         public void UpdateData()
         {
-            // DON'T CHANGE THE ORDER
-            UpdateDataPositions();
-            UpdateDataRotation();
-            UpdateDataScale();
-        }
-
-        private void UpdateDataPositions()
-        {
-            Vector3 positionDelta = volumeTransform.position - lastVolumePosition;
-            if (volumeTransform.position == lastVolumePosition)
-                return;
-
-            // Update gradient list using parallel processing
-            System.Threading.Tasks.Parallel.ForEach(gradientList, gradient => {
-                gradient.Position += positionDelta;
-            });
-
-            // Update critical point list using parallel processing
-            System.Threading.Tasks.Parallel.ForEach(criticalPointList, criticalPoint => {
-                criticalPoint.Position += positionDelta;
-            });
-
-            // Update min3D and max3D vectors in the same way
-            min3D += positionDelta;
-            max3D += positionDelta;
-
-            lastVolumePosition = volumeTransform.position;
-        }
-
-        private void UpdateDataScale()
-        {
-            if (volumeTransform.lossyScale == lastVolumeScale)
-                return;
-
-            Vector3 scaleRatio = new Vector3(
-                volumeTransform.lossyScale.x / lastVolumeScale.x,
-                volumeTransform.lossyScale.y / lastVolumeScale.y,
-                volumeTransform.lossyScale.z / lastVolumeScale.z
-            );
-
-            Vector3 volumeCenter = volumeTransform.position;
-
-            System.Threading.Tasks.Parallel.ForEach(gradientList, gradient => {
-                // Calculate position relative to center
-                Vector3 relativePos = gradient.Position - volumeCenter;
-
-                // Scale the relative position
-                relativePos.x *= scaleRatio.x;
-                relativePos.y *= scaleRatio.y;
-                relativePos.z *= scaleRatio.z;
-
-                // Set the new position
-                gradient.Position = volumeCenter + relativePos;
-
-                // Scale the direction vector - FIXED
-                Vector3 newDirection = new Vector3(
-                    gradient.Direction.x * scaleRatio.x,
-                    gradient.Direction.y * scaleRatio.y,
-                    gradient.Direction.z * scaleRatio.z
-                );
-                gradient.Direction = newDirection;
-
-                // Calculate new magnitude
-                gradient.Magnitude = gradient.Direction.magnitude;
-            });
-
-            // Critical point update remains the same
-            System.Threading.Tasks.Parallel.ForEach(criticalPointList, criticalPoint => {
-                Vector3 relativePos = criticalPoint.Position - volumeCenter;
-                relativePos.x *= scaleRatio.x;
-                relativePos.y *= scaleRatio.y;
-                relativePos.z *= scaleRatio.z;
-                criticalPoint.Position = volumeCenter + relativePos;
-            });
-
-            // Update min3D and max3D vectors
-            // Calculate position of min3D relative to center
-            Vector3 minRelativePos = min3D - volumeCenter;
-            // Scale the relative position
-            minRelativePos.x *= scaleRatio.x;
-            minRelativePos.y *= scaleRatio.y;
-            minRelativePos.z *= scaleRatio.z;
-            // Set the new min3D position
-            min3D = volumeCenter + minRelativePos;
-
-            // Calculate position of max3D relative to center
-            Vector3 maxRelativePos = max3D - volumeCenter;
-            // Scale the relative position
-            maxRelativePos.x *= scaleRatio.x;
-            maxRelativePos.y *= scaleRatio.y;
-            maxRelativePos.z *= scaleRatio.z;
-            // Set the new max3D position
-            max3D = volumeCenter + maxRelativePos;
-
-            // Update maximum magnitude value
-            maxMag = 0;
-            foreach (var gradient in gradientList)
+            // Check if volume transform has changed
+            if (volumeTransform.position != lastVolumePosition ||
+                volumeTransform.lossyScale != lastVolumeScale ||
+                volumeTransform.rotation != lastVolumeRotation)
             {
-                maxMag = maxMag >= gradient.Magnitude ? maxMag : gradient.Magnitude;
+                UpdateDataTransforms();
+
+                // Store current transform values
+                lastVolumePosition = volumeTransform.position;
+                lastVolumeScale = volumeTransform.lossyScale;
+                lastVolumeRotation = volumeTransform.rotation;
+            }
+        }
+
+        private void UpdateDataTransforms()
+        {
+            // Calculate transform for all data points
+            for (int i = 0; i < gradientList.Count; i++)
+            {
+                // Apply full transformation (scale, rotation, translation) for position
+                gradientList[i].Position = CalculateWorldPosition(
+                    volumeTransform,
+                    gradientLocalPositions[i]
+                );
+
+                // For direction vectors, we only care about scale and rotation, not translation
+                Vector3 scaledDirection = Vector3.Scale(gradientLocalDirections[i], volumeTransform.lossyScale);
+                Vector3 worldDirection = volumeTransform.rotation * scaledDirection;
+                gradientList[i].Direction = worldDirection;
+
+                // Update magnitude from the new direction vector
+                gradientList[i].Magnitude = worldDirection.magnitude;
             }
 
-            // Update scale last
-            lastVolumeScale = volumeTransform.lossyScale;
-        }
-
-        private void UpdateDataRotation()
-        {
-            // Check if rotation has changed
-            if (Quaternion.Angle(volumeTransform.rotation, lastVolumeRotation) < 0.1f)
-                return;
-
-            // Calculate rotation delta
-            Quaternion rotationDelta = volumeTransform.rotation * Quaternion.Inverse(lastVolumeRotation);
-            Vector3 volumeCenter = volumeTransform.position;
-
-            // Update gradient positions and directions with rotation
-            System.Threading.Tasks.Parallel.ForEach(gradientList, gradient => {
-                // Calculate relative position from center
-                Vector3 relativePos = gradient.Position - volumeCenter;
-
-                // Apply rotation to relative position
-                relativePos = rotationDelta * relativePos;
-
-                // Update position
-                gradient.Position = volumeCenter + relativePos;
-
-                // Apply same rotation to direction vector
-                gradient.Direction = rotationDelta * gradient.Direction;
-            });
-
-            // Update critical points with rotation
-            System.Threading.Tasks.Parallel.ForEach(criticalPointList, criticalPoint => {
-                Vector3 relativePos = criticalPoint.Position - volumeCenter;
-                relativePos = rotationDelta * relativePos;
-                criticalPoint.Position = volumeCenter + relativePos;
-            });
+            // Update critical point positions
+            for (int i = 0; i < criticalPointList.Count; i++)
+            {
+                criticalPointList[i].Position = CalculateWorldPosition(
+                    volumeTransform,
+                    criticalPointLocalPositions[i]
+                );
+            }
 
             // Update min3D and max3D vectors
-            Vector3 minRelativePos = min3D - volumeCenter;
-            minRelativePos = rotationDelta * minRelativePos;
-            min3D = volumeCenter + minRelativePos;
+            min3D = CalculateWorldPosition(volumeTransform, minLocalPosition);
+            max3D = CalculateWorldPosition(volumeTransform, maxLocalPosition);
+        }
 
-            Vector3 maxRelativePos = max3D - volumeCenter;
-            maxRelativePos = rotationDelta * maxRelativePos;
-            max3D = volumeCenter + maxRelativePos;
+        /// <summary>
+        /// Calculates world position based on parent transform and local position
+        /// </summary>
+        private Vector3 CalculateWorldPosition(Transform parent, Vector3 localPosition)
+        {
+            // 1. Scale
+            Vector3 scaledPosition = Vector3.Scale(localPosition, parent.lossyScale);
 
-            // Update last rotation
-            lastVolumeRotation = volumeTransform.rotation;
+            // 2. Rotation
+            Vector3 rotatedPosition = parent.rotation * scaledPosition;
+
+            // 3. Translation
+            Vector3 worldPosition = parent.position + rotatedPosition;
+
+            return worldPosition;
         }
 
         private void LoadTopologyConfiguration()
@@ -228,7 +150,48 @@ namespace AugmeNDT
         {
             ConvertData(ttkCalculation.GetGradientAllVectorField(), ttkCalculation.GetCriticalPointAllVectorField());
             ConvertMinMax3DVectors();
+            StoreLocalTransforms(); // Store local positions for future transform updates
             TDAHandler.instance.ActivateTDAScenes(config);
+        }
+
+        /// <summary>
+        /// Store initial local positions relative to volume transform for accurate transformations
+        /// </summary>
+        private void StoreLocalTransforms()
+        {
+            // Clear previous data
+            gradientLocalPositions.Clear();
+            gradientLocalDirections.Clear();
+            criticalPointLocalPositions.Clear();
+
+            // Store local positions for gradients
+            foreach (var gradient in gradientList)
+            {
+                // Calculate local position relative to volume
+                Vector3 localPosition = volumeTransform.InverseTransformPoint(gradient.Position);
+                gradientLocalPositions.Add(localPosition);
+
+                // Calculate local direction
+                // We need to convert from world to local space for the direction vector
+                Vector3 localDirection = Quaternion.Inverse(volumeTransform.rotation) * gradient.Direction;
+                // Remove scale influence
+                localDirection.x /= volumeTransform.lossyScale.x;
+                localDirection.y /= volumeTransform.lossyScale.y;
+                localDirection.z /= volumeTransform.lossyScale.z;
+
+                gradientLocalDirections.Add(localDirection);
+            }
+
+            // Store local positions for critical points
+            foreach (var criticalPoint in criticalPointList)
+            {
+                Vector3 localPosition = volumeTransform.InverseTransformPoint(criticalPoint.Position);
+                criticalPointLocalPositions.Add(localPosition);
+            }
+
+            // Store local positions for min3D and max3D
+            minLocalPosition = volumeTransform.InverseTransformPoint(min3D);
+            maxLocalPosition = volumeTransform.InverseTransformPoint(max3D);
         }
 
         private void ConvertData(List<GradientDataset> orjGradientList, List<CriticalPointDataset> orjCriticalPointDataset)
@@ -269,6 +232,12 @@ namespace AugmeNDT
                 // Add the world-space position of the Volume
                 Vector3 finalPos = volumePosition + scaledPos - (volumeWorldScale / 2f); // Adjust from center position
 
+                // Apply initial rotation if there is any
+                finalPos = volumePosition + (volumeTransform.rotation * (scaledPos - (volumeWorldScale / 2f)));
+
+                // Also adjust direction vector with rotation
+                scaledDirection = volumeTransform.rotation * scaledDirection;
+
                 // New gradient object
                 scaledGradients.Add(new GradientDataset(
                     gradient.ID,
@@ -277,7 +246,6 @@ namespace AugmeNDT
                     scaledMagnitude
                 ));
 
-                maxMag = maxMag >= gradient.Magnitude ? maxMag : gradient.Magnitude;
             }
 
             // Transform critical points
@@ -298,8 +266,8 @@ namespace AugmeNDT
                     normalizedPos.z * volumeWorldScale.z
                 );
 
-                // Add the world-space position of the Volume
-                Vector3 finalPos = volumePosition + scaledPos - (volumeWorldScale / 2f); // Adjust from center position
+                // Add the world-space position of the Volume and apply rotation
+                Vector3 finalPos = volumePosition + (volumeTransform.rotation * (scaledPos - (volumeWorldScale / 2f)));
 
                 // Create new critical point object
                 scaledCriticalPoints.Add(new CriticalPointDataset(
@@ -312,6 +280,7 @@ namespace AugmeNDT
             gradientList = scaledGradients;
             criticalPointList = scaledCriticalPoints;
         }
+
         /// <summary>
         /// Converts Min3D and Max3D vectors from raw data coordinates to world coordinates
         /// </summary>
@@ -348,14 +317,19 @@ namespace AugmeNDT
                 normalizedMax.z * volumeWorldScale.z
             );
 
-            // Add world position of the Volume and adjust according to center position
-            Vector3 finalMin = volumePosition + scaledMin - (volumeWorldScale / 2f);
-            Vector3 finalMax = volumePosition + scaledMax - (volumeWorldScale / 2f);
+            // Add world position of the Volume, adjusting for center position and applying rotation
+            Vector3 adjustedMin = scaledMin - (volumeWorldScale / 2f);
+            Vector3 adjustedMax = scaledMax - (volumeWorldScale / 2f);
+
+            // Apply rotation and then translate
+            Vector3 finalMin = volumePosition + (volumeTransform.rotation * adjustedMin);
+            Vector3 finalMax = volumePosition + (volumeTransform.rotation * adjustedMax);
 
             // Assign converted values
             min3D = finalMin;
             max3D = finalMax;
         }
+
         /// <summary>
         /// Calculates the optimal scale rate for gradient calculations based on the volume dimensions.
         /// This scale rate is used to determine the appropriate grid density for visualizations.

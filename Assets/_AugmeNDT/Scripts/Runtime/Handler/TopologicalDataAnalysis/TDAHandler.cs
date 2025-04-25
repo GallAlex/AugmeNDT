@@ -125,8 +125,8 @@ namespace AugmeNDT
                 Rectangle3DManager.rectangle3DManager.InitializeRectangle();
 
                 Glyph3DVectorField.instance.onlyVisCriticalPoints = true;
+                Glyph3DVectorField.instance.ShowVectorsAndCriticalPoints();
                 StreamLine3D.Instance.ShowStreamLines(true);
-                Glyph3DVectorField.instance.ShowVectorsAndCriticalPoints(true);
                 FlowObject3DManager.Instance.StartFlowObject();
             }
 
@@ -140,8 +140,8 @@ namespace AugmeNDT
                 Rectangle3DManager.rectangle3DManager.visibleRectangle = true;
                 Rectangle3DManager.rectangle3DManager.InitializeRectangle();
 
+                Glyph3DVectorField.instance.ShowVectorsAndCriticalPoints();
                 StreamLine3D.Instance.ShowStreamLines(true);
-                Glyph3DVectorField.instance.ShowVectorsAndCriticalPoints(true);
                 FlowObject3DManager.Instance.StartFlowObject();
             }
 

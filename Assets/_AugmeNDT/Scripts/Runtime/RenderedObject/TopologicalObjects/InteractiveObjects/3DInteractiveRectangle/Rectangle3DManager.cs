@@ -70,15 +70,12 @@ namespace AugmeNDT
         /// </summary>
         public void InitializeRectangle()
         {
-            if (rectangle == null)
-            {
-                if (useAllData)
-                    rectangle3DManager.Create3DRectangle();
-                else
-                    rectangle3DManager.Create3DRectangle(topologicalDataObjectInstance.min3D, topologicalDataObjectInstance.max3D);
+            if (rectangle != null)
+                return;
 
-                UpdateInstance();
-            }
+            rectangle3DManager.Create3DRectangle();
+
+            UpdateInstance();
         }
 
         /// <summary>
@@ -116,16 +113,6 @@ namespace AugmeNDT
         {
             if (rectangle == null)
                 return;
-
-            Destroy(rectangle.GetComponent<Basic3DRectangle>());
-            Destroy(GameObject.Find("RectangleVisual"));
-            Destroy(rectangle);
-            rectangle = null;
-
-            if (useAllData)
-                rectangle3DManager.Create3DRectangle();
-            else
-                rectangle3DManager.Create3DRectangle(topologicalDataObjectInstance.min3D, topologicalDataObjectInstance.max3D);
 
             UpdateInstance();
         }
@@ -224,57 +211,63 @@ namespace AugmeNDT
         }
 
         /// <summary>
-        /// Creates a 3D rectangle using the volume's bounds
-        /// </summary>
-        public void Create3DRectangle()
-        {
-            rectangle = new GameObject("Rectangle3D");
-            rectangle.tag = "Rectangle3D";
-
-            rectangle.transform.parent = volumeTransform;
-            GameObject volumeObject = volumeTransform.gameObject;
-
-            // Reset transform to align with parent
-            rectangle.transform.localPosition = Vector3.zero;
-            rectangle.transform.localRotation = Quaternion.identity;
-            rectangle.transform.localScale = Vector3.one;
-
-            Basic3DRectangle basic3DRectangle = rectangle.AddComponent<Basic3DRectangle>();
-            basic3DRectangle.drawBorders = visibleRectangle;
-
-            BoxCollider boxCollider = volumeObject.GetComponent<BoxCollider>();
-            if (boxCollider != null)
-            {
-                Vector3 min = volumeObject.transform.TransformPoint(boxCollider.center - boxCollider.size * 0.5f);
-                Vector3 max = volumeObject.transform.TransformPoint(boxCollider.center + boxCollider.size * 0.5f);
-                basic3DRectangle.SetBounds(min, max);
-            }
-        }
-
-        /// <summary>
         /// Creates a 3D rectangle with specified minimum and maximum corners
         /// </summary>
         /// <param name="min">Minimum corner position (x,y,z)</param>
         /// <param name="max">Maximum corner position (x,y,z)</param>
-        public void Create3DRectangle(Vector3 min, Vector3 max)
+        public bool Create3DRectangle()
         {
-            // Create new GameObject
-            rectangle = new GameObject("Rectangle3D");
-            rectangle.tag = "Rectangle3D";
+            if (rectangle == null)
+            {
+                rectangle = new GameObject("Rectangle3D");
+                rectangle.tag = "Rectangle3D";
 
-            // Set volumeTransform as parent
-            rectangle.transform.parent = volumeTransform;
+                rectangle.transform.parent = volumeTransform;
 
-            // Reset transform
-            rectangle.transform.localPosition = Vector3.zero;
-            rectangle.transform.localRotation = Quaternion.identity;
-            rectangle.transform.localScale = Vector3.one;
+                // Reset transform values (important)
+                rectangle.transform.localPosition = Vector3.zero;
+                rectangle.transform.localRotation = Quaternion.identity;
+                rectangle.transform.localScale = Vector3.one;
+            }
 
-            // Add and initialize Basic3DRectangle component
+            Vector3 worldMin;
+            Vector3 worldMax;
+
+            if (useAllData)
+            {
+                GameObject volumeObject = volumeTransform.gameObject;
+                BoxCollider boxCollider = volumeObject.GetComponent<BoxCollider>();
+                if (boxCollider == null)
+                {
+                    Debug.LogError("fiber.raw's BoxCollider is not found.");
+                    return false;
+                }
+
+                // Bu değerler world space'te
+                worldMin = volumeObject.transform.TransformPoint(boxCollider.center - boxCollider.size * 0.5f);
+                worldMax = volumeObject.transform.TransformPoint(boxCollider.center + boxCollider.size * 0.5f);
+            }
+            else
+            {
+                worldMin = topologicalDataObjectInstance.min3D;
+                worldMax = topologicalDataObjectInstance.max3D;
+
+                if (worldMin == Vector3.zero && worldMax == Vector3.zero)
+                {
+                    Debug.LogError("please insert min and max value in config.file");
+                    return false;
+                }
+            }
+
+            // World space değerlerini rectangle'ın parent'ının (volume) local space'ine dönüştür
+            Vector3 localMin = volumeTransform.InverseTransformPoint(worldMin);
+            Vector3 localMax = volumeTransform.InverseTransformPoint(worldMax);
+
+            // Add and initialize Basic3DRectangle component with local coordinates
             Basic3DRectangle basic3DRectangle = rectangle.AddComponent<Basic3DRectangle>();
             basic3DRectangle.drawBorders = visibleRectangle;
-            // Set bounds
-            basic3DRectangle.SetBounds(min, max);
+            basic3DRectangle.InitializeBoundsLocal(localMin, localMax);
+            return true;
         }
 
         #endregion private
