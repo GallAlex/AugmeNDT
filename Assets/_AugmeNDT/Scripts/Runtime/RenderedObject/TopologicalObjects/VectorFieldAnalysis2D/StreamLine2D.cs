@@ -126,23 +126,6 @@ namespace AugmeNDT
         }
 
         /// <summary>
-        /// Calculates streamlines from seed points using the gradient field
-        /// </summary>
-        /// <returns>List of streamline point sequences</returns>
-        //private List<List<Vector3>> CalculateStreamlines()
-        //{
-        //    List<Vector3> seedPoints = GeneratePoissonDiskSeeds(minDistanceToGeneratePoissonDiskSeeds, numStreamlines);
-
-        //    List<List<Vector3>> streamlinePoints = new List<List<Vector3>>();
-        //    foreach (var seed in seedPoints)
-        //    {
-        //        streamlinePoints.Add(GenerateStreamline(seed));
-        //    }
-
-        //    return streamlinePoints;
-        //}
-
-        /// <summary>
         /// Generates Poisson disk sampling points within the rectangle
         /// </summary>
         /// <param name="minDistance">Minimum distance between points</param>

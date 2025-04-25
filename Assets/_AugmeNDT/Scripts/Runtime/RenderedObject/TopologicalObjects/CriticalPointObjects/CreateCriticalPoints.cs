@@ -21,7 +21,7 @@ namespace AugmeNDT
         {
             { 0, Color.blue },   // Minimum
             { 1, Color.yellow }, // 1-Saddle
-            { 2, new Color(1.0f, 0.5f, 0.0f) }, // 2-Saddle (Orange)
+            { 2, new Color(1.0f, 0.5f, 0.0f) }, // 2-Saddle
             { 3, Color.red },    // Maximum
         };
 
@@ -37,28 +37,13 @@ namespace AugmeNDT
 
                 CreateInteractiveCriticalPoint(point.ID, point.Type, point.Position, container, pointPrefab, localScaleRate, criticalPointDictionary);
             });
-            if (createLegendColorBar)
-                CreateLegendColorBar(container, localScaleRate * 10);
+
             return criticalPointDictionary;
         }
 
-        public List<GameObject> CreateBasicCriticalPoint(List<CriticalPointDataset> criticalPoints, Transform container, float localScaleRate = 1.0f, bool createLegendColorBar = true)
+        public GameObject CreateLegendColorBar(Transform container, System.Action<int>  calledFunction, float localScaleRate = 1.0f)
         {
-            List<GameObject> spheres = new List<GameObject>();
-            criticalPoints.ForEach(cp => {
-                // Create and configure sphere object
-                GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                sphere.transform.SetParent(container, worldPositionStays: true);
-                sphere.transform.position = cp.Position;
-                sphere.transform.localScale = Vector3.one * localScaleRate;
-                sphere.GetComponent<Renderer>().material.color = GetColorByType(cp.Type);
-                spheres.Add(sphere);
-            });
-            
-            if(createLegendColorBar)
-                CreateLegendColorBar(container, localScaleRate * 10);
-
-            return spheres;
+            return InnerCreateLegendColorBar(container, calledFunction, localScaleRate * 10);
         }
 
         /// <summary>
@@ -104,7 +89,7 @@ namespace AugmeNDT
         /// <summary>
         /// Creates and places the color legend bar that explains critical point types with corresponding colors and labels.
         /// </summary>
-        private void CreateLegendColorBar(Transform container,float localScale)
+        private GameObject InnerCreateLegendColorBar(Transform container, System.Action<int> calledFunction, float localScale)
         {
             // Extract colors from the dictionary into a color array (ordered by key)
             Color[] colors = new Color[typeColors.Count];
@@ -119,24 +104,31 @@ namespace AugmeNDT
             Vector3 legendPosition = GameObject.Find("Volume").transform.position + new Vector3(0.2f, 0f, 0f);
             
             // Generate the color bar using the new method that places labels on all sides
-            GameObject legendObject = legend.CreateColorScalarBar(
-                legendPosition,   // World position where the legend will appear
+            GameObject legendObject = legend.CreateInteractiveColorScalarBar(
+                legendPosition,            // World position where the legend will appear
                 "Critical Points",         // Title of the legend
                 labels,                    // Labels to display for each color segment
                 colors,                    // Corresponding colors for each label
-                2                          // Percentage spacing between blocks
+                5                          // Percentage spacing between blocks
             );
 
             // Attach the legend under the main container so it moves/scales with the data visualization
-            legendObject.transform.SetParent( container , true);
+            legendObject.transform.SetParent(container, true);
             legendObject.transform.localScale = Vector3.one * localScale;
 
-            // Make it interactable in immersive systems
-            legendObject.AddComponent<BoxCollider>();
-            legendObject.AddComponent<Microsoft.MixedReality.Toolkit.UI.ObjectManipulator>();
-            legendObject.AddComponent<Microsoft.MixedReality.Toolkit.Input.NearInteractionGrabbable>();
+            BoxCollider[] boxColiders= legendObject.GetComponentsInChildren<BoxCollider>();
+            foreach (BoxCollider collider in boxColiders)
+            {
+                collider.enabled = true;
+            }
+
+            ColorBarButtonConfig[] ColorBarButtonConfigs = legendObject.GetComponentsInChildren<ColorBarButtonConfig>();
+            foreach (ColorBarButtonConfig colorBarButtonConfig in ColorBarButtonConfigs)
+            {
+                colorBarButtonConfig.onButtonPressedCallback = calledFunction;
+            }
+
+            return legendObject;
         }
-
-
     }
 }

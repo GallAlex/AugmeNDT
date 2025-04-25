@@ -22,7 +22,7 @@ namespace AugmeNDT
         private Material streamlineMaterial; // Material for LineRenderer
 
         [Header("Streamline Parameters")]
-        public int numStreamlines = 20; // Number of streamlines to draw
+        public int numStreamlines = 350; // Number of streamlines to draw
         public float streamlineStepSize = 0.0033f; // Step size for integration
         public int maxStreamlineSteps = 142; // Maximum number of steps per streamline
         public float cellSize = 0.01f; // Spatial grid cell size
@@ -55,6 +55,25 @@ namespace AugmeNDT
             sceneObjects = GameObject.Find("Scene Objects").transform;
         }
 
+        /// <summary>
+        /// Shows streamlines by creating them if needed or making existing ones visible
+        /// </summary>
+        public void ShowStreamLines(bool forced = false)
+        {
+            if (forced || !LineObjs.Any() || IsUpdated())
+            {
+                if (!PrepareInstance())
+                    return;
+
+                StartCoroutine(DrawStreamlinesCoroutine());
+            }
+            else
+            {
+                LineObjs.ForEach(line => line.SetActive(true));
+            }
+        }
+
+        #region private
         private bool IsUpdated()
         {
             Bounds currentCubeBounds = rectangle3DManager.GetRectangleBounds();
@@ -90,27 +109,9 @@ namespace AugmeNDT
         }
 
         /// <summary>
-        /// Shows streamlines by creating them if needed or making existing ones visible
-        /// </summary>
-        public void ShowStreamLines(bool forced = false)
-        {
-            if (forced || !LineObjs.Any() || IsUpdated())
-            {
-                if (!PrepareInstance())
-                    return;
-
-                StartCoroutine(DrawStreamlinesCoroutine());
-            }
-            else
-            {
-                LineObjs.ForEach(line => line.SetActive(true));
-            }
-        }
-
-        /// <summary>
         /// Gets the grid cell index for a position
         /// </summary>
-        public Vector3Int GetGridCell(Vector3 position)
+        private Vector3Int GetGridCell(Vector3 position)
         {
             return new Vector3Int(
                 Mathf.FloorToInt(position.x / cellSize),
@@ -143,8 +144,8 @@ namespace AugmeNDT
         {
             criticalPointsPositions.Clear();
 
-            criticalPointsPositions = rectangle3DManager.GetCriticalPoints().Select(x => x.Position).ToList();
-            return;
+            var globalCriticalPointsPositions = rectangle3DManager.GetCriticalPoints().Select(x => x.Position).ToList();
+            List<Vector3> localCriticalPointsPositions = new List<Vector3>();
 
             // Find local minima in magnitude as potential critical points
             float thresholdMagnitude = averageMagnitude * 0.1f;
@@ -184,10 +185,18 @@ namespace AugmeNDT
 
                     if (isLocalMin)
                     {
-                        criticalPointsPositions.Add(gradient.Position);
+                        localCriticalPointsPositions.Add(gradient.Position);
                     }
                 }
             }
+
+
+            int separator = (int)numStreamlines / 2;
+            if (globalCriticalPointsPositions.Count > 0)
+                criticalPointsPositions.AddRange(globalCriticalPointsPositions.Take(separator));
+
+            if (localCriticalPointsPositions.Count > 0)
+                criticalPointsPositions.AddRange(localCriticalPointsPositions.Take(separator));
 
             Debug.Log($"Detected {criticalPointsPositions.Count} potential critical points");
         }
@@ -489,5 +498,7 @@ namespace AugmeNDT
         }
 
         #endregion
+        #endregion
+
     }
 }

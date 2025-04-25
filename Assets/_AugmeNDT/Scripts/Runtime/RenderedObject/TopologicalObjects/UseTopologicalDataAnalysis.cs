@@ -1,7 +1,6 @@
 ﻿using Microsoft.MixedReality.Toolkit.UI;
 using Microsoft.MixedReality.Toolkit.UI.BoundsControl;
 using System.Collections;
-using System.Diagnostics;
 using UnityEngine;
 
 namespace AugmeNDT
@@ -88,13 +87,17 @@ namespace AugmeNDT
                 Rectangle3DManager.rectangle3DManager.UpdateRectangleAfterScaling();
 
                 if (Glyph3DVectorField.instance != null)
-                    Glyph3DVectorField.instance.ShowVectorsAndCriticalPoints();
+                    Glyph3DVectorField.instance.Visualize();
+
+                if (CriticalPoint3DVis.instance != null)
+                    CriticalPoint3DVis.instance.Visualize(true);
 
                 if (StreamLine3D.Instance != null)
                     StreamLine3D.Instance.ShowStreamLines(true);
 
                 if (FlowObject3DManager.Instance != null)
                     FlowObject3DManager.Instance.StartFlowObject();
+
             }
         }
 

@@ -11,44 +11,44 @@
         private GameObject rectangleObject;
         private LineRenderer lineRenderer;
         public bool drawBorders = true;
-        private Matrix4x4 worldToLocalMatrix; // Thread-safe kullanım için
+        private Matrix4x4 worldToLocalMatrix; // For thread-safe usage
 
         /// <summary>
         /// Initializes the LineRenderer component
         /// </summary>
         private void Awake()
         {
-            // Create LineRenderer component
+            // Create LineRenderer holder object
             rectangleObject = new GameObject("RectangleVisual");
             rectangleObject.transform.SetParent(transform);
         }
 
         /// <summary>
-        /// Local space koordinatlarında dikdörtgen sınırlarını ayarlar
+        /// Sets rectangle bounds in local space
         /// </summary>
-        /// <param name="localMin">Local space'teki minimum köşe</param>
-        /// <param name="localMax">Local space'teki maximum köşe</param>
+        /// <param name="localMin">Minimum corner in local space</param>
+        /// <param name="localMax">Maximum corner in local space</param>
         public void InitializeBoundsLocal(Vector3 localMin, Vector3 localMax)
         {
-            // Local space'te merkez hesapla
+            // Calculate center in local space
             Vector3 localCenter = (localMin + localMax) * 0.5f;
 
-            // Local space'te boyut hesapla
+            // Calculate size in local space
             Vector3 localSize = localMax - localMin;
 
-            // Objenin local pozisyonunu ayarla
+            // Set object's local position
             transform.localPosition = localCenter;
 
-            // Objenin local ölçeğini ayarla
+            // Set object's local scale
             transform.localScale = localSize;
 
-            // Manuel bounds'u güncelle
+            // Manually update cached matrix
             worldToLocalMatrix = transform.worldToLocalMatrix;
 
-            // LineRenderer ekle ve ayarla
+            // Add and configure LineRenderer if borders are requested
             if (drawBorders)
             {
-                // Mevcut LineRenderer'ı temizle (varsa)
+                // Clear existing LineRenderer (if exists)
                 if (lineRenderer != null)
                 {
                     Destroy(lineRenderer);
@@ -58,45 +58,47 @@
                 lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
                 lineRenderer.startColor = Color.yellow;
                 lineRenderer.endColor = Color.yellow;
-                lineRenderer.startWidth = 0.001f; // Daha görünür olması için kalınlığı artırıyorum
+                lineRenderer.startWidth = 0.001f; // Increase thickness for better visibility
                 lineRenderer.endWidth = 0.001f;
-                lineRenderer.positionCount = 24; // 12 kenar için 24 nokta
-                lineRenderer.useWorldSpace = false; // Local space'te çalış!
+                lineRenderer.positionCount = 24; // 12 edges, 2 points per edge
+                lineRenderer.useWorldSpace = false; // Work in local space
 
-                // RectangleVisual objesi transformunu sıfırla
+                // Reset RectangleVisual transform
                 rectangleObject.transform.localPosition = Vector3.zero;
                 rectangleObject.transform.localRotation = Quaternion.identity;
                 rectangleObject.transform.localScale = Vector3.one;
 
-                // LineRenderer pozisyonlarını güncelle
+                // Update LineRenderer positions
                 UpdateLinePositions();
             }
         }
 
+        /// <summary>
         /// Calculates and returns a Bounds object that encapsulates the rectangle
+        /// </summary>
         public Bounds GetBounds()
         {
-            // Birim küpün köşelerini tanımla (-0.5, -0.5, -0.5) ile (0.5, 0.5, 0.5) arası
+            // Define the corners of a unit cube (-0.5, -0.5, -0.5) to (0.5, 0.5, 0.5)
             Vector3[] unitCorners = new Vector3[8]
             {
-                new Vector3(-0.5f, -0.5f, -0.5f), // sol alt ön
-                new Vector3(0.5f, -0.5f, -0.5f),  // sağ alt ön
-                new Vector3(0.5f, -0.5f, 0.5f),   // sağ alt arka
-                new Vector3(-0.5f, -0.5f, 0.5f),  // sol alt arka
-                new Vector3(-0.5f, 0.5f, -0.5f),  // sol üst ön
-                new Vector3(0.5f, 0.5f, -0.5f),   // sağ üst ön
-                new Vector3(0.5f, 0.5f, 0.5f),    // sağ üst arka
-                new Vector3(-0.5f, 0.5f, 0.5f)    // sol üst arka
+                new Vector3(-0.5f, -0.5f, -0.5f), // bottom-left-front
+                new Vector3(0.5f, -0.5f, -0.5f),  // bottom-right-front
+                new Vector3(0.5f, -0.5f, 0.5f),   // bottom-right-back
+                new Vector3(-0.5f, -0.5f, 0.5f),  // bottom-left-back
+                new Vector3(-0.5f, 0.5f, -0.5f),  // top-left-front
+                new Vector3(0.5f, 0.5f, -0.5f),   // top-right-front
+                new Vector3(0.5f, 0.5f, 0.5f),    // top-right-back
+                new Vector3(-0.5f, 0.5f, 0.5f)    // top-left-back
             };
 
-            // Transform'un world matrix'ini kullanarak tüm dönüşümleri uygula
+            // Apply local to world transformation
             Matrix4x4 worldMatrix = transform.localToWorldMatrix;
 
-            // İlk köşe ile bounds'u başlat
+            // Initialize bounds using the first corner
             Vector3 firstCorner = worldMatrix.MultiplyPoint(unitCorners[0]);
             Bounds bounds = new Bounds(firstCorner, Vector3.zero);
 
-            // Diğer tüm köşeleri ekleyerek bounds'u genişlet
+            // Expand bounds to include all corners
             for (int i = 1; i < unitCorners.Length; i++)
             {
                 bounds.Encapsulate(worldMatrix.MultiplyPoint(unitCorners[i]));
@@ -105,31 +107,39 @@
             return bounds;
         }
 
+        /// <summary>
+        /// Updates the cached world-to-local matrix manually
+        /// </summary>
         public void SetBoundsManuelUpdated()
         {
-            // Transform matrisini önden hesaplayıp saklayalım
             worldToLocalMatrix = transform.worldToLocalMatrix;
         }
 
-        // Thread-safe içinde/dışında kontrolü
+        /// <summary>
+        /// Checks if a given world point is inside the bounds of the rectangle
+        /// </summary>
+        /// <param name="worldPoint">World space point to check</param>
+        /// <param name="useCachedBounds">Use cached matrix if true (thread-safe)</param>
+        /// <returns>True if inside bounds, otherwise false</returns>
         public bool ContainsPointUsingBounds(Vector3 worldPoint, bool useCachedBounds)
         {
             if (!useCachedBounds)
             {
-                // Thread-safe olmayan yol, sadece ana thread'de çağrılabilir
+                // Non-thread-safe path, must be called from the main thread
                 Vector3 lp = transform.InverseTransformPoint(worldPoint);
                 return IsPointInUnitCube(lp);
             }
 
-            // Thread-safe yol, cached matrix kullanır
+            // Thread-safe path using cached matrix
             Vector3 localPoint = worldToLocalMatrix.MultiplyPoint3x4(worldPoint);
             return IsPointInUnitCube(localPoint);
         }
 
-        // Yardımcı metod
+        /// <summary>
+        /// Helper method to check if a point is inside a unit cube with small epsilon tolerance
+        /// </summary>
         private bool IsPointInUnitCube(Vector3 localPoint)
         {
-            // Epsilon değeri ekleyerek sınır değerlerde daha toleranslı olabiliriz
             float epsilon = 0.0001f;
             return (localPoint.x >= -0.5f - epsilon && localPoint.x <= 0.5f + epsilon &&
                     localPoint.y >= -0.5f - epsilon && localPoint.y <= 0.5f + epsilon &&
@@ -137,35 +147,31 @@
         }
 
         /// <summary>
-        /// Updates the LineRenderer positions to display the wireframe cube more efficiently
+        /// Updates the LineRenderer positions to visualize the cube edges
         /// </summary>
         private void UpdateLinePositions()
         {
             if (lineRenderer == null) return;
 
-            // Configure LineRenderer for 12 separate edges (each edge contains 2 points)
+            // Configure LineRenderer for 12 edges (2 points per edge)
             lineRenderer.positionCount = 24;
 
-            // Birim küpün (-0.5, -0.5, -0.5) ile (0.5, 0.5, 0.5) arasındaki köşeleri
-            // Bu değerler, transform.localScale tarafından ölçeklendirilecek
+            // Define corners of a unit cube
             Vector3[] unitCorners = new Vector3[8]
             {
-                new Vector3(-0.5f, -0.5f, -0.5f), // sol alt ön
-                new Vector3(0.5f, -0.5f, -0.5f),  // sağ alt ön
-                new Vector3(0.5f, -0.5f, 0.5f),   // sağ alt arka
-                new Vector3(-0.5f, -0.5f, 0.5f),  // sol alt arka
-                new Vector3(-0.5f, 0.5f, -0.5f),  // sol üst ön
-                new Vector3(0.5f, 0.5f, -0.5f),   // sağ üst ön
-                new Vector3(0.5f, 0.5f, 0.5f),    // sağ üst arka
-                new Vector3(-0.5f, 0.5f, 0.5f)    // sol üst arka
+                new Vector3(-0.5f, -0.5f, -0.5f),
+                new Vector3(0.5f, -0.5f, -0.5f),
+                new Vector3(0.5f, -0.5f, 0.5f),
+                new Vector3(-0.5f, -0.5f, 0.5f),
+                new Vector3(-0.5f, 0.5f, -0.5f),
+                new Vector3(0.5f, 0.5f, -0.5f),
+                new Vector3(0.5f, 0.5f, 0.5f),
+                new Vector3(-0.5f, 0.5f, 0.5f)
             };
-
-            // LineRenderer'ın parent objesi ile aynı dönüşüme sahip olduğunu varsayarsak,
-            // yerel koordinatlarda çizim yaparız (useWorldSpace = false ise)
 
             int index = 0;
 
-            // Alt yüzey (0-1-2-3)
+            // Bottom face edges (0-1-2-3)
             lineRenderer.SetPosition(index++, unitCorners[0]);
             lineRenderer.SetPosition(index++, unitCorners[1]);
 
@@ -178,7 +184,7 @@
             lineRenderer.SetPosition(index++, unitCorners[3]);
             lineRenderer.SetPosition(index++, unitCorners[0]);
 
-            // Üst yüzey (4-5-6-7)
+            // Top face edges (4-5-6-7)
             lineRenderer.SetPosition(index++, unitCorners[4]);
             lineRenderer.SetPosition(index++, unitCorners[5]);
 
@@ -191,7 +197,7 @@
             lineRenderer.SetPosition(index++, unitCorners[7]);
             lineRenderer.SetPosition(index++, unitCorners[4]);
 
-            // Yan kenarlar (0-4, 1-5, 2-6, 3-7)
+            // Side edges (0-4, 1-5, 2-6, 3-7)
             lineRenderer.SetPosition(index++, unitCorners[0]);
             lineRenderer.SetPosition(index++, unitCorners[4]);
 

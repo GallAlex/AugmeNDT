@@ -11,27 +11,30 @@ using UnityEngine;
 namespace AugmeNDT
 {
     /// <summary>
-    /// Manages a 3D rectangular region for visualizing and analyzing vector field data
+    /// Manages a 3D rectangular region for visualizing and analyzing vector field data.
     /// </summary>
     public class Rectangle3DManager : MonoBehaviour
     {
         public static Rectangle3DManager rectangle3DManager;
 
-        public bool useAllData = true;
-        public bool visibleRectangle = false;
+        public bool useAllData = true; // Whether to use the full volume data for the rectangle
+        public bool visibleRectangle = false; // Toggle visibility of the rectangle borders
 
         public TopologyConfigData config;
         public Transform volumeTransform;
 
         /// <summary>
-        /// Controls the density of the grid used for gradient calculations.
-        /// Lower values create denser grids with more detail but higher processing cost.
+        /// Default spacing interval used for grid generation.
         /// </summary>
         private float defaultInterval;
-        /// Scale factor for calculation grid density, automatically adjusted based on volume dimensions.
+        /// <summary>
+        /// Scale factor for adjusting calculation density based on volume size.
+        /// </summary>
         public float scaleRateToCalculation;
-        public float intervalValue; // defaultInterval*scaleRateToCalculation
-
+        /// <summary>
+        /// Actual interval value after applying scale rate.
+        /// </summary>
+        public float intervalValue;
 
         private static TopologicalDataObject topologicalDataObjectInstance;
         private List<GradientDataset> gradientPoints = new List<GradientDataset>();
@@ -39,20 +42,18 @@ namespace AugmeNDT
         private GameObject rectangle;
 
         /// <summary>
-        /// Initializes the singleton instance
+        /// Initializes the singleton instance.
         /// </summary>
         private void Awake()
         {
-            // Initialize singleton instance
             rectangle3DManager = this;
         }
 
         /// <summary>
-        /// Initializes references and configuration values
+        /// Initializes references and loads configuration values.
         /// </summary>
         private void Start()
         {
-            // Get reference to topological data object
             if (topologicalDataObjectInstance == null)
             {
                 topologicalDataObjectInstance = TopologicalDataObject.instance;
@@ -60,13 +61,13 @@ namespace AugmeNDT
                 config = topologicalDataObjectInstance.config;
 
                 scaleRateToCalculation = topologicalDataObjectInstance.GetOptimalScaleRateToCalculation();
-                defaultInterval = 0.1f; //default
+                defaultInterval = 0.1f;
                 intervalValue = defaultInterval * scaleRateToCalculation;
             }
         }
 
         /// <summary>
-        /// Creates the 3D rectangle visualization if it doesn't exist yet
+        /// Initializes the 3D rectangle if it has not been created.
         /// </summary>
         public void InitializeRectangle()
         {
@@ -74,14 +75,12 @@ namespace AugmeNDT
                 return;
 
             rectangle3DManager.Create3DRectangle();
-
             UpdateInstance();
         }
 
         /// <summary>
-        /// Gets the current bounds of the wireframe cube
+        /// Returns the bounds of the current rectangle.
         /// </summary>
-        /// <returns>Bounds representing the position and size of the cube</returns>
         public Bounds GetRectangleBounds()
         {
             Basic3DRectangle rectangleComponent = rectangle.GetComponent<Basic3DRectangle>();
@@ -89,25 +88,23 @@ namespace AugmeNDT
         }
 
         /// <summary>
-        /// Gets the gradient points inside the current 3D rectangle
+        /// Returns the list of gradient points within the rectangle.
         /// </summary>
-        /// <returns>List of gradient points inside the rectangle</returns>
         public List<GradientDataset> GetGradientPoints()
         {
             return gradientPoints;
         }
 
         /// <summary>
-        /// Gets the critical points inside the current 3D rectangle
+        /// Returns the list of critical points within the rectangle.
         /// </summary>
-        /// <returns>List of critical points inside the rectangle</returns>
         public List<CriticalPointDataset> GetCriticalPoints()
         {
             return criticalPoints;
         }
 
         /// <summary>
-        /// Recreates the rectangle after the volume has been scaled
+        /// Updates rectangle content after scaling.
         /// </summary>
         public void UpdateRectangleAfterScaling()
         {
@@ -118,8 +115,9 @@ namespace AugmeNDT
         }
 
         #region private
+
         /// <summary>
-        /// Updates internal data when the rectangle position or size changes
+        /// Updates internal data when the rectangle changes.
         /// </summary>
         private void UpdateInstance()
         {
@@ -128,24 +126,17 @@ namespace AugmeNDT
         }
 
         /// <summary>
-        /// Calculates and filters gradient points within the rectangle using spatial grid spacing
+        /// Calculates gradient points within the rectangle using a spaced grid to avoid overcrowding.
         /// </summary>
         private void CalculateGradientPointsWithSpacing()
         {
-            // Clear previous data
             gradientPoints.Clear();
 
             Basic3DRectangle rectangleComponent = rectangle.GetComponent<Basic3DRectangle>();
             Bounds bounds = rectangleComponent.GetBounds();
 
-            // Get rectangle bounds
-            Vector3 min = bounds.min;
-            Vector3 max = bounds.max;
-
-            // Use interval value
             float spacing = intervalValue;
 
-            // Use thread-safe dictionary to manage concurrent access
             ConcurrentDictionary<Vector3Int, GradientDataset> gridPoints = new ConcurrentDictionary<Vector3Int, GradientDataset>();
 
             rectangleComponent.SetBoundsManuelUpdated();
@@ -153,38 +144,33 @@ namespace AugmeNDT
             {
                 if (rectangleComponent.ContainsPointUsingBounds(data.Position, true))
                 {
-                    // Convert position to grid cell
                     Vector3Int gridPos = new Vector3Int(
                         Mathf.FloorToInt(data.Position.x / spacing),
                         Mathf.FloorToInt(data.Position.y / spacing),
                         Mathf.FloorToInt(data.Position.z / spacing)
                     );
 
-                    // Take only one point from each grid cell (in a thread-safe way)
                     gridPoints.TryAdd(gridPos, data);
                 }
             });
 
-            // Add selected points to gradientPoints list
             gradientPoints.AddRange(gridPoints.Values);
 
             Debug.Log($"Filtered {gradientPoints.Count} points inside the cube with interval {spacing}.");
         }
 
         /// <summary>
-        /// Calculates and filters critical points within the rectangle using spatial grid spacing
+        /// Calculates critical points within the rectangle using a spaced grid to avoid overcrowding.
         /// </summary>
         private void CalculateCriticalPointsWithSpacing()
         {
-            criticalPoints.Clear(); // Clear previous data
+            criticalPoints.Clear();
 
             Basic3DRectangle rectangleComponent = rectangle.GetComponent<Basic3DRectangle>();
             Bounds bounds = rectangleComponent.GetBounds();
 
-            // Use interval value - you can use a different interval value for critical points
             float spacing = intervalValue;
 
-            // Use thread-safe dictionary to manage concurrent access
             ConcurrentDictionary<Vector3Int, CriticalPointDataset> gridPoints = new ConcurrentDictionary<Vector3Int, CriticalPointDataset>();
 
             rectangleComponent.SetBoundsManuelUpdated();
@@ -192,39 +178,31 @@ namespace AugmeNDT
             {
                 if (rectangleComponent.ContainsPointUsingBounds(data.Position, true))
                 {
-                    // Convert position to grid cell
                     Vector3Int gridPos = new Vector3Int(
                         Mathf.FloorToInt(data.Position.x / spacing),
                         Mathf.FloorToInt(data.Position.y / spacing),
                         Mathf.FloorToInt(data.Position.z / spacing)
                     );
 
-                    // Take only one point from each grid cell (in a thread-safe way)
                     gridPoints.TryAdd(gridPos, data);
                 }
             });
 
-            // Add selected points to criticalPoints list
             criticalPoints.AddRange(gridPoints.Values);
 
             Debug.Log($"Filtered {criticalPoints.Count} critical points inside the cube with interval {spacing}.");
         }
 
         /// <summary>
-        /// Creates a 3D rectangle with specified minimum and maximum corners
+        /// Creates a new 3D rectangle in the scene.
         /// </summary>
-        /// <param name="min">Minimum corner position (x,y,z)</param>
-        /// <param name="max">Maximum corner position (x,y,z)</param>
         public bool Create3DRectangle()
         {
             if (rectangle == null)
             {
                 rectangle = new GameObject("Rectangle3D");
                 rectangle.tag = "Rectangle3D";
-
                 rectangle.transform.parent = volumeTransform;
-
-                // Reset transform values (important)
                 rectangle.transform.localPosition = Vector3.zero;
                 rectangle.transform.localRotation = Quaternion.identity;
                 rectangle.transform.localScale = Vector3.one;
@@ -239,11 +217,10 @@ namespace AugmeNDT
                 BoxCollider boxCollider = volumeObject.GetComponent<BoxCollider>();
                 if (boxCollider == null)
                 {
-                    Debug.LogError("fiber.raw's BoxCollider is not found.");
+                    Debug.LogError("BoxCollider for fiber.raw not found.");
                     return false;
                 }
 
-                // Bu değerler world space'te
                 worldMin = volumeObject.transform.TransformPoint(boxCollider.center - boxCollider.size * 0.5f);
                 worldMax = volumeObject.transform.TransformPoint(boxCollider.center + boxCollider.size * 0.5f);
             }
@@ -254,19 +231,18 @@ namespace AugmeNDT
 
                 if (worldMin == Vector3.zero && worldMax == Vector3.zero)
                 {
-                    Debug.LogError("please insert min and max value in config.file");
+                    Debug.LogError("Please insert min and max values in config.file.");
                     return false;
                 }
             }
 
-            // World space değerlerini rectangle'ın parent'ının (volume) local space'ine dönüştür
             Vector3 localMin = volumeTransform.InverseTransformPoint(worldMin);
             Vector3 localMax = volumeTransform.InverseTransformPoint(worldMax);
 
-            // Add and initialize Basic3DRectangle component with local coordinates
             Basic3DRectangle basic3DRectangle = rectangle.AddComponent<Basic3DRectangle>();
             basic3DRectangle.drawBorders = visibleRectangle;
             basic3DRectangle.InitializeBoundsLocal(localMin, localMax);
+
             return true;
         }
 
