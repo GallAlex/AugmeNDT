@@ -1,6 +1,4 @@
-﻿using Assets.Scripts.DataStructure;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -23,8 +21,7 @@ namespace AugmeNDT
         private List<GameObject> spheres = new List<GameObject>();
         private static float localScaleRateTo3DVectorVisualize;
         private static float localScaleRateTo3DCriticalPointsVisualize;
-        private static int arrowsPerFrame = 50;
-
+        private Transform sceneObjects;
         private Bounds cubeBounds;
         private bool IsUpdated()
         {
@@ -55,40 +52,7 @@ namespace AugmeNDT
             }
 
             createCriticalPointsInstance = CreateCriticalPoints.instance;
-        }
-
-        /// <summary>
-        /// Displays the vector field visualization using arrows
-        /// </summary>
-        private void ShowVectorField()
-        {
-            if (!arrows.Any() || IsUpdated())
-            {
-                SetContainer();
-                ClearArrows();
-
-                List<GradientDataset> gradientPoints = rectangle3DManager.GetGradientPoints();
-                if (gradientPoints.Count > 200)
-                {
-                    StartCoroutine(CreateArrowsCoroutine(gradientPoints));
-                }
-                else
-                {
-                    // For a small number of arrows, use the normal method
-                    arrows = VectorObjectVis.instance.CreateArrows(gradientPoints, container, localScaleRateTo3DVectorVisualize);
-                }
-            }
-            else
-            {
-                arrows.ForEach(x => x.SetActive(true));
-            }
-        }
-        /// <summary>
-        /// Hides the vector field visualization
-        /// </summary>
-        private void HideVectorField()
-        {
-            arrows.ForEach(x => x.SetActive(false));
+            sceneObjects = GameObject.Find("Scene Objects").transform;
         }
 
         private void ShowCriticalPoints(bool force = false)
@@ -118,7 +82,6 @@ namespace AugmeNDT
             bool createNewObjects = force || !arrows.Any() || !spheres.Any() || IsUpdated();
             if (createNewObjects)
             {
-                container = null;
                 SetContainer();
 
                 ClearArrows();
@@ -136,10 +99,16 @@ namespace AugmeNDT
         /// </summary>
         private void SetContainer()
         {
-            Destroy(GameObject.Find("3DVectorForce"));
+            if(container != null)
+            {
+                Destroy(container.gameObject);
+                Destroy(container);
+                container = null;
+            }
+
 
             container = new GameObject("3DVectorForce").transform;
-            container.transform.parent = rectangle3DManager.volumeTransform;
+            container.transform.SetParent(sceneObjects.transform, worldPositionStays: true);
         }
 
         /// <summary>
@@ -158,34 +127,6 @@ namespace AugmeNDT
         {
             spheres.ForEach(x => Destroy(x));
             spheres.Clear();
-        }
-
-        private IEnumerator CreateArrowsCoroutine(List<GradientDataset> gradientPoints)
-        {
-            // Total number of arrows
-            int totalArrows = gradientPoints.Count;
-            arrows = new List<GameObject>(totalArrows);
-
-            for (int i = 0; i < totalArrows; i += arrowsPerFrame)
-            {
-                // Get the subset of gradientPoints to process in this frame
-                List<GradientDataset> batchPoints = gradientPoints
-                    .Skip(i)
-                    .Take(Mathf.Min(arrowsPerFrame, totalArrows - i))
-                    .ToList();
-
-                // Create arrows for this batch
-                List<GameObject> batchArrows = VectorObjectVis.instance.CreateArrows(
-                    batchPoints, container, localScaleRateTo3DVectorVisualize);
-
-                // Add to the main list
-                arrows.AddRange(batchArrows);
-
-                // Move to the next frame
-                yield return null;
-            }
-
-            Debug.Log($"Created {arrows.Count} arrow glyphs");
         }
 
         #endregion private

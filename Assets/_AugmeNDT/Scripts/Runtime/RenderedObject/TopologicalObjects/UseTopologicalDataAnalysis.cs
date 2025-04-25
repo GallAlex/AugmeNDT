@@ -8,8 +8,6 @@ namespace AugmeNDT
 {
     public class UseTopologicalDataAnalysis : MonoBehaviour
     {
-        private Stopwatch scaleTimer = new Stopwatch();
-
         private void Start()
         {
             StartCoroutine(CheckForFiberRoutine());
@@ -46,7 +44,7 @@ namespace AugmeNDT
             }
         }
 
-        private void OnScaleStarted()
+        private void OnChangeStarted()
         {
             // Pause 2D flow objects during scaling
             if (RectangleManager.rectangleManager != null)
@@ -63,11 +61,8 @@ namespace AugmeNDT
             }
         }
 
-        private void OnScaleEnded()
+        private void OnChangeEnded()
         {
-            // Start timing the update process
-            scaleTimer.Reset();
-            scaleTimer.Start();
 
             // Update the topological data after scaling
             TopologicalDataObject.instance.UpdateData();
@@ -92,80 +87,23 @@ namespace AugmeNDT
             {
                 Rectangle3DManager.rectangle3DManager.UpdateRectangleAfterScaling();
 
-                if (StreamLine3D.Instance != null)
-                    StreamLine3D.Instance.ShowStreamLines();
-
                 if (Glyph3DVectorField.instance != null)
-                    Glyph3DVectorField.instance.ShowVectorsAndCriticalPoints(true);
+                    Glyph3DVectorField.instance.ShowVectorsAndCriticalPoints();
 
-                if (FlowObject3DManager.Instance != null)
-                    FlowObject3DManager.Instance.StartFlowObject();
-            }
-
-            // Stop timer and log the elapsed time for scaling update
-            scaleTimer.Stop();
-            UnityEngine.Debug.Log($"Scale update duration: {scaleTimer.ElapsedMilliseconds} ms");
-        }
-
-        private void OnMovingStarted(ManipulationEventData eventData)
-        {
-            // Pause flow objects when movement starts
-            if (RectangleManager.rectangleManager != null)
-            {
-                if (FlowObject2DManager.Instance != null)
-                    FlowObject2DManager.Instance.PauseFlowObject();
-            }
-
-            if (Rectangle3DManager.rectangle3DManager != null)
-            {
-                if (FlowObject3DManager.Instance != null)
-                    FlowObject3DManager.Instance.PauseFlowObject();
-            }
-        }
-
-        private void OnMovingEnded(ManipulationEventData eventData)
-        {
-            // Determine if the volume was rotated (by a minimal threshold)
-            bool rotated = Quaternion.Angle(TopologicalDataObject.instance.volumeTransform.rotation,
-                TopologicalDataObject.instance.lastVolumeRotation) >= 0.1f;
-
-            // Update topological data positions, scale, and rotation
-            TopologicalDataObject.instance.UpdateData();
-
-            // Update 2D visuals
-            if (RectangleManager.rectangleManager != null)
-            {
-                RectangleManager.rectangleManager.UpdateRectangleAfterScaling();
-
-                if (rotated)
-                {
-                    if (Glyph2DVectorField.Instance != null)
-                        Glyph2DVectorField.Instance.ShowArrows();
-
-                    if (StreamLine2D.Instance != null)
-                        StreamLine2D.Instance.ShowStreamLines(true);
-                }
-                if (FlowObject2DManager.Instance != null)
-                    FlowObject2DManager.Instance.StartFlowObject();
-            }
-
-            // Update 3D visuals
-            if (Rectangle3DManager.rectangle3DManager != null)
-            {
-                Rectangle3DManager.rectangle3DManager.UpdateRectangleAfterScaling();
-
-                if (rotated)
-                {
-                    if (Glyph3DVectorField.instance != null)
-                        Glyph3DVectorField.instance.ShowVectorsAndCriticalPoints();
-
-                    if (StreamLine3D.Instance != null)
-                        StreamLine3D.Instance.ShowStreamLines(true);
-                }
+                if (StreamLine3D.Instance != null)
+                    StreamLine3D.Instance.ShowStreamLines(true);
 
                 if (FlowObject3DManager.Instance != null)
                     FlowObject3DManager.Instance.StartFlowObject();
             }
         }
+
+        private void OnScaleStarted() => OnChangeStarted();
+
+        private void OnScaleEnded() => OnChangeEnded();
+
+        private void OnMovingStarted(ManipulationEventData eventData) => OnChangeStarted();
+
+        private void OnMovingEnded(ManipulationEventData eventData) => OnChangeEnded();
     }
 }

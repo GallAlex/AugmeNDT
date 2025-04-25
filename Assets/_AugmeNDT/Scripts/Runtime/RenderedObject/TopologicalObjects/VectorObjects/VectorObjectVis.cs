@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace AugmeNDT
@@ -30,8 +28,9 @@ namespace AugmeNDT
                 if (gradient.Magnitude == 0)
                     continue; // Skip zero-magnitude vectors to avoid unnecessary visuals
 
-                GameObject vector = CreateGameObject(gradient.Position.ToString(), container);
+                GameObject vector = new GameObject("arrow_" + gradient.Position.ToString());
                 vectors.Add(CreateVector(gradient, vector, scaleFactor));
+                vector.transform.SetParent(container, true);
             }
 
             return vectors;
@@ -51,22 +50,6 @@ namespace AugmeNDT
             }
 
             vectorCreator.SetVector(gradient.Position, gradient.Direction); // Configure direction and position
-            return vector;
-        }
-
-        /// <summary>
-        /// Creates a new empty GameObject for a vector and sets transform under the container.
-        /// </summary>
-        private GameObject CreateGameObject(string position, Transform parentContainer)
-        {
-            GameObject vector = new GameObject("arrow_" + position.ToString());
-            vector.transform.parent = parentContainer;
-
-            // Reset local transform
-            //vector.transform.localPosition = Vector3.zero;
-            //vector.transform.localRotation = Quaternion.identity;
-            //vector.transform.localScale = Vector3.one;
-
             return vector;
         }
     }

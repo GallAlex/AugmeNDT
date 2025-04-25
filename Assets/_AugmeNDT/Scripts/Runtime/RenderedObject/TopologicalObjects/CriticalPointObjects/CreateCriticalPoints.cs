@@ -48,7 +48,7 @@ namespace AugmeNDT
             criticalPoints.ForEach(cp => {
                 // Create and configure sphere object
                 GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                sphere.transform.parent = container;
+                sphere.transform.SetParent(container, worldPositionStays: true);
                 sphere.transform.position = cp.Position;
                 sphere.transform.localScale = Vector3.one * localScaleRate;
                 sphere.GetComponent<Renderer>().material.color = GetColorByType(cp.Type);
@@ -67,6 +67,8 @@ namespace AugmeNDT
         private void CreateInteractiveCriticalPoint(int id, int type, Vector3 position, Transform container, GameObject pointPrefab, float localScaleRate, Dictionary<int, List<GameObject>> criticalPointDictionary)
         {
             GameObject point = Instantiate(pointPrefab, container); // Instantiate under container
+            point.transform.SetParent(container, worldPositionStays: true);
+
             point.transform.localPosition = position;
 
             point.name = $"InteractiveCriticalPoint_{id}";
@@ -126,7 +128,7 @@ namespace AugmeNDT
             );
 
             // Attach the legend under the main container so it moves/scales with the data visualization
-            legendObject.transform.parent = container;
+            legendObject.transform.SetParent( container , true);
             legendObject.transform.localScale = Vector3.one * localScale;
 
             // Make it interactable in immersive systems

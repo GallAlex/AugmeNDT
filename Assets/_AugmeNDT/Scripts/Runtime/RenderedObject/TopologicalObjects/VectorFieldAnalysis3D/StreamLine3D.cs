@@ -1,5 +1,4 @@
-﻿using Assets.Scripts.DataStructure;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -40,8 +39,7 @@ namespace AugmeNDT
         private float averageMagnitude = 50f; // Will be updated from data
         private List<Vector3> criticalPointsPositions = new List<Vector3>();
         public Bounds cubeBounds;
-
-
+        private Transform sceneObjects;
 
         private void Awake()
         {
@@ -54,6 +52,7 @@ namespace AugmeNDT
         {
             // Get reference to rectangle manager
             rectangle3DManager = Rectangle3DManager.rectangle3DManager;
+            sceneObjects = GameObject.Find("Scene Objects").transform;
         }
 
         private bool IsUpdated()
@@ -72,7 +71,7 @@ namespace AugmeNDT
             Destroy(GameObject.Find("3DStreamLines"));
 
             container = new GameObject("3DStreamLines").transform;
-            container.transform.parent = rectangle3DManager.volumeTransform;
+            container.transform.parent = sceneObjects;
 
             gradientPoints = rectangle3DManager.GetGradientPoints();
             if (!gradientPoints.Any())

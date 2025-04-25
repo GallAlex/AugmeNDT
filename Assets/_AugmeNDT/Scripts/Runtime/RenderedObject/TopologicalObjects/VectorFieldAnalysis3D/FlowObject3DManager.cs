@@ -38,6 +38,7 @@ namespace AugmeNDT
         {
             // Get references to other managers
             streamLine3DInstance = StreamLine3D.Instance;
+            rectangle3DManager = Rectangle3DManager.rectangle3DManager;
         }
 
         #region Flow
