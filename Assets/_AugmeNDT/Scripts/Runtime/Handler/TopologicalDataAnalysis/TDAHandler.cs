@@ -59,7 +59,9 @@ namespace AugmeNDT
                 GameObject rectangleManagers3D = new GameObject("RectangleManagers3D");
                 rectangleManagers3D.transform.parent = sceneObjects;
                 rectangleManagers3D.AddComponent<Rectangle3DManager>();
+
                 rectangleManagers3D.AddComponent<Glyph3DVectorField>();
+                rectangleManagers3D.AddComponent<CriticalPoint3DVis>();
             }
 
             // AllVectorField: StreamLine, Flow and CriticalPoints
@@ -68,7 +70,9 @@ namespace AugmeNDT
                 GameObject rectangleManagers3D = new GameObject("RectangleManagers3D");
                 rectangleManagers3D.transform.parent = sceneObjects;
                 rectangleManagers3D.AddComponent<Rectangle3DManager>();
+
                 rectangleManagers3D.AddComponent<Glyph3DVectorField>();
+                rectangleManagers3D.AddComponent<CriticalPoint3DVis>();
                 rectangleManagers3D.AddComponent<StreamLine3D>();
                 rectangleManagers3D.AddComponent<FlowObject3DManager>();
             }
@@ -79,7 +83,9 @@ namespace AugmeNDT
                 GameObject rectangleManagers3D = new GameObject("RectangleManagers3D");
                 rectangleManagers3D.transform.parent = sceneObjects;
                 rectangleManagers3D.AddComponent<Rectangle3DManager>();
+
                 rectangleManagers3D.AddComponent<Glyph3DVectorField>();
+                rectangleManagers3D.AddComponent<CriticalPoint3DVis>();
                 rectangleManagers3D.AddComponent<StreamLine3D>();
                 rectangleManagers3D.AddComponent<FlowObject3DManager>();
             }
@@ -90,6 +96,7 @@ namespace AugmeNDT
                 GameObject rectangleManagers2D = new GameObject("RectangleManagers2D");
                 rectangleManagers2D.transform.parent = sceneObjects;
                 rectangleManagers2D.AddComponent<RectangleManager>();
+
                 rectangleManagers2D.AddComponent<Glyph2DVectorField>();
                 rectangleManagers2D.AddComponent<StreamLine2D>();
                 rectangleManagers2D.AddComponent<FlowObject2DManager>();
@@ -113,7 +120,8 @@ namespace AugmeNDT
                     MakeTransparent();
 
                 Rectangle3DManager.rectangle3DManager.InitializeRectangle();
-                Glyph3DVectorField.instance.ShowVectorsAndCriticalPoints();
+                Glyph3DVectorField.instance.Visualize();
+                CriticalPoint3DVis.instance.Visualize(true);
             }
 
             // AllVectorField: StreamLine, Flow and CriticalPoints
@@ -124,8 +132,8 @@ namespace AugmeNDT
 
                 Rectangle3DManager.rectangle3DManager.InitializeRectangle();
 
-                Glyph3DVectorField.instance.onlyVisCriticalPoints = true;
-                Glyph3DVectorField.instance.ShowVectorsAndCriticalPoints();
+                Glyph3DVectorField.instance.Visualize();
+                CriticalPoint3DVis.instance.Visualize(true);
                 StreamLine3D.Instance.ShowStreamLines(true);
                 FlowObject3DManager.Instance.StartFlowObject();
             }
@@ -140,7 +148,8 @@ namespace AugmeNDT
                 Rectangle3DManager.rectangle3DManager.visibleRectangle = true;
                 Rectangle3DManager.rectangle3DManager.InitializeRectangle();
 
-                Glyph3DVectorField.instance.ShowVectorsAndCriticalPoints();
+                Glyph3DVectorField.instance.Visualize();
+                CriticalPoint3DVis.instance.Visualize(true);
                 StreamLine3D.Instance.ShowStreamLines(true);
                 FlowObject3DManager.Instance.StartFlowObject();
             }
@@ -158,7 +167,7 @@ namespace AugmeNDT
             }
         }
 
-        public void MakeTransparent()
+        private void MakeTransparent()
         {
             // Find the volume object and adjust its material to make it transparent
             GameObject volumeObject = GameObject.Find("Volume");

@@ -5,24 +5,26 @@ using UnityEngine;
 namespace AugmeNDT
 {
     /// <summary>
-    /// Manages the visualization of 3D vector fields and critical points using glyphs
+    /// Manages the visualization of 3D vector fields and critical points using glyphs.
     /// </summary>
     public class Glyph3DVectorField : MonoBehaviour
     {
         public static Glyph3DVectorField instance;
 
         private static Rectangle3DManager rectangle3DManager;
-        private static CreateCriticalPoints createCriticalPointsInstance;
-        public bool onlyVisCriticalPoints = false;
 
         // Containers for visualization objects
         private Transform container;
         private List<GameObject> arrows = new List<GameObject>();
         private List<GameObject> spheres = new List<GameObject>();
+
         private static float localScaleRateTo3DVectorVisualize;
-        private static float localScaleRateTo3DCriticalPointsVisualize;
         private Transform sceneObjects;
         private Bounds cubeBounds;
+
+        /// <summary>
+        /// Checks whether the bounding box of the vector field has been updated.
+        /// </summary>
         private bool IsUpdated()
         {
             Bounds currentCubeBounds = rectangle3DManager.GetRectangleBounds();
@@ -40,79 +42,58 @@ namespace AugmeNDT
                 instance = this;
         }
 
-        public void Start()
+        private void Start()
         {
             if (rectangle3DManager == null)
             {
-                // Get reference to the rectangle manager
+                // Get reference to the Rectangle3DManager instance
                 rectangle3DManager = Rectangle3DManager.rectangle3DManager;
 
+                // Set default local scale rate for vector field glyphs
                 localScaleRateTo3DVectorVisualize = 0.3f;
-                localScaleRateTo3DCriticalPointsVisualize = 0.006f;
             }
 
-            createCriticalPointsInstance = CreateCriticalPoints.instance;
+            // Find and assign the main scene container
             sceneObjects = GameObject.Find("Scene Objects").transform;
         }
 
-        private void ShowCriticalPoints(bool force = false)
+        /// <summary>
+        /// Visualizes the 3D vector field using arrow glyphs.
+        /// </summary>
+        /// <param name="force">Force the regeneration of visualization objects even if already present.</param>
+        public void Visualize(bool force = false)
         {
-            if (force || !spheres.Any() || IsUpdated())
-            {
-                SetContainer();
-
-                ClearCriticalPoints();
-
-                spheres = createCriticalPointsInstance.CreateBasicCriticalPoint(rectangle3DManager.GetCriticalPoints(), container, localScaleRateTo3DCriticalPointsVisualize);
-            }
-            else
-            {
-                spheres.ForEach(x => x.SetActive(true));
-            }
-        }
-
-        public void ShowVectorsAndCriticalPoints(bool force = false)
-        {
-            if (onlyVisCriticalPoints)
-            {
-                ShowCriticalPoints(force);
-                return;
-            }
-
             bool createNewObjects = force || !arrows.Any() || !spheres.Any() || IsUpdated();
             if (createNewObjects)
             {
                 SetContainer();
-
                 ClearArrows();
-                ClearCriticalPoints();
 
-                spheres = createCriticalPointsInstance.CreateBasicCriticalPoint(rectangle3DManager.GetCriticalPoints(), container, localScaleRateTo3DCriticalPointsVisualize);
+                // Create new arrow glyphs based on gradient points
                 arrows = VectorObjectVis.instance.CreateArrows(rectangle3DManager.GetGradientPoints(), container, localScaleRateTo3DVectorVisualize);
             }
         }
 
-        #region private
+        #region private methods
 
         /// <summary>
-        /// Creates a new container GameObject under the fiber object to hold all vector visuals.
+        /// Creates a new container GameObject under the scene objects to hold all 3D vector glyphs.
         /// </summary>
         private void SetContainer()
         {
-            if(container != null)
+            if (container != null)
             {
                 Destroy(container.gameObject);
                 Destroy(container);
                 container = null;
             }
 
-
             container = new GameObject("3DVectorForce").transform;
             container.transform.SetParent(sceneObjects.transform, worldPositionStays: true);
         }
 
         /// <summary>
-        /// Clears all arrow objects from the scene
+        /// Clears all previously generated arrow glyphs from the scene.
         /// </summary>
         private void ClearArrows()
         {
@@ -120,16 +101,7 @@ namespace AugmeNDT
             arrows.Clear();
         }
 
-        /// <summary>
-        /// Clears all critical point sphere objects from the scene
-        /// </summary>
-        private void ClearCriticalPoints()
-        {
-            spheres.ForEach(x => Destroy(x));
-            spheres.Clear();
-        }
-
-        #endregion private
+        #endregion private methods
 
     }
 }

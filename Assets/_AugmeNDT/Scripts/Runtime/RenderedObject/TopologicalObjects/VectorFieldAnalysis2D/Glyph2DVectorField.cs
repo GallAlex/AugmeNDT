@@ -24,7 +24,6 @@ namespace AugmeNDT
 
         private static float localScaleRate;
         private static int arrowsPerFrame = 50;
-        private bool dontUseHideVolumeObjects = true;
 
         // References to other manager instances
         private static VectorObjectVis arrowObjectVisInstance;
@@ -74,15 +73,6 @@ namespace AugmeNDT
         }
 
         /// <summary>
-        /// Hides all vector field arrows by setting them inactive
-        /// </summary>
-        public void HideArrows()
-        {
-            foreach (var arrow in arrows)
-                arrow.SetActive(false);
-        }
-
-        /// <summary>
         /// Creates and displays arrow glyphs to visualize the vector field
         /// </summary>
         private void VisualizePoints()
@@ -98,26 +88,6 @@ namespace AugmeNDT
                 StartCoroutine(CreateArrowsCoroutine());
             else
                 arrows = arrowObjectVisInstance.CreateArrows(generatedGradientPoints, container, localScaleRate);
-        }
-
-        /// <summary>
-        /// Toggles visibility of volume objects while keeping vector field visible
-        /// </summary>
-        /// <param name="hideObjects">Whether to hide the volume objects</param>
-        public void HideVolumeObjects(bool hideObjects)
-        {
-            if (container == null || dontUseHideVolumeObjects)
-                return;
-
-            Renderer[] renderers = container.parent.GetComponentsInChildren<Renderer>(true);
-            foreach (var renderer in renderers)
-            {
-                // Skip streamline objects
-                if (renderer.gameObject.name.Contains("2DVectorForce"))
-                    continue;
-
-                renderer.enabled = !hideObjects;
-            }
         }
 
         /// <summary>
