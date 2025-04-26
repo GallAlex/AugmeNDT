@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace AugmeNDT
@@ -19,17 +18,24 @@ namespace AugmeNDT
         private CreateCriticalPoints createCriticalPointsInstance;
         private static Rectangle3DManager rectangle3DManager;
 
-        private GameObject pointPrefab;  // Prefab used for representing a critical point
         private float localScaleRate;
         private Transform sceneObjects;
         private Bounds cubeBounds;
         private int onlyShowThisType = -1;
+        private bool legendCreated = false;
+        private GameObject legend;
 
         private void Awake()
         {
             // Singleton pattern for global access
             instance = this;
-            pointPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/TopologicalVis/InteractiveCriticalPointPrefab");
+
+            // Find the main container for scene objects
+            sceneObjects = GameObject.Find("Scene Objects").transform;
+
+            GameObject poolObj = new GameObject("CriticalPointPoolManager");
+            poolObj.AddComponent<CriticalPointObjectPool>();
+            poolObj.transform.SetParent(sceneObjects);
         }
 
         private void Start()
@@ -44,9 +50,94 @@ namespace AugmeNDT
 
             if (createCriticalPointsInstance == null)
                 createCriticalPointsInstance = CreateCriticalPoints.instance;
+        }
 
-            // Find the main container for scene objects
-            sceneObjects = GameObject.Find("Scene Objects").transform;
+        public void Visualize(bool force = false)
+        {
+            bool needsUpdate = force || criticalPointDictionary.Count == 0 || IsUpdated();
+
+            if (needsUpdate)
+            {
+                // Clear existing visible objects and return them to the pool
+                ClearVisualization();
+
+                // Set up the container (update its position instead of recreating)
+                SetupContainer();
+
+                // Visualize critical points (using the pool)
+                criticalPointDictionary = CreateCriticalPointsUsingPool(rectangle3DManager.GetCriticalPoints(), container, localScaleRate);
+
+                if (legendCreated)
+                {
+                    legend.transform.position = rectangle3DManager.volumeTransform.position + new Vector3(0.2f, 0f, 0f);
+                }
+                else
+                {
+                    legend = createCriticalPointsInstance.CreateLegendColorBar(container, FilterCriticalPointsByType, localScaleRate);
+                    legendCreated = true;
+                }
+            }
+        }
+
+        private void ClearVisualization()
+        {
+            // Return all active critical points back to the pool
+            foreach (var pointList in criticalPointDictionary.Values)
+            {
+                foreach (var point in pointList)
+                {
+                    CriticalPointObjectPool.Instance.ReturnToPool(point);
+                }
+            }
+
+            criticalPointDictionary.Clear();
+        }
+
+        private void SetupContainer()
+        {
+            if (container == null)
+            {
+                container = new GameObject("CriticalPointObjects").transform;
+                container.SetParent(sceneObjects, worldPositionStays: true);
+            }
+
+            // Update the container's position (instead of fully recreating)
+            // If needed, other transform settings can also be adjusted here
+        }
+
+        private Dictionary<int, List<GameObject>> CreateCriticalPointsUsingPool(List<CriticalPointDataset> criticalPoints, Transform container, float localScaleRate)
+        {
+            Dictionary<int, List<GameObject>> result = new Dictionary<int, List<GameObject>>();
+
+            foreach (var point in criticalPoints)
+            {
+                // Get an object from the pool
+                GameObject obj = CriticalPointObjectPool.Instance.GetPooledObject();
+
+                // Configure the object
+                obj.transform.SetParent(container, false);
+                obj.transform.localPosition = point.Position;
+                obj.transform.localScale = Vector3.one * localScaleRate;
+                obj.name = $"InteractiveCriticalPoint_{point.ID}";
+
+                // Set the renderer
+                obj.GetComponent<Renderer>().material.color = createCriticalPointsInstance.GetColorByType(point.Type);
+
+                // Set the critical point component
+                InteractiveCriticalPoint cp = obj.GetComponent<InteractiveCriticalPoint>();
+                cp.pointID = point.ID;
+                cp.pointType = point.Type;
+                cp.pointPosition = point.Position;
+
+                // Add to the dictionary
+                if (!result.ContainsKey(point.Type))
+                {
+                    result[point.Type] = new List<GameObject>();
+                }
+                result[point.Type].Add(obj);
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -96,21 +187,6 @@ namespace AugmeNDT
         }
 
         /// <summary>
-        /// Creates and visualizes critical points stored in TopologicalDataObject.
-        /// </summary>
-        /// <param name="force">Force recreation of critical points even if already created.</param>
-        public void Visualize(bool force = false)
-        {
-            bool createNewObjects = force || criticalPointDictionary.Count == 0 || IsUpdated();
-            if (createNewObjects)
-            {
-                SetContainer();
-                criticalPointDictionary = createCriticalPointsInstance.CreateInteractiveCriticalPoint(rectangle3DManager.GetCriticalPoints(), container, pointPrefab, localScaleRate);
-                var legend = createCriticalPointsInstance.CreateLegendColorBar(container, FilterCriticalPointsByType, localScaleRate);
-            }
-        }
-
-        /// <summary>
         /// Checks whether the bounds have changed since last visualization.
         /// </summary>
         private bool IsUpdated()
@@ -123,20 +199,5 @@ namespace AugmeNDT
             return true;
         }
 
-        /// <summary>
-        /// Creates a new container GameObject under the scene objects to hold all critical point visualizations.
-        /// </summary>
-        private void SetContainer()
-        {
-            if (container != null)
-            {
-                Destroy(container.gameObject);
-                Destroy(container);
-                container = null;
-            }
-
-            container = new GameObject("CriticalPointObjects").transform;
-            container.transform.SetParent(sceneObjects.transform, worldPositionStays: true);
-        }
     }
 }

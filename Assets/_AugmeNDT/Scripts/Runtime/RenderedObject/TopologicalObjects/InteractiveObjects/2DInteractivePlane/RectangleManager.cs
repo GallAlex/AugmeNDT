@@ -3,9 +3,7 @@
     using UnityEngine;
     using System.Collections.Generic;
     using System.Linq;
-    using Assets.Scripts.DataStructure;
     using System;
-    using System.Diagnostics;
 
     /// <summary>
     /// Manages the 2D rectangle for visualization and analysis of vector field data on a plane
