@@ -1,12 +1,5 @@
-﻿using Assets.Scripts.DataStructure;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.UIElements;
 
 namespace AugmeNDT
 {
@@ -81,7 +74,7 @@ namespace AugmeNDT
         /// <summary>
         /// Returns the appropriate color for the given critical point type.
         /// </summary>
-        private Color GetColorByType(int type)
+        public Color GetColorByType(int type)
         {
             return typeColors.ContainsKey(type) ? typeColors[type] : Color.gray; // Fallback color for unknown types
         }

@@ -1,5 +1,4 @@
-﻿using Assets.Scripts.DataStructure;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace AugmeNDT
