@@ -14,13 +14,15 @@ namespace AugmeNDT
         [Header("Data Paths")]
         public string mhdPath = @"C:/Users/ozdag/OneDrive/Desktop/smallDATA/fibers.mhd";
 
-        [Header("User Interface")]
-        public bool showTopologicalUI = true;
-
         [Header("Critical Point Color Settings")]
         public Color sinkColor = Color.blue;
-        public Color majorPointColor = Color.red;
-        public Color saddlePointColor = Color.yellow;
+        public Color sourcePointColor = Color.red;
+        public Color saddle1_PointColor = Color.yellow;
+        public Color saddle2_PointColor = new Color(1.0f, 0.5f, 0.0f);
+
+        [Header("Vector Field Color Settings")]
+        public Color ColorOfVectorObject = Color.blue;
+        public Color ColorOfStreamLines = Color.white;
 
         [Header("Settings of All Vector Field_Vector Visualization")]
         public float localScaleRate = 0.3f;

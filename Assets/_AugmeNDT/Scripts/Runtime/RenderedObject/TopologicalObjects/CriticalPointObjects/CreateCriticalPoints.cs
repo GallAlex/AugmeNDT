@@ -6,28 +6,33 @@ namespace AugmeNDT
     public class CreateCriticalPoints : MonoBehaviour
     {
         public static CreateCriticalPoints instance;
-
+        
         // Define text labels for each critical point type
         private string[] labels = { "Minimum", "1-Saddle", "2-Saddle", "Maximum" };
 
         private Dictionary<int, Color> typeColors = new Dictionary<int, Color>()
         {
-            { 0, Color.blue },   // Minimum
-            { 1, Color.yellow }, // 1-Saddle
+            { 0, Color.blue },                  // Minimum
+            { 1, Color.yellow },                // 1-Saddle
             { 2, new Color(1.0f, 0.5f, 0.0f) }, // 2-Saddle
-            { 3, Color.red },    // Maximum
+            { 3, Color.red },                   // Maximum
         };
 
         private void Awake()
         {
-            instance = this; // Singleton setup for global access
+            // Singleton setup for global access
+            instance = this; 
+        }
+
+        public void CustomizeTypeColors(Dictionary<int, Color> customizedTypeColors)
+        {
+            typeColors = customizedTypeColors;
         }
 
         public Dictionary<int, List<GameObject>> CreateInteractiveCriticalPoint(List<CriticalPointDataset> criticalPoints,Transform container, GameObject pointPrefab, float localScaleRate = 1.0f, bool createLegendColorBar = true)
         {
             Dictionary<int, List<GameObject>> criticalPointDictionary = new Dictionary<int, List<GameObject>>();
             criticalPoints.ForEach(point => {
-
                 CreateInteractiveCriticalPoint(point.ID, point.Type, point.Position, container, pointPrefab, localScaleRate, criticalPointDictionary);
             });
 

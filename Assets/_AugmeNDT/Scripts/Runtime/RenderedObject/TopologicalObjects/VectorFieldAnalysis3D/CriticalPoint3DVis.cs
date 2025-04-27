@@ -73,6 +73,15 @@ namespace AugmeNDT
                 }
                 else
                 {
+                    Dictionary<int, Color> typeColors = new Dictionary<int, Color>()
+                    {
+                        { 0, rectangle3DManager.config.sinkColor },              // Minimum
+                        { 1, rectangle3DManager.config.saddle1_PointColor },     // 1-Saddle
+                        { 2, rectangle3DManager.config.saddle2_PointColor },     // 2-Saddle
+                        { 3, rectangle3DManager.config.sourcePointColor },       // Maximum
+                    };
+
+                    createCriticalPointsInstance.CustomizeTypeColors(typeColors);
                     legend = createCriticalPointsInstance.CreateLegendColorBar(container, FilterCriticalPointsByType, localScaleRate);
                     legendCreated = true;
                 }
