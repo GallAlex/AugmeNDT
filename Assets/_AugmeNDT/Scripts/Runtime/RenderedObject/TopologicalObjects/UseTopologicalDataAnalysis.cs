@@ -60,9 +60,8 @@ namespace AugmeNDT
             }
         }
 
-        private void OnChangeEnded()
+        private void OnChangeEnded(bool isScaling = true)
         {
-
             // Update the topological data after scaling
             TopologicalDataObject.instance.UpdateData();
 
@@ -70,13 +69,14 @@ namespace AugmeNDT
             if (RectangleManager.rectangleManager != null)
             {
                 RectangleManager.rectangleManager.UpdateRectangleAfterScaling();
+                if (isScaling)
+                {
+                    if (Glyph2DVectorField.Instance != null)
+                        Glyph2DVectorField.Instance.ShowArrows();
 
-                if (Glyph2DVectorField.Instance != null)
-                    Glyph2DVectorField.Instance.ShowArrows();
-
-                if (StreamLine2D.Instance != null)
-                    StreamLine2D.Instance.ShowStreamLines(true);
-
+                    if (StreamLine2D.Instance != null)
+                        StreamLine2D.Instance.ShowStreamLines(true);
+                }
                 if (FlowObject2DManager.Instance != null)
                     FlowObject2DManager.Instance.StartFlowObject();
             }
@@ -85,19 +85,20 @@ namespace AugmeNDT
             if (Rectangle3DManager.rectangle3DManager != null)
             {
                 Rectangle3DManager.rectangle3DManager.UpdateRectangleAfterScaling();
-
                 if (Glyph3DVectorField.instance != null)
                     Glyph3DVectorField.instance.Visualize();
 
-                if (CriticalPoint3DVis.instance != null)
-                    CriticalPoint3DVis.instance.Visualize(true);
+                if (isScaling)
+                {
+                    if (CriticalPoint3DVis.instance != null)
+                        CriticalPoint3DVis.instance.Visualize(true);
 
-                if (StreamLine3D.Instance != null)
-                    StreamLine3D.Instance.ShowStreamLines(true);
+                    if (StreamLine3D.Instance != null)
+                        StreamLine3D.Instance.ShowStreamLines(true);
+                }
 
                 if (FlowObject3DManager.Instance != null)
                     FlowObject3DManager.Instance.StartFlowObject();
-
             }
         }
 
@@ -107,6 +108,6 @@ namespace AugmeNDT
 
         private void OnMovingStarted(ManipulationEventData eventData) => OnChangeStarted();
 
-        private void OnMovingEnded(ManipulationEventData eventData) => OnChangeEnded();
+        private void OnMovingEnded(ManipulationEventData eventData) => OnChangeEnded(isScaling: false);
     }
 }

@@ -98,7 +98,7 @@ namespace AugmeNDT
             if (container == null)
             {
                 container = new GameObject("CriticalPointObjects").transform;
-                container.SetParent(sceneObjects, worldPositionStays: true);
+                container.SetParent(rectangle3DManager.volumeTransform, worldPositionStays: true);
             }
 
             // Update the container's position (instead of fully recreating)
@@ -115,8 +115,8 @@ namespace AugmeNDT
                 GameObject obj = CriticalPointObjectPool.Instance.GetPooledObject();
 
                 // Configure the object
-                obj.transform.SetParent(container, false);
-                obj.transform.localPosition = point.Position;
+                obj.transform.SetParent(container, true);
+                obj.transform.position = point.Position;  // world position olarak ayarla
                 obj.transform.localScale = Vector3.one * localScaleRate;
                 obj.name = $"InteractiveCriticalPoint_{point.ID}";
 

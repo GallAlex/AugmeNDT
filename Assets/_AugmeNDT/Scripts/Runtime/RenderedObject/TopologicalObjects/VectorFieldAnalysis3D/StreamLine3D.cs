@@ -19,8 +19,6 @@ namespace AugmeNDT
         private List<GameObject> LineObjs = new List<GameObject>();
         public Transform container;
 
-        private Material streamlineMaterial; // Material for LineRenderer
-
         [Header("Streamline Parameters")]
         public int numStreamlines = 350; // Number of streamlines to draw
         public float streamlineStepSize = 0.0033f; // Step size for integration
@@ -39,20 +37,29 @@ namespace AugmeNDT
         private float averageMagnitude = 50f; // Will be updated from data
         private List<Vector3> criticalPointsPositions = new List<Vector3>();
         public Bounds cubeBounds;
-        private Transform sceneObjects;
+
+        private StreamLineObjectPool streamLinePool;
 
         private void Awake()
         {
             // Initialize singleton instance
             Instance = this;
-            streamlineMaterial = (Material)Resources.Load("Materials/StreamLine");
+
+            // Get or create a reference to the object pool
+            streamLinePool = FindObjectOfType<StreamLineObjectPool>();
+            if (streamLinePool == null)
+            {
+                GameObject poolObj = new GameObject("StreamLineObjectPool");
+                poolObj.transform.SetParent(GameObject.Find("Scene Objects").transform);
+                
+                streamLinePool = poolObj.AddComponent<StreamLineObjectPool>();
+            }
         }
 
         private void Start()
         {
             // Get reference to rectangle manager
             rectangle3DManager = Rectangle3DManager.rectangle3DManager;
-            sceneObjects = GameObject.Find("Scene Objects").transform;
         }
 
         /// <summary>
@@ -86,15 +93,20 @@ namespace AugmeNDT
 
         private bool PrepareInstance()
         {
-            DestroyLines();
-            Destroy(GameObject.Find("3DStreamLines"));
-
-            container = new GameObject("3DStreamLines").transform;
-            container.transform.parent = sceneObjects;
+            ReturnAllLinesToPool();
 
             gradientPoints = rectangle3DManager.GetGradientPoints();
             if (!gradientPoints.Any())
                 return false;
+
+            // If the 3DStreamLines container does not exist, create it
+            if (container != null)
+            {
+                Destroy(GameObject.Find("3DStreamLines"));
+            }
+
+            container = new GameObject("3DStreamLines").transform;
+            container.transform.SetParent(rectangle3DManager.volumeTransform, true);
 
             cubeBounds = rectangle3DManager.GetRectangleBounds();
             averageMagnitude = gradientPoints.Average(gradient => gradient.Magnitude);
@@ -463,38 +475,47 @@ namespace AugmeNDT
             return (k1 + 2f * k2 + 2f * k3 + k4) / 6f;
         }
 
-        /// <summary>
-        /// Creates a LineRenderer GameObject for visualizing a streamline
-        /// </summary>
         private void CreateLineRenderer(List<Vector3> points)
         {
             if (points.Count < 2) return;
 
-            GameObject lineObj = new GameObject("Streamline");
-            lineObj.transform.parent = container;
-            LineRenderer lr = lineObj.AddComponent<LineRenderer>();
+            // Get a line object from the object pool
+            GameObject lineObj = streamLinePool.GetPooledObject();
+            lineObj.transform.SetParent(container, true);
 
-            // Set base properties
-            lr.material = streamlineMaterial;
-            lr.positionCount = points.Count;
-            lr.SetPositions(points.ToArray());
-            lr.useWorldSpace = false;
+            LineRenderer lr = lineObj.GetComponent<LineRenderer>();
 
-            // Use a single color (blue) and smaller width
+            // Convert world coordinates to local coordinates
+            List<Vector3> localPoints = new List<Vector3>(points.Count);
+            foreach (var point in points)
+            {
+                // Convert each point to the line object's local coordinate system
+                localPoints.Add(lineObj.transform.InverseTransformPoint(point));
+            }
+
+            // Set up the line renderer
+            lr.positionCount = localPoints.Count;
+            lr.SetPositions(localPoints.ToArray());
+
+            // Color and width settings
             lr.startColor = lr.endColor = streamlineColor;
             lr.startWidth = lr.endWidth = streamlineWidth;
 
-            // Add to list and set parent
+            // Add to the list of active used objects
             LineObjs.Add(lineObj);
         }
 
-        /// <summary>
-        /// Destroys all line objects and clears the list
-        /// </summary>
-        private void DestroyLines()
+        private void ReturnAllLinesToPool()
         {
-            LineObjs.ForEach(x => Destroy(x));
-            LineObjs.Clear();
+            if (streamLinePool != null)
+            {
+                foreach (var lineObj in LineObjs)
+                {
+                    // Instead of destroying, return to the object pool
+                    streamLinePool.ReturnToPool(lineObj);
+                }
+                LineObjs.Clear();
+            }
         }
 
         #endregion

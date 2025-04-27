@@ -28,6 +28,7 @@ namespace AugmeNDT
         private static RectangleManager rectangleManager;
         private static Transform container;
         private Material streamlineMaterial;
+        private StreamLineObjectPool streamLinePool;
 
         /// <summary>
         /// Initializes the singleton instance and default values for visualization
@@ -42,8 +43,17 @@ namespace AugmeNDT
             numStreamlines = 200;                      // Fewer streamlines
             streamLineStepSize = 0.007f;              // Smaller step size
             maxStreamlineSteps = 300;                // More steps
-            streamlineWidth = 0.01f;                // Much thinner lines
+            streamlineWidth = 0.0009f;                // Much thinner lines
             minDistanceToGeneratePoissonDiskSeeds = 0.01f; // Slightly larger minimum distance
+
+            // Object pool referansını al veya oluştur
+            streamLinePool = FindObjectOfType<StreamLineObjectPool>();
+            if (streamLinePool == null)
+            {
+                GameObject poolObj = new GameObject("StreamLineObjectPool");
+                poolObj.transform.SetParent(GameObject.Find("Scene Objects").transform);
+                streamLinePool = poolObj.AddComponent<StreamLineObjectPool>();
+            }
         }
 
         /// <summary>
@@ -89,7 +99,9 @@ namespace AugmeNDT
             //Depends on rectangleManager. Therefore it can not call in start()
             SetContainer();
 
-            DestroyLines();
+            //Return to pool instead of Destroy the lines
+            ReturnAllLinesToPool();
+
             gradientPoints.Clear();
             gradientPoints = rectangleManager.GetGradientPoints();
 
@@ -415,23 +427,18 @@ namespace AugmeNDT
             if (points.Count < 2)
                 return;
 
-            GameObject lineObj = new GameObject("SliceStreamLine");
-            lineObj.transform.parent = container;
+            // Get line object from the pool
+            GameObject lineObj = streamLinePool.GetPooledObject();
+            lineObj.transform.SetParent(container);
 
-            LineRenderer lr = lineObj.AddComponent<LineRenderer>();
-            lr.material = streamlineMaterial;
-            lr.positionCount = points.Count;
-            lr.SetPositions(points.ToArray());
+            LineRenderer lr = lineObj.GetComponent<LineRenderer>();
             lr.useWorldSpace = false;
 
-            // Thinner lines
-            lr.startWidth = lr.endWidth = 0.0009f;  // Much thinner value
-
-            // Change alignment to be parallel with the section
-            // Use TransformZ instead of View - this provides a ribbon-like appearance
+            // Adjust line renderer to 2D specifications
+            lr.positionCount = points.Count;
+            lr.SetPositions(points.ToArray());
+            lr.startWidth = lr.endWidth = streamlineWidth;
             lr.alignment = LineAlignment.TransformZ;
-
-            // Add anti-aliasing
             lr.numCapVertices = 2;
             lr.numCornerVertices = 2;
 
@@ -450,13 +457,16 @@ namespace AugmeNDT
             container.transform.parent = rectangleManager.GetInteractiveRectangleContainer();
         }
 
-        /// <summary>
-        /// Destroys all line objects and clears the list
-        /// </summary>
-        private void DestroyLines()
+        private void ReturnAllLinesToPool()
         {
-            lineObjs.ForEach(x => Destroy(x));
-            lineObjs.Clear();
+            if (streamLinePool != null)
+            {
+                foreach (var lineObj in lineObjs)
+                {
+                    streamLinePool.ReturnToPool(lineObj);
+                }
+                lineObjs.Clear();
+            }
         }
 
         #endregion private

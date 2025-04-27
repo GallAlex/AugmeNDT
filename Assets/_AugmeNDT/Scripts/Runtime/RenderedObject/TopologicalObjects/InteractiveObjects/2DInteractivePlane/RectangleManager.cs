@@ -170,6 +170,7 @@
             Destroy(volumeTransform.Find("Rectangle").gameObject);
             rectangle = null;
             CreateRectangle();
+
             UpdateInstance();
         }
 

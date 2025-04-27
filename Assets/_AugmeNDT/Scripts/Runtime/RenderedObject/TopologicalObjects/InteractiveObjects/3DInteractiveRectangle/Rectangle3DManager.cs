@@ -42,13 +42,7 @@ namespace AugmeNDT
         private void Awake()
         {
             rectangle3DManager = this;
-        }
 
-        /// <summary>
-        /// Initializes references and loads configuration values.
-        /// </summary>
-        private void Start()
-        {
             if (topologicalDataObjectInstance == null)
             {
                 topologicalDataObjectInstance = TopologicalDataObject.instance;

@@ -101,6 +101,17 @@ namespace AugmeNDT
                 rectangleManagers2D.AddComponent<StreamLine2D>();
                 rectangleManagers2D.AddComponent<FlowObject2DManager>();
             }
+
+            // 2D visualization---streamline flow
+            if (topologyConfigData.SceneNumber == 9 || topologyConfigData.SceneNumber == 10)
+            {
+                GameObject rectangleManagers2D = new GameObject("RectangleManagers2D");
+                rectangleManagers2D.transform.parent = sceneObjects;
+                rectangleManagers2D.AddComponent<RectangleManager>();
+
+                rectangleManagers2D.AddComponent<StreamLine2D>();
+                rectangleManagers2D.AddComponent<FlowObject2DManager>();
+            }
         }
 
         private IEnumerator InitializeAfterStart()
@@ -162,6 +173,18 @@ namespace AugmeNDT
 
                 RectangleManager.rectangleManager.ShowRectangle();
                 Glyph2DVectorField.Instance.ShowArrows();
+                StreamLine2D.Instance.ShowStreamLines();
+                FlowObject2DManager.Instance.StartFlowObject();
+            }
+
+            // 2D visualization---streamline flow
+            if (topologyConfigData.SceneNumber == 9 || topologyConfigData.SceneNumber == 10)
+            {
+                if (topologyConfigData.SceneNumber == 10)
+                    MakeTransparent();
+
+                RectangleManager.rectangleManager.ShowRectangle();
+
                 StreamLine2D.Instance.ShowStreamLines();
                 FlowObject2DManager.Instance.StartFlowObject();
             }
