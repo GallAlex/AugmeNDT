@@ -19,7 +19,6 @@ namespace AugmeNDT
         private List<GameObject> spheres = new List<GameObject>();
 
         private static float localScaleRateTo3DVectorVisualize;
-        private Transform sceneObjects;
         private Bounds cubeBounds;
 
         /// <summary>
@@ -52,9 +51,6 @@ namespace AugmeNDT
                 // Set default local scale rate for vector field glyphs
                 localScaleRateTo3DVectorVisualize = 0.3f;
             }
-
-            // Find and assign the main scene container
-            sceneObjects = GameObject.Find("Scene Objects").transform;
         }
 
         /// <summary>
@@ -87,9 +83,9 @@ namespace AugmeNDT
                 Destroy(container);
                 container = null;
             }
-
+            
             container = new GameObject("3DVectorForce").transform;
-            container.transform.SetParent(sceneObjects.transform, worldPositionStays: true);
+            container.transform.SetParent(GameObject.Find("RectangleVisual").transform, worldPositionStays: true);
         }
 
         /// <summary>

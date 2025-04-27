@@ -85,11 +85,11 @@ namespace AugmeNDT
             if (Rectangle3DManager.rectangle3DManager != null)
             {
                 Rectangle3DManager.rectangle3DManager.UpdateRectangleAfterScaling();
-                if (Glyph3DVectorField.instance != null)
-                    Glyph3DVectorField.instance.Visualize();
-
                 if (isScaling)
                 {
+                    if (Glyph3DVectorField.instance != null)
+                        Glyph3DVectorField.instance.Visualize();
+
                     if (CriticalPoint3DVis.instance != null)
                         CriticalPoint3DVis.instance.Visualize(true);
 

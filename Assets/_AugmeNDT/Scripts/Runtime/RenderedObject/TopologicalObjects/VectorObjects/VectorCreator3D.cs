@@ -66,11 +66,11 @@
         private void CreateLineObject(Vector3 normalizedDirection, Vector3 localPosition, Vector3 localScale)
         {
             lineObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            lineObject.transform.SetParent(transform);
+            lineObject.transform.SetParent(transform,true);
             lineObject.name = "VectorLine";
 
             // Position and orient the cylinder in local space
-            lineObject.transform.localPosition = localPosition;
+            lineObject.transform.position = localPosition;
             lineObject.transform.localScale = localScale;
 
             // Align the cylinder's Y-axis with the vector direction
@@ -83,10 +83,10 @@
         private void CreateVectorHead(Vector3 normalizedDirection, Vector3 lineEnd)
         {
             arrowHeadObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            arrowHeadObject.transform.SetParent(transform);
+            arrowHeadObject.transform.SetParent(transform,true);
             arrowHeadObject.name = "VectorArrowHead";
 
-            arrowHeadObject.transform.localPosition = lineEnd;
+            arrowHeadObject.transform.position = lineEnd;
             arrowHeadObject.transform.localScale = new Vector3(arrowHeadSize, arrowHeadSize, arrowHeadSize);
 
             // Morph cube into a pyramid by manipulating vertices
