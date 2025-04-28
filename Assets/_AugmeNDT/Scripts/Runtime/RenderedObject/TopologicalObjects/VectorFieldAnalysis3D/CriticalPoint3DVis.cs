@@ -73,15 +73,6 @@ namespace AugmeNDT
                 }
                 else
                 {
-                    Dictionary<int, Color> typeColors = new Dictionary<int, Color>()
-                    {
-                        { 0, rectangle3DManager.config.sinkColor },              // Minimum
-                        { 1, rectangle3DManager.config.saddle1_PointColor },     // 1-Saddle
-                        { 2, rectangle3DManager.config.saddle2_PointColor },     // 2-Saddle
-                        { 3, rectangle3DManager.config.sourcePointColor },       // Maximum
-                    };
-
-                    createCriticalPointsInstance.CustomizeTypeColors(typeColors);
                     legend = createCriticalPointsInstance.CreateLegendColorBar(container, FilterCriticalPointsByType, localScaleRate);
                     legendCreated = true;
                 }
@@ -108,10 +99,18 @@ namespace AugmeNDT
             {
                 container = new GameObject("CriticalPointObjects").transform;
                 container.SetParent(rectangle3DManager.volumeTransform, worldPositionStays: true);
-            }
 
-            // Update the container's position (instead of fully recreating)
-            // If needed, other transform settings can also be adjusted here
+
+                Dictionary<int, Color> typeColors = new Dictionary<int, Color>()
+                    {
+                        { 0, rectangle3DManager.config.sinkColor },              // Minimum
+                        { 1, rectangle3DManager.config.saddle1_PointColor },     // 1-Saddle
+                        { 2, rectangle3DManager.config.saddle2_PointColor },     // 2-Saddle
+                        { 3, rectangle3DManager.config.sourcePointColor },       // Maximum
+                    };
+
+                createCriticalPointsInstance.CustomizeTypeColors(typeColors);
+            }
         }
 
         private Dictionary<int, List<GameObject>> CreateCriticalPointsUsingPool(List<CriticalPointDataset> criticalPoints, Transform container, float localScaleRate)

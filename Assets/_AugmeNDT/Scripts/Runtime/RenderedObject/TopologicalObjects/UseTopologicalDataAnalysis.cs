@@ -26,6 +26,10 @@ namespace AugmeNDT
                     // Only add component if it doesn't already exist
                     if (volume.GetComponent<TopologicalDataObject>() == null)
                     {
+                        GameObject dataLoadingMenu = GameObject.Find("DataLoadingMenu");
+                        volume.transform.parent.SetPositionAndRotation(dataLoadingMenu.transform.position,
+                            new Quaternion(0,0,0,0));
+
                         volume.AddComponent<TopologicalDataObject>();
 
                         BoundsControl boundsControl = volume.transform.parent.gameObject.GetComponent<BoundsControl>();
