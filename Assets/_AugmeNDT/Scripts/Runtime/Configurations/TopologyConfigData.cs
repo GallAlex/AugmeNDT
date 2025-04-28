@@ -6,7 +6,7 @@ namespace AugmeNDT
     public class TopologyConfigData
     {
         [Header("Scene Number")]
-        public int SceneNumber = 2;
+        public int SceneNumber = 8;
 
         [Header("MHD Dimensions")]
         public Vector3 mhdDimension = new Vector3(24, 16, 45);
@@ -18,10 +18,10 @@ namespace AugmeNDT
         public Color sinkColor = Color.blue;
         public Color sourcePointColor = Color.red;
         public Color saddle1_PointColor = Color.yellow;
-        public Color saddle2_PointColor = new Color(1.0f, 0.5f, 0.0f);
+        public Color saddle2_PointColor = Color.magenta;
 
         [Header("Vector Field Color Settings")]
-        public Color ColorOfVectorObject = Color.blue;
+        public Color ColorOfVectorObject = Color.gray;
         public Color ColorOfStreamLines = Color.white;
 
         [Header("Settings of All Vector Field_Vector Visualization")]
@@ -45,6 +45,8 @@ namespace AugmeNDT
 
         [Header("2D Slice Visualization")]
         public float Slice2D_VectorSizeRate = 0.2f;
+        public float Slice2D_2DFlowSpheres_BaseRate = 0.04f;
+        public bool Slice2D_2DFlowSpheres_UseDynamicSice = true;
 
     }
 }

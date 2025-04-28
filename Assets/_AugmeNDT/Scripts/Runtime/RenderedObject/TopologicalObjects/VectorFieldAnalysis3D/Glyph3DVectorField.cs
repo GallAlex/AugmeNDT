@@ -66,7 +66,7 @@ namespace AugmeNDT
                 ClearArrows();
 
                 // Create new arrow glyphs based on gradient points
-                arrows = VectorObjectVis.instance.CreateArrows(rectangle3DManager.GetGradientPoints(), container, localScaleRateTo3DVectorVisualize);
+                arrows = VectorObjectVis.instance.CreateArrows(rectangle3DManager.GetGradientPoints(), container, localScaleRateTo3DVectorVisualize, rectangle3DManager.config.ColorOfVectorObject);
             }
         }
 

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace AugmeNDT
@@ -23,10 +19,17 @@ namespace AugmeNDT
         public int numSpheres; // Number of spheres to maintain simultaneously
         private bool enableSpheres = true;
         private bool stopFlowObjects = true;
+        private GameObject spherePrefab; // Sphere prefab
+        private Vector3 parentScale;
+
+        /// <summary>
+        /// Config settings
+        /// </summary>
         private float sphereSpeed;
         private float lifetime;
-        private float localScale;
-        private GameObject spherePrefab; // Sphere prefab
+        private Vector3 localScale = Vector3.one;
+        private float baseScale = 0.04f; // Base scale for spheres
+        private bool useDynamicSize = true;
 
         /// <summary>
         /// Initializes the singleton instance and loads the sphere prefab resource
@@ -46,6 +49,10 @@ namespace AugmeNDT
             // Get references to other managers
             rectangleManager = RectangleManager.rectangleManager;
             streamLine2DInstance = StreamLine2D.Instance;
+
+            var config = rectangleManager.config;
+            baseScale = config.Slice2D_2DFlowSpheres_BaseRate;
+            useDynamicSize = config.Slice2D_2DFlowSpheres_UseDynamicSice;
         }
 
         /// <summary>
@@ -67,25 +74,35 @@ namespace AugmeNDT
         /// </summary>
         private void SetContainer()
         {
-            if (container != null)
-                return;
+            //Initial setup
+            if (container == null){
 
-            sphereSpeed = 0.01f;
-            lifetime = 15f;
-            numSpheres = 8;
-            localScale = 0.03f;
+                sphereSpeed = 0.01f;
+                lifetime = 15f;
+                numSpheres = 8;
+                localScale = Vector3.one * baseScale;
 
-            container = new GameObject("2DMovingSpheres").transform;
-            Transform rectangleTransform = rectangleManager.GetInteractiveRectangleContainer();
-            container.parent = rectangleTransform;
+                container = new GameObject("2DMovingSpheres").transform;
+                container.parent = rectangleManager.volumeTransform;
 
-            // Scale inversely to parent to maintain consistent visual size
-            Vector3 parentScale = rectangleTransform.gameObject.transform.localScale;
-            container.transform.localScale = new Vector3(
-                1f / parentScale.x,
-                1f / parentScale.y,
-                1f / parentScale.z
-            );
+                // Scale inversely to parent to maintain consistent visual size
+                parentScale = rectangleManager.volumeTransform.gameObject.transform.localScale;
+                container.transform.localScale = new Vector3(
+                    1f / parentScale.x,
+                    1f / parentScale.y,
+                    1f / parentScale.z
+                );
+            }
+
+            if (useDynamicSize)
+            {
+                parentScale = rectangleManager.volumeTransform.gameObject.transform.localScale;
+                localScale = new Vector3(
+                    baseScale * parentScale.x,
+                    baseScale * parentScale.y,
+                    baseScale * parentScale.z
+                );
+            }
         }
 
         /// <summary>
@@ -131,7 +148,7 @@ namespace AugmeNDT
                         // Instantiate sphere at selected position
                         GameObject sphere = Instantiate(spherePrefab, startPosition, Quaternion.identity);
                         sphere.transform.parent = container;
-                        sphere.transform.localScale = Vector3.one * localScale; // Uniform small scale
+                        sphere.transform.localScale = localScale; // Uniform small scale
                         sphere.tag = "2DMovingSphere"; // Tag for tracking spheres
 
                         // Initialize flow behavior on the sphere

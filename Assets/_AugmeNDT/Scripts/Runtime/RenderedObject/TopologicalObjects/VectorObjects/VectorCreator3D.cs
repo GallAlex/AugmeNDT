@@ -28,6 +28,8 @@
         [Range(0f, 1f)]
         public float linePortion = 0.7f;  // The percentage of the vector dedicated to the line (rest is arrow head)
 
+        public Color glyphColor = Color.blue;
+
         private GameObject lineObject;
         private GameObject arrowHeadObject;
 
@@ -123,8 +125,8 @@
             Material lineMaterial = new Material(Shader.Find("Standard"));
             Material arrowMaterial = new Material(Shader.Find("Standard"));
 
-            lineMaterial.color = Color.blue;
-            arrowMaterial.color = Color.blue;
+            lineMaterial.color = glyphColor;
+            arrowMaterial.color = glyphColor;
 
             Renderer lineRenderer = lineObject.GetComponent<Renderer>();
             Renderer arrowRenderer = arrowHeadObject.GetComponent<Renderer>();

@@ -60,6 +60,8 @@ namespace AugmeNDT
         {
             // Get reference to rectangle manager
             rectangle3DManager = Rectangle3DManager.rectangle3DManager;
+            TopologyConfigData config = rectangle3DManager.config;
+            streamlineColor = config.ColorOfStreamLines;
         }
 
         /// <summary>

@@ -84,7 +84,7 @@ namespace AugmeNDT
 
                 // Create arrows for this batch
                 List<GameObject> batchArrows = arrowObjectVisInstance.CreateArrows(
-                    batchPoints, container, localScaleRate);
+                    batchPoints, container, localScaleRate, topologicalDataInstance.config.ColorOfVectorObject);
 
                 // Add to the main list
                 arrows.AddRange(batchArrows);

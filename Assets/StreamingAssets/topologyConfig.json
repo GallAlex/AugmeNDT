@@ -1,28 +1,45 @@
 {
-    "SceneNumber": 4,
+    "SceneNumber": 8,
     "mhdDimension": {
         "x": 24.0,
         "y": 16.0,
         "z": 45.0
     },
     "mhdPath": "C:/Users/ozdag/OneDrive/Desktop/smallDATA/fibers.mhd",
-    "showTopologicalUI": false,
     "sinkColor": {
         "r": 0.0,
         "g": 0.0,
         "b": 1.0,
         "a": 1.0
     },
-    "majorPointColor": {
+    "sourcePointColor": {
         "r": 1.0,
         "g": 0.0,
         "b": 0.0,
         "a": 1.0
     },
-    "saddlePointColor": {
+    "saddle1_PointColor": {
         "r": 1.0,
         "g": 0.9215686321258545,
         "b": 0.01568627543747425,
+        "a": 1.0
+    },
+    "saddle2_PointColor": {
+        "r": 1.0,
+        "g": 0.0,
+        "b": 1.0,
+        "a": 1.0
+    },
+    "ColorOfVectorObject": {
+        "r": 0.5,
+        "g": 0.5,
+        "b": 0.5,
+        "a": 1.0
+    },
+    "ColorOfStreamLines": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
         "a": 1.0
     },
     "localScaleRate": 0.30000001192092898,
@@ -38,5 +55,7 @@
     "cp_dynamic_maxPointCount": 10000,
     "cp_dynamic_minPointCount": 400,
     "cp_dynamic_scaleChangeThreshold": 0.10000000149011612,
-    "Slice2D_VectorSizeRate": 0.20000000298023225
+    "Slice2D_VectorSizeRate": 0.20000000298023225,
+    "Slice2D_2DFlowSpheres_BaseRate": 0.03999999910593033,
+    "Slice2D_2DFlowSpheres_UseDynamicSice": true
 }

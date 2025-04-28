@@ -22,12 +22,13 @@ namespace AugmeNDT
 
         [Header("Visual Settings")]
         public float streamlineWidth; // Reduced width for all streamlines
+        
+        public Color streamlineColor = Color.white; // Single color for all streamlines
 
         public List<GradientDataset> gradientPoints = new List<GradientDataset>();
         private List<GameObject> lineObjs = new List<GameObject>();
         private static RectangleManager rectangleManager;
         private static Transform container;
-        private Material streamlineMaterial;
         private StreamLineObjectPool streamLinePool;
 
         /// <summary>
@@ -39,11 +40,10 @@ namespace AugmeNDT
             if (Instance == null)
                 Instance = this;
 
-            streamlineMaterial = (Material)Resources.Load("Materials/StreamLine");
-            numStreamlines = 200;                      // Fewer streamlines
-            streamLineStepSize = 0.007f;              // Smaller step size
-            maxStreamlineSteps = 300;                // More steps
-            streamlineWidth = 0.0009f;                // Much thinner lines
+            numStreamlines = 200;                          // Fewer streamlines
+            streamLineStepSize = 0.007f;                   // Smaller step size
+            maxStreamlineSteps = 300;                      // More steps
+            streamlineWidth = 0.0009f;                     // Much thinner lines
             minDistanceToGeneratePoissonDiskSeeds = 0.01f; // Slightly larger minimum distance
 
             // Object pool referansını al veya oluştur
@@ -66,6 +66,9 @@ namespace AugmeNDT
             {
                 rectangleManager = RectangleManager.rectangleManager;
             }
+
+            var config = rectangleManager.config;
+            streamlineColor = config.ColorOfStreamLines;
         }
 
         /// <summary>
@@ -441,6 +444,8 @@ namespace AugmeNDT
             lr.alignment = LineAlignment.TransformZ;
             lr.numCapVertices = 2;
             lr.numCornerVertices = 2;
+
+            lr.startColor = lr.endColor = streamlineColor;
 
             lineObjs.Add(lineObj);
         }

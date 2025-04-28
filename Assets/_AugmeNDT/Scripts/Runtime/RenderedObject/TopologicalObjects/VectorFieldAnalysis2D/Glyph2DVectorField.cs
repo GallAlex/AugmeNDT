@@ -87,7 +87,7 @@ namespace AugmeNDT
             if (generatedGradientPoints.Count > 100)
                 StartCoroutine(CreateArrowsCoroutine());
             else
-                arrows = arrowObjectVisInstance.CreateArrows(generatedGradientPoints, container, localScaleRate);
+                arrows = arrowObjectVisInstance.CreateArrows(generatedGradientPoints, container, localScaleRate,rectangleManager.config.ColorOfVectorObject);
         }
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace AugmeNDT
                     .ToList();
 
                 // Create arrows for this batch
-                List<GameObject> batchArrows = arrowObjectVisInstance.CreateArrows(batchPoints, container, localScaleRate);
+                List<GameObject> batchArrows = arrowObjectVisInstance.CreateArrows(batchPoints, container, localScaleRate, rectangleManager.config.ColorOfVectorObject);
 
                 // Add to the main list
                 arrows.AddRange(batchArrows);
