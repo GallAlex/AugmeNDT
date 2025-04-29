@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.MixedReality.Toolkit.UI.BoundsControl;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -295,6 +296,35 @@ namespace AugmeNDT
                     );
                 }
             }
+        }
+        
+        public List<PersistencePoint> LoadPersistenceCSV(string filename)
+        {
+            string fullPath = ttkResults + filename;
+
+            // Read the CSV data
+            string[] lines = File.ReadAllLines(fullPath);
+
+            List<PersistencePoint> persistencePoints = new List<PersistencePoint>();
+
+            // Skip header (first line)
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+                if (string.IsNullOrEmpty(line)) continue;
+
+                string[] values = line.Split(',');
+                if (values.Length < 7) continue; // Ensure we have enough columns
+
+                // Extract only the required parameters: Birth and Persistence
+                if (float.TryParse(values[1], out float birth) &&
+                    float.TryParse(values[6], out float persistence))
+                {
+                    persistencePoints.Add(new PersistencePoint(birth, persistence));
+                }
+            }
+
+            return persistencePoints;
         }
     }
 }

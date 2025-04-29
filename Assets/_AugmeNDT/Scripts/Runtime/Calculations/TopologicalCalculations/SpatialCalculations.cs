@@ -41,6 +41,10 @@ namespace AugmeNDT
             else
                 return direction;
         }
+        public static Vector3 GetInterpolatedGradient(Vector3 position, List<GradientDataset> gradientPoints)
+        {
+            return InterpolateGradientAtPositionOptimized(position, gradientPoints);
+        }
 
         /// <summary>
         /// Optimized method to interpolate a gradient at a given position using nearest neighbors.

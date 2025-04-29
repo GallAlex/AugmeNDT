@@ -1,5 +1,5 @@
 {
-    "SceneNumber": 8,
+    "SceneNumber": 1,
     "mhdDimension": {
         "x": 24.0,
         "y": 16.0,
@@ -54,8 +54,5 @@
     "cp_dynamic_localScaleFactor": 0.006000000052154064,
     "cp_dynamic_maxPointCount": 10000,
     "cp_dynamic_minPointCount": 400,
-    "cp_dynamic_scaleChangeThreshold": 0.10000000149011612,
-    "Slice2D_VectorSizeRate": 0.20000000298023225,
-    "Slice2D_2DFlowSpheres_BaseRate": 0.03999999910593033,
-    "Slice2D_2DFlowSpheres_UseDynamicSice": true
+    "cp_dynamic_scaleChangeThreshold": 0.10000000149011612
 }

@@ -6,7 +6,7 @@ namespace AugmeNDT
     public class TopologyConfigData
     {
         [Header("Scene Number")]
-        public int SceneNumber = 8;
+        public int SceneNumber = 2;
 
         [Header("MHD Dimensions")]
         public Vector3 mhdDimension = new Vector3(24, 16, 45);
@@ -42,11 +42,5 @@ namespace AugmeNDT
         public int cp_dynamic_maxPointCount = 10000;
         public int cp_dynamic_minPointCount = 400;
         public float cp_dynamic_scaleChangeThreshold = 0.1f;
-
-        [Header("2D Slice Visualization")]
-        public float Slice2D_VectorSizeRate = 0.2f;
-        public float Slice2D_2DFlowSpheres_BaseRate = 0.04f;
-        public bool Slice2D_2DFlowSpheres_UseDynamicSice = true;
-
     }
 }

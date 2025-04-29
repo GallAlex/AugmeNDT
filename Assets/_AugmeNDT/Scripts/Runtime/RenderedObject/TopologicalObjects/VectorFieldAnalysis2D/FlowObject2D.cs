@@ -1,12 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace AugmeNDT
 {
     /// <summary>
-    /// Controls a 2D flow object that moves along gradient streamlines
+    /// Controls a 2D flow object that moves along predefined streamlines
     /// </summary>
     public class FlowObject2D : MonoBehaviour
     {
@@ -14,7 +13,7 @@ namespace AugmeNDT
         private static RectangleManager rectangleManager;
 
         /// <summary>
-        /// Initiates the flow simulation along gradient streamlines
+        /// Initiates the flow simulation along gradient streamlines using rungeKutta4
         /// </summary>
         /// <param name="gradientPoints">List of gradient data points defining the flow field</param>
         /// <param name="cubeBounds">Boundary constraints for the flow simulation</param>
@@ -23,14 +22,30 @@ namespace AugmeNDT
         /// <param name="lifetime">Maximum duration in seconds before the flow object is destroyed</param>
         public void StartFlow(List<GradientDataset> gradientPoints, Bounds cubeBounds,
             float streamlineStepSize, float sphereSpeed, float lifetime)
-
         {
             rectangleManager = RectangleManager.rectangleManager;
             StartCoroutine(StartMoveSphere(gradientPoints, cubeBounds, streamlineStepSize, sphereSpeed, lifetime));
         }
 
         /// <summary>
-        /// Coroutine that handles the movement of the object along gradient streamlines
+        /// Initiates the flow simulation along a predefined streamline path
+        /// </summary>
+        /// <param name="streamlinePoints">Array of points defining the streamline path</param>
+        /// <param name="gradientPoints">List of gradient data points as fallback</param>
+        /// <param name="cubeBounds">Boundary constraints for the flow simulation</param>
+        /// <param name="streamlineStepSize">Step size for calculations</param>
+        /// <param name="sphereSpeed">Movement speed of the flow object</param>
+        /// <param name="lifetime">Maximum duration in seconds before the flow object is destroyed</param>
+        public void StartFlowAlongStreamline(Vector3[] streamlinePoints, List<GradientDataset> gradientPoints,
+            Bounds cubeBounds, float streamlineStepSize, float sphereSpeed, float lifetime)
+        {
+            rectangleManager = RectangleManager.rectangleManager;
+            StartCoroutine(MoveAlongStreamline(streamlinePoints, gradientPoints, cubeBounds,
+                streamlineStepSize, sphereSpeed, lifetime));
+        }
+
+        /// <summary>
+        /// Coroutine that handles the movement of the object along gradient streamlines using RungeKutta4
         /// </summary>
         /// <param name="gradientPoints">List of gradient data points defining the flow field</param>
         /// <param name="cubeBounds">Boundary constraints for the flow simulation</param>
@@ -82,6 +97,76 @@ namespace AugmeNDT
                 currentPosition = nextPosition;
                 elapsedTime += Time.deltaTime;
 
+                yield return null;
+            }
+
+            // Destroy the object when flow completes or times out
+            Destroy(gameObject);
+        }
+
+        /// <summary>
+        /// Coroutine that handles the movement of the object along a predefined streamline path
+        /// </summary>
+        /// <param name="streamlinePoints">Array of points defining the streamline path</param>
+        /// <param name="gradientPoints">List of gradient data points (as fallback)</param>
+        /// <param name="cubeBounds">Boundary constraints for the flow simulation</param>
+        /// <param name="streamlineStepSize">Step size (for reference only)</param>
+        /// <param name="sphereSpeed">Movement speed of the flow object</param>
+        /// <param name="lifetime">Maximum duration in seconds before the flow object is destroyed</param>
+        /// <returns>IEnumerator for coroutine processing</returns>
+        private IEnumerator MoveAlongStreamline(Vector3[] streamlinePoints, List<GradientDataset> gradientPoints,
+            Bounds cubeBounds, float streamlineStepSize, float sphereSpeed, float lifetime)
+        {
+            if (streamlinePoints == null || streamlinePoints.Length < 2)
+            {
+                // Fallback to gradient-based movement if streamline is invalid
+                yield return StartCoroutine(StartMoveSphere(gradientPoints, cubeBounds, streamlineStepSize, sphereSpeed, lifetime));
+                yield break;
+            }
+
+            // Start from the beginning of the streamline
+            int currentPointIndex = 0;
+            float elapsedTime = 0f;
+
+            while (currentPointIndex < streamlinePoints.Length - 1 && elapsedTime < lifetime)
+            {
+                // Calculate current and next points in the streamline
+                Vector3 currentPoint = streamlinePoints[currentPointIndex];
+                Vector3 nextPoint = streamlinePoints[currentPointIndex + 1];
+
+                // Calculate direction vector between current and next point
+                Vector3 direction = (nextPoint - currentPoint).normalized;
+
+                // Calculate distance to move this frame
+                float distanceToMove = sphereSpeed * Time.deltaTime;
+                float distanceToNextPoint = Vector3.Distance(transform.position, nextPoint);
+
+                // Check if we would reach or pass the next point
+                if (distanceToMove >= distanceToNextPoint)
+                {
+                    // Move directly to the next point and advance to the next segment
+                    transform.position = nextPoint;
+                    currentPointIndex++;
+
+                    // If we reached the end of the streamline, break the loop
+                    if (currentPointIndex >= streamlinePoints.Length - 1)
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    // Move along the direction by the calculated distance
+                    transform.position = Vector3.MoveTowards(transform.position, nextPoint, distanceToMove);
+                }
+
+                // Exit if object goes outside the boundary mesh (safety check)
+                if (!rectangleManager.IsPointInsideMesh(transform.position))
+                {
+                    break;
+                }
+
+                elapsedTime += Time.deltaTime;
                 yield return null;
             }
 

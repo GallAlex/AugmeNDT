@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace AugmeNDT
@@ -26,167 +27,63 @@ namespace AugmeNDT
         private void InitialTopologicalGameObjects()
         {
             Transform sceneObjects = GameObject.Find("Scene Objects").transform;
+            Transform dataVisGroup = GameObject.Find("DataVisGroup_0").transform;
 
-            //Loads necessary classes for all scenes
+            // Loads necessary classes for all scenes
             GameObject commonObjectsForTopologicalVis = new GameObject("CommonObjectsForTopologicalVis");
             commonObjectsForTopologicalVis.transform.parent = sceneObjects;
             commonObjectsForTopologicalVis.AddComponent<VectorObjectVis>();
             commonObjectsForTopologicalVis.AddComponent<CreateCriticalPoints>();
 
-            ManageScenes(sceneObjects);
-            StartCoroutine(InitializeAfterStart());
+            ManageScenes(sceneObjects, dataVisGroup);
+            StartCoroutine(InitializeAfterStart(dataVisGroup));
         }
 
-        private void ManageScenes(Transform sceneObjects)
+        private void ManageScenes(Transform sceneObjects, Transform dataVisGroup)
         {
-            // Only for fibers.raw dataset
-            if (topologyConfigData.SceneNumber == -1)
-            {
-                return;
-            }
-
-            // Dynamic All VectorField
-            if (topologyConfigData.SceneNumber == 0)
-            {
-                GameObject vectorFieldObject = new GameObject("VectorFieldObject");
-                vectorFieldObject.transform.parent = sceneObjects;
-                vectorFieldObject.AddComponent<VectorFieldDynamicObjectVis>();
-            }
-
-            // AllVectorField: Vectors and CriticalPoints
+            // 2D visualizations
             if (topologyConfigData.SceneNumber == 1 || topologyConfigData.SceneNumber == 2)
             {
-                GameObject rectangleManagers3D = new GameObject("RectangleManagers3D");
-                rectangleManagers3D.transform.parent = sceneObjects;
-                rectangleManagers3D.AddComponent<Rectangle3DManager>();
+                // Create pool for fast rendering
+                GameObject poolObj = new GameObject("StreamLineObjectPool");
+                poolObj.transform.SetParent(sceneObjects.transform);
+                poolObj.AddComponent<StreamLineObjectPool>();
 
-                rectangleManagers3D.AddComponent<Glyph3DVectorField>();
-                rectangleManagers3D.AddComponent<CriticalPoint3DVis>();
-            }
+                // Create Interactive object pool for fast rendering
+                GameObject interactivePoolObj = new GameObject("InteractiveStreamLineObjectPool");
+                interactivePoolObj.transform.SetParent(sceneObjects.transform);
+                interactivePoolObj.AddComponent<InteractiveStreamLineObjectPool>();
 
-            // AllVectorField: StreamLine, Flow and CriticalPoints
-            if (topologyConfigData.SceneNumber == 3 || topologyConfigData.SceneNumber == 4)
-            {
-                GameObject rectangleManagers3D = new GameObject("RectangleManagers3D");
-                rectangleManagers3D.transform.parent = sceneObjects;
-                rectangleManagers3D.AddComponent<Rectangle3DManager>();
-
-                rectangleManagers3D.AddComponent<Glyph3DVectorField>();
-                rectangleManagers3D.AddComponent<CriticalPoint3DVis>();
-                rectangleManagers3D.AddComponent<StreamLine3D>();
-                rectangleManagers3D.AddComponent<FlowObject3DManager>();
-            }
-
-            // Predetermined area: StreamLine, Flow and CriticalPoints
-            if (topologyConfigData.SceneNumber == 5 || topologyConfigData.SceneNumber == 6)
-            {
-                GameObject rectangleManagers3D = new GameObject("RectangleManagers3D");
-                rectangleManagers3D.transform.parent = sceneObjects;
-                rectangleManagers3D.AddComponent<Rectangle3DManager>();
-
-                rectangleManagers3D.AddComponent<Glyph3DVectorField>();
-                rectangleManagers3D.AddComponent<CriticalPoint3DVis>();
-                rectangleManagers3D.AddComponent<StreamLine3D>();
-                rectangleManagers3D.AddComponent<FlowObject3DManager>();
-            }
-
-            // 2D visualizations
-            if (topologyConfigData.SceneNumber == 7 || topologyConfigData.SceneNumber == 8)
-            {
+                // Create main object
                 GameObject rectangleManagers2D = new GameObject("RectangleManagers2D");
-                rectangleManagers2D.transform.parent = sceneObjects;
+                rectangleManagers2D.transform.parent = sceneObjects.transform;
                 rectangleManagers2D.AddComponent<RectangleManager>();
 
+                // Add essential components
+                rectangleManagers2D.AddComponent<StreamLine2D>();
+                rectangleManagers2D.AddComponent<FlowObject2DManager>();
                 rectangleManagers2D.AddComponent<Glyph2DVectorField>();
-                rectangleManagers2D.AddComponent<StreamLine2D>();
-                rectangleManagers2D.AddComponent<FlowObject2DManager>();
+                rectangleManagers2D.AddComponent<DuplicateStreamLine2D>();
             }
 
-            // 2D visualization---streamline flow
-            if (topologyConfigData.SceneNumber == 9 || topologyConfigData.SceneNumber == 10)
-            {
-                GameObject rectangleManagers2D = new GameObject("RectangleManagers2D");
-                rectangleManagers2D.transform.parent = sceneObjects;
-                rectangleManagers2D.AddComponent<RectangleManager>();
-
-                rectangleManagers2D.AddComponent<StreamLine2D>();
-                rectangleManagers2D.AddComponent<FlowObject2DManager>();
-            }
         }
 
-        private IEnumerator InitializeAfterStart()
+        private IEnumerator InitializeAfterStart(Transform dataVisGroup)
         {
             yield return null;
 
-            // Dynamic All VectorField
-            if (topologyConfigData.SceneNumber == 0)
-            {
-                VectorFieldDynamicObjectVis.instance.ShowVectorField();
-            }
-
-            // AllVectorField and CriticalPoints
+            // 2D visualization
             if (topologyConfigData.SceneNumber == 1 || topologyConfigData.SceneNumber == 2)
             {
                 if (topologyConfigData.SceneNumber == 2)
                     MakeTransparent();
 
-                Rectangle3DManager.rectangle3DManager.InitializeRectangle();
-                Glyph3DVectorField.instance.Visualize();
-                CriticalPoint3DVis.instance.Visualize(true);
-            }
-
-            // AllVectorField: StreamLine, Flow and CriticalPoints
-            if (topologyConfigData.SceneNumber == 3 || topologyConfigData.SceneNumber == 4)
-            {
-                if (topologyConfigData.SceneNumber == 4)
-                    MakeTransparent();
-
-                Rectangle3DManager.rectangle3DManager.InitializeRectangle();
-
-                Glyph3DVectorField.instance.Visualize();
-                CriticalPoint3DVis.instance.Visualize(true);
-                StreamLine3D.Instance.ShowStreamLines(true);
-                FlowObject3DManager.Instance.StartFlowObject();
-            }
-
-            // Predetermined area: StreamLine, Flow and CriticalPoints
-            if (topologyConfigData.SceneNumber == 5 || topologyConfigData.SceneNumber == 6)
-            {
-                if (topologyConfigData.SceneNumber == 6)
-                    MakeTransparent();
-
-                Rectangle3DManager.rectangle3DManager.useAllData = false;
-                Rectangle3DManager.rectangle3DManager.visibleRectangle = true;
-                Rectangle3DManager.rectangle3DManager.InitializeRectangle();
-
-                Glyph3DVectorField.instance.Visualize();
-                CriticalPoint3DVis.instance.Visualize(true);
-                StreamLine3D.Instance.ShowStreamLines(true);
-                FlowObject3DManager.Instance.StartFlowObject();
-            }
-
-            // 2D visualization
-            if (topologyConfigData.SceneNumber == 7 || topologyConfigData.SceneNumber == 8)
-            {
-                if (topologyConfigData.SceneNumber == 8)
-                    MakeTransparent();
-
-                RectangleManager.rectangleManager.ShowRectangle();
-                Glyph2DVectorField.Instance.ShowArrows();
-                StreamLine2D.Instance.ShowStreamLines();
-                FlowObject2DManager.Instance.StartFlowObject();
-            }
-
-            // 2D visualization---streamline flow
-            if (topologyConfigData.SceneNumber == 9 || topologyConfigData.SceneNumber == 10)
-            {
-                if (topologyConfigData.SceneNumber == 10)
-                    MakeTransparent();
-
                 RectangleManager.rectangleManager.ShowRectangle();
 
-                StreamLine2D.Instance.ShowStreamLines();
+                StreamLine2D.Instance.Visualize();
                 FlowObject2DManager.Instance.StartFlowObject();
+
+                dataVisGroup.AddComponent<PersistenceDiagramGenerator>();
             }
         }
 

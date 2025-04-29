@@ -73,35 +73,7 @@
         /// </summary>
         public void ShowRectangle()
         {
-            if (rectangle == null || rectangle.gameObject == null)
-            {
-                CreateRectangle();
-            }
-            else
-            {
-                IsUpdated();
-                rectangle.gameObject.SetActive(true);
-            }
-        }
-
-        /// <summary>
-        /// Hides the rectangle and its corner handles
-        /// </summary>
-        public void HideRectangle()
-        {
-            if (rectangle != null && rectangle.gameObject != null)
-            {
-                rectangle.gameObject.SetActive(false);
-            }
-        }
-
-        /// <summary>
-        /// Returns the transform that contains the interactive rectangle for parenting purposes
-        /// </summary>
-        /// <returns>The parent transform for interactive rectangle objects</returns>
-        public Transform GetInteractiveRectangleContainer()
-        {
-            return volumeTransform;
+            CreateRectangle();
         }
 
         /// <summary>
@@ -110,10 +82,8 @@
         /// <returns>True if the rectangle has been updated (position, size, or orientation changed)</returns>
         public bool IsUpdated()
         {
-            bool IsUpdated = false;
-
             if (rectangle == null)
-                return IsUpdated;
+                return false;
 
             // Check if corners have changed
             Vector3[] currentCorners = rectangle.GetCornerPositions();
@@ -123,7 +93,7 @@
                 {
                     if (Vector3.Distance(currentCorners[i], lastKnownCorners[i]) > 0.001f)
                     {
-                        IsUpdated = true;
+                        return true;
                     }
                 }
             }
@@ -132,7 +102,7 @@
             Vector3 currentNormal = rectangle.GetNormal();
             if (Vector3.Angle(currentNormal, lastKnownNormal) > 0.1f)
             {
-                IsUpdated = true;
+                return true;
             }
 
             // Check if bounds have changed
@@ -140,10 +110,10 @@
             if (Vector3.Distance(currentBounds.center, lastKnownBounds.center) > 0.001f ||
                 Vector3.Distance(currentBounds.size, lastKnownBounds.size) > 0.001f)
             {
-                IsUpdated = true;
+                return true;
             }
 
-            return IsUpdated;
+            return false;
         }
 
         /// <summary>
@@ -250,20 +220,6 @@
         }
 
         /// <summary>
-        /// Creates a test sphere at the specified position for debugging
-        /// </summary>
-        /// <param name="position">Position to place the sphere</param>
-        /// <returns>The created sphere GameObject</returns>
-        private GameObject TEST(Vector3 position)
-        {
-            // Create and configure sphere object
-            GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            sphere.transform.position = position;
-            sphere.transform.localScale = Vector3.one * 0.003f;
-            return sphere;
-        }
-
-        /// <summary>
         /// Calculates gradient points on the rectangle plane
         /// </summary>
         private void CalculateGradientPoints()
@@ -358,47 +314,6 @@
         }
 
         /// <summary>
-        /// Old method to create a rectangle - kept for reference
-        /// </summary>
-        private void CreateRectangleOLD()
-        {
-            if (rectangle != null)
-                return;
-
-            // Get the BoxCollider component
-            BoxCollider boxCollider = volumeTransform.gameObject.GetComponent<BoxCollider>();
-            if (boxCollider == null)
-            {
-                UnityEngine.Debug.LogError("BoxCollider not found on the volumetric object!");
-                return;
-            }
-
-            // Get the world-space center and extents
-            Vector3 center = boxCollider.bounds.center;
-            Vector3 extents = boxCollider.bounds.extents;
-
-            // Calculate the four corners of the rectangle in the x-z plane
-            // We're keeping y constant at the center's y value
-            List<Vector3> corners = new List<Vector3>();
-
-            // Bottom-left (min X, center Y, min Z)
-            corners.Add(new Vector3(center.x - extents.x, center.y, center.z - extents.z));
-
-            // Bottom-right (max X, center Y, min Z)
-            corners.Add(new Vector3(center.x + extents.x, center.y, center.z - extents.z));
-
-            // Top-right (max X, center Y, max Z)
-            corners.Add(new Vector3(center.x + extents.x, center.y, center.z + extents.z));
-
-            // Top-left (min X, center Y, max Z)
-            corners.Add(new Vector3(center.x - extents.x, center.y, center.z + extents.z));
-
-            // Add the InteractiveRectangle component
-            rectangle = volumeTransform.gameObject.AddComponent<InteractiveRectangle>();
-            // Initialize the rectangle with our calculated corners
-            rectangle.InitializeWithCorners(corners.ToArray());
-        }
-        /// <summary>
         /// Creates a new interactive rectangle with corners based on the volume's box collider
         /// </summary>
         private void CreateRectangle()
@@ -445,6 +360,7 @@
             // Initialize the rectangle with our calculated corners
             rectangle.InitializeWithCorners(worldCorners.ToArray());
         }
+
         /// <summary>
         /// Gets the minimum and maximum values of the rectangle in each axis
         /// </summary>

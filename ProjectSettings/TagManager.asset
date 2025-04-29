@@ -18,6 +18,7 @@ TagManager:
   - Moving3DSphere
   - Rectangle2D
   - Rectangle3D
+  - Interactive2DSphere
   layers:
   - Default
   - TransparentFX

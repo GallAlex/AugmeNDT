@@ -12,6 +12,15 @@ namespace AugmeNDT
             instance = this; // Singleton setup for global access
         }
 
+        public GameObject CreateArrow(GradientDataset gradient, Transform container, float scaleFactor = 1.0f, Color? customColor = null)
+        {
+            GameObject vector = new GameObject("arrow_" + gradient.Position.ToString());
+            vector = CreateVector(gradient, vector, scaleFactor, customColor);
+            vector.transform.SetParent(container, true);
+            return vector;
+        }
+
+
         /// <summary>
         /// Creates visual arrow representations for a list of gradient vectors.
         /// </summary>

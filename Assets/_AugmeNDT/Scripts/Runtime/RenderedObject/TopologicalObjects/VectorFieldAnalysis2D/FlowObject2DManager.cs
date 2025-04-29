@@ -28,7 +28,7 @@ namespace AugmeNDT
         private float sphereSpeed;
         private float lifetime;
         private Vector3 localScale = Vector3.one;
-        private float baseScale = 0.04f; // Base scale for spheres
+        private float baseScale = 0.03f; // Base scale for spheres
         private bool useDynamicSize = true;
 
         /// <summary>
@@ -49,10 +49,6 @@ namespace AugmeNDT
             // Get references to other managers
             rectangleManager = RectangleManager.rectangleManager;
             streamLine2DInstance = StreamLine2D.Instance;
-
-            var config = rectangleManager.config;
-            baseScale = config.Slice2D_2DFlowSpheres_BaseRate;
-            useDynamicSize = config.Slice2D_2DFlowSpheres_UseDynamicSice;
         }
 
         /// <summary>
@@ -75,7 +71,8 @@ namespace AugmeNDT
         private void SetContainer()
         {
             //Initial setup
-            if (container == null){
+            if (container == null)
+            {
 
                 sphereSpeed = 0.01f;
                 lifetime = 15f;
@@ -136,24 +133,45 @@ namespace AugmeNDT
                 int currentSpheres = GameObject.FindGameObjectsWithTag("2DMovingSphere").Length;
 
                 // Spawn additional spheres if needed to maintain the target count
-                if (currentSpheres < numSpheres)
+                if (currentSpheres < numSpheres && streamLine2DInstance.lineObjs.Count > 0)
                 {
                     int spheresToSpawn = numSpheres - currentSpheres;
 
                     for (int i = 0; i < spheresToSpawn; i++)
                     {
-                        // Pick a random starting position from gradient points
-                        Vector3 startPosition = generatedGradientPoints[UnityEngine.Random.Range(0, generatedGradientPoints.Count())].Position;
+                        // Get a random streamline from the available lines
+                        GameObject randomLineObj = streamLine2DInstance.lineObjs[Random.Range(0, streamLine2DInstance.lineObjs.Count)];
+                        LineRenderer lineRenderer = randomLineObj.GetComponent<LineRenderer>();
 
-                        // Instantiate sphere at selected position
-                        GameObject sphere = Instantiate(spherePrefab, startPosition, Quaternion.identity);
-                        sphere.transform.parent = container;
-                        sphere.transform.localScale = localScale; // Uniform small scale
-                        sphere.tag = "2DMovingSphere"; // Tag for tracking spheres
+                        if (lineRenderer != null && lineRenderer.positionCount > 0)
+                        {
+                            // Get start position from the beginning of the streamline
+                            Vector3 startPosition = lineRenderer.GetPosition(0);
 
-                        // Initialize flow behavior on the sphere
-                        FlowObject2D movingSphere = sphere.GetComponent<FlowObject2D>();
-                        movingSphere.StartFlow(generatedGradientPoints, bounds, streamLine2DInstance.streamLineStepSize, sphereSpeed, lifetime);
+                            // Convert local position to world position
+                            startPosition = randomLineObj.transform.TransformPoint(startPosition);
+
+                            // Get all points from the streamline to pass to the flow object
+                            Vector3[] streamlinePoints = new Vector3[lineRenderer.positionCount];
+                            lineRenderer.GetPositions(streamlinePoints);
+
+                            // Convert local positions to world positions
+                            for (int j = 0; j < streamlinePoints.Length; j++)
+                            {
+                                streamlinePoints[j] = randomLineObj.transform.TransformPoint(streamlinePoints[j]);
+                            }
+
+                            // Instantiate sphere at selected position
+                            GameObject sphere = Instantiate(spherePrefab, startPosition, Quaternion.identity);
+                            sphere.transform.parent = container;
+                            sphere.transform.localScale = localScale; // Uniform small scale
+                            sphere.tag = "2DMovingSphere"; // Tag for tracking spheres
+
+                            // Initialize flow behavior on the sphere, passing the streamline points
+                            FlowObject2D movingSphere = sphere.GetComponent<FlowObject2D>();
+                            movingSphere.StartFlowAlongStreamline(streamlinePoints, generatedGradientPoints, bounds,
+                                streamLine2DInstance.streamLineStepSize, sphereSpeed, lifetime);
+                        }
                     }
                 }
 
