@@ -86,14 +86,14 @@ namespace AugmeNDT{
                 polyModel.transform.localScale = new Vector3(scaleFactor, scaleFactor, scaleFactor);
 
                 //Move bounding box
-                polyModel.transform.localPosition = new Vector3(-0.5f, -0.5f, 0.5f);
+                //polyModel.transform.localPosition = new Vector3(-0.5f, -0.5f, 0.5f);
+
+                //GlobalScaleAndPos.ResizeObjectRelative(polyModel.transform, 1f, wholeFiberObjBounds.size);
+                GlobalScaleAndPos.ResizeBoxCollider(polyModel.transform, boxColl, wholeFiberObjBounds.size, wholeFiberObjBounds.center);
 
                 BoundsControl boundsControl = polyModelContainer.GetComponent<BoundsControl>() != null ? polyModelContainer.GetComponent<BoundsControl>() : polyModelContainer.AddComponent<BoundsControl>();
                 boundsControl.OverrideBounds = true;
                 boundsControl.BoundsOverride = polyModel.transform;
-
-                //GlobalScaleAndPos.ResizeObjectRelative(polyModel.transform, 1f, wholeFiberObjBounds.size);
-                GlobalScaleAndPos.ResizeBoxCollider(polyModel.transform, boxColl, wholeFiberObjBounds.size, wholeFiberObjBounds.center);
 
             }
             else

@@ -66,7 +66,7 @@ namespace AugmeNDT
 
         private async Task Scenario1()
         {
-            string mainFolder = GetPlatformDependentMainPath() + "\\FCP_Daten_Gall_sGFCR0\\";
+            string mainFolder = GetPlatformDependentMainPath() + "/FCP_Daten_Gall_sGFCR0/";
             List<string> filePaths = new List<string>(){
                 mainFolder + "0N.csv",
                 mainFolder + "132N.csv",
@@ -93,16 +93,19 @@ namespace AugmeNDT
         {
             // Different Paths for different platforms
             #if UNITY_EDITOR
-                                    return "D:\\TestData\\DemoData_Hololens";
-            #elif !UNITY_EDITOR && UNITY_ANDROID
-                        return "/storage/emulated/0/Datasets/";
-            #elif !UNITY_EDITOR && UNITY_WSA_10_0
-                                    throw new System.NotImplementedException("No main path for Hololens");
-            #elif !UNITY_EDITOR && UNITY_STANDALONE_WIN
-                                    return "D:\\TestData\\DemoData_Hololens";
-            #else
-                                    throw new System.NotImplementedException("No main path for this platform");
+            return "D:\\TestData\\DemoData_Hololens";
             #endif
+            #if !UNITY_EDITOR && UNITY_ANDROID
+            return "/storage/emulated/0/Datasets/";
+            #endif
+            #if !UNITY_EDITOR && UNITY_WSA_10_0
+            throw new System.NotImplementedException("No main path for Hololens");
+            #endif
+            #if !UNITY_EDITOR && UNITY_STANDALONE_WIN
+            return "D:\\TestData\\DemoData_Hololens";
+            #endif
+
+            throw new System.NotImplementedException("No main path for this platform");
         }
 
     }
