@@ -6,9 +6,9 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Android;
 
-
+#if !UNITY_EDITOR && UNITY_ANDROID
 using SimpleFileBrowser;
-
+#endif
 
 #if !UNITY_EDITOR && UNITY_WSA_10_0
 using Windows.Storage;
@@ -368,6 +368,8 @@ namespace AugmeNDT
             return filePath;
         }
 
+        // For loading with SimpleFileBrowser
+        /*
         IEnumerator ShowLoadDialogCoroutine(TaskCompletionSource<string> tcs)
         {
             FileBrowser.CustomPrefabName = "Prefabs/UIPrefabs/SimpleFileBrowserVRCanvas";
@@ -399,7 +401,7 @@ namespace AugmeNDT
             filePath = filePaths[0];
             tcs.SetResult(filePath);
         }
-        
+        */
 
 #endif
 

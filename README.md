@@ -31,6 +31,7 @@ Currently compatible with Microsoft HoloLens 2 and Magic Leap 2 devices.
 | .NET Framework                                                          | 4.8         |
 | [MRTK3](https://github.com/MixedRealityToolkit/MixedRealityToolkit-Unity/releases) | 3.0 |
 | [Math.NET Numerics](https://numerics.mathdotnet.com/#Math-NET-Numerics) | 5.0.0       |
+| [UnitySimpleFileBrowser](https://github.com/yasirkula/UnitySimpleFileBrowser) | 1.7.2       |
 
 For easy loading of NuGet packages in Unity, we recommend:
 
