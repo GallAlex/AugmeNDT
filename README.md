@@ -11,9 +11,9 @@
 [![Math.NET](https://img.shields.io/badge/Math.NET-5.0.0-orange.svg)](https://numerics.mathdotnet.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-</div>
+<img src="https://github.com/user-attachments/assets/6db0d7d2-e6a0-4a48-b686-b6d8ba011409" width="740">
 
-#### ![AugmeNDT](https://github.com/user-attachments/assets/6db0d7d2-e6a0-4a48-b686-b6d8ba011409)
+</div>
 
 ## Overview
 
@@ -52,7 +52,10 @@ AugmeNDT serves as the foundation for two powerful research applications:
 - **Temporal Evolution Tracker**: Visualises changes in the distributions of these attributes over time.
 - **Chrono Bins**: Interactive exploration of multidimensional distributions across multiple time steps to compare the severity of changes between datasets.
 
-
+<div align="center">
+<img src="https://github.com/user-attachments/assets/ca61b742-6897-46db-bd36-3cfa8aefc0dc" width="600">
+</div>
+   
 ### 2. Situated Analytics for Material Inspection
 
 This prototype [[2]](#immersive-inspection) enables **on-site, in-place inspection** of material properties by overlaying X-ray computed tomography (XCT) data directly onto physical objects in augmented reality.
@@ -64,6 +67,9 @@ This prototype [[2]](#immersive-inspection) enables **on-site, in-place inspecti
 - Exploration of both primary and secondary XCT data
 - Intuitive workflows for identifying anomalies in fiber-reinforced polymer materials
 
+<div align="center">
+<img src="https://github.com/user-attachments/assets/a73fa298-9e0a-41e1-b33d-983d6a5c4e9b" width="600">
+</div>
 
 ## Installation
 
