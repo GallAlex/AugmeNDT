@@ -45,7 +45,7 @@ namespace AugmeNDT
                 // Get reference to the Rectangle3DManager instance
                 rectangle3DManager = Rectangle3DManager.rectangle3DManager;
                 TopologyConfigData config = rectangle3DManager.config;
-                localScaleRate = config.criticalPoints_localScaleRate;
+                localScaleRate = 0.004f;
             }
 
             if (createCriticalPointsInstance == null)
@@ -73,7 +73,7 @@ namespace AugmeNDT
                 }
                 else
                 {
-                    legend = createCriticalPointsInstance.CreateLegendColorBar(container, FilterCriticalPointsByType, localScaleRate);
+                    legend = createCriticalPointsInstance.CreateLegendColorBar(container, FilterCriticalPointsByType, localScaleRate*2);
                     legendCreated = true;
                 }
             }

@@ -140,7 +140,8 @@
         /// </summary>
         private bool IsPointInUnitCube(Vector3 localPoint)
         {
-            float epsilon = 0.0001f;
+            //float epsilon = 0.0001f;
+            float epsilon = 0f;
             return (localPoint.x >= -0.5f - epsilon && localPoint.x <= 0.5f + epsilon &&
                     localPoint.y >= -0.5f - epsilon && localPoint.y <= 0.5f + epsilon &&
                     localPoint.z >= -0.5f - epsilon && localPoint.z <= 0.5f + epsilon);

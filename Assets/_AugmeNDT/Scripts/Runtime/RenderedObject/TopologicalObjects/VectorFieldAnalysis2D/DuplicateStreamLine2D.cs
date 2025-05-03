@@ -102,7 +102,7 @@ namespace AugmeNDT
             interactiveStreamLinePool = InteractiveStreamLineObjectPool.Instance;
 
             // Find the data visualization group in the scene
-            dataVisGroup = GameObject.Find("DataVisGroup_0").transform;
+            dataVisGroup = GameObject.Find("Volume").transform;
 
             // Create the container that will hold all duplicated streamlines
             CreateContainer();
@@ -122,7 +122,7 @@ namespace AugmeNDT
                 duplicateContainer = new GameObject("DuplicateStreamLinesContainer");
 
                 // Parent it to the rectangle manager's volume transform
-                duplicateContainer.transform.SetParent(GameObject.Find("DataVisGroup_0").transform, true);
+                duplicateContainer.transform.SetParent(GameObject.Find("fibers.raw").transform, true);
             }
         }
 
@@ -139,7 +139,7 @@ namespace AugmeNDT
 
             // Move the container to this position plus the offset
             duplicateContainer.transform.position = position + positionOffset;
-            SetupBoundsControl(duplicateContainer);
+            //SetupBoundsControl(duplicateContainer);
         }
         #endregion
 
@@ -331,19 +331,19 @@ namespace AugmeNDT
 
         private void OnMovingStarted(ManipulationEventData eventData)
         {
-            foreach (var item in selectedGameObjects)
-            {
-                LineRenderer lr = item.GetComponent<LineRenderer>();
-                lr.startColor = lr.endColor = strlineColor;
-                lr.startWidth = lr.endWidth = strlineWidth;
-            }
+            //foreach (var item in selectedGameObjects)
+            //{
+            //    LineRenderer lr = item.GetComponent<LineRenderer>();
+            //    lr.startColor = lr.endColor = strlineColor;
+            //    lr.startWidth = lr.endWidth = strlineWidth;
+            //}
 
-            StopImmediatelyAllFlow();
+            //StopImmediatelyAllFlow();
         }
 
         private void OnMovingEnded(ManipulationEventData eventData)
         {
-            StartFlowObject();
+            //StartFlowObject();
         }
 
         /// <summary>

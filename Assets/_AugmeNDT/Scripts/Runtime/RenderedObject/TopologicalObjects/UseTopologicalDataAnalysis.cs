@@ -84,25 +84,25 @@ namespace AugmeNDT
                     FlowObject2DManager.Instance.StartFlowObject();
             }
 
-            //// Update 3D rectangle if available
-            //if (Rectangle3DManager.rectangle3DManager != null)
-            //{
-            //    Rectangle3DManager.rectangle3DManager.UpdateRectangleAfterScaling();
-            //    if (isScaling)
-            //    {
-            //        if (Glyph3DVectorField.instance != null)
-            //            Glyph3DVectorField.instance.Visualize();
+            // Update 3D rectangle if available
+            if (Rectangle3DManager.rectangle3DManager != null)
+            {
+                Rectangle3DManager.rectangle3DManager.UpdateRectangleAfterScaling();
+                if (isScaling)
+                {
+                    if (Glyph3DVectorField.instance != null)
+                        Glyph3DVectorField.instance.Visualize();
 
-            //        if (CriticalPoint3DVis.instance != null)
-            //            CriticalPoint3DVis.instance.Visualize(true);
+                    if (CriticalPoint3DVis.instance != null)
+                        CriticalPoint3DVis.instance.Visualize(true);
 
-            //        if (StreamLine3D.Instance != null)
-            //            StreamLine3D.Instance.ShowStreamLines(true);
-            //    }
+                    if (StreamLine3D.Instance != null)
+                        StreamLine3D.Instance.ShowStreamLines(true);
+                }
 
-            //    if (FlowObject3DManager.Instance != null)
-            //        FlowObject3DManager.Instance.StartFlowObject();
-            //}
+                if (FlowObject3DManager.Instance != null)
+                    FlowObject3DManager.Instance.StartFlowObject();
+            }
         }
 
         private void OnScaleStarted() => OnChangeStarted();
