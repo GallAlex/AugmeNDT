@@ -16,7 +16,7 @@ namespace AugmeNDT
         public List<GradientDataset> gradientPoints = new List<GradientDataset>();
         public Dictionary<Vector3Int, List<GradientDataset>> spatialGrid = new Dictionary<Vector3Int, List<GradientDataset>>();
 
-        private List<GameObject> LineObjs = new List<GameObject>();
+        public List<GameObject> LineObjs = new List<GameObject>();
         public Transform container;
 
         [Header("Streamline Parameters")]

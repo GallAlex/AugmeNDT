@@ -54,6 +54,9 @@ namespace AugmeNDT
             {
                 if (FlowObject2DManager.Instance != null)
                     FlowObject2DManager.Instance.PauseFlowObject();
+
+                if(StreamlineFlowObjectManager2D.instance != null)
+                    StreamlineFlowObjectManager2D.instance.PauseFlowObjects();
             }
 
             // Pause 3D flow objects during scaling
@@ -82,6 +85,9 @@ namespace AugmeNDT
 
                 if (FlowObject2DManager.Instance != null)
                     FlowObject2DManager.Instance.StartFlowObject();
+
+                if (StreamlineFlowObjectManager2D.instance != null)
+                    StreamlineFlowObjectManager2D.instance.StartFlowObject();
             }
 
             // Update 3D rectangle if available

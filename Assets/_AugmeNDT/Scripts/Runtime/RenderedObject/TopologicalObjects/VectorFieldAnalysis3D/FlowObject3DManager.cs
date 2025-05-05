@@ -26,12 +26,21 @@ namespace AugmeNDT
         private static StreamLine3D streamLine3DInstance;
         private static Rectangle3DManager rectangle3DManager;
         private GameObject spherePrefab; // Sphere prefab
+        Material pinkMaterial;
 
         private void Awake()
         {
             // Initialize singleton instance
             Instance = this;
             spherePrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/TopologicalVis/MovingSphere");
+
+
+            // Yeni pembe materyal oluştur
+            Material pinkMaterial = new Material(Shader.Find("Standard"));
+            pinkMaterial.color = new Color(1f, 0.4f, 0.7f); // Pembe renk
+            pinkMaterial.EnableKeyword("_EMISSION");
+            pinkMaterial.SetColor("_EmissionColor", new Color(1f, 0.4f, 0.7f) * 0.5f); // Hafif parlaklık
+
         }
 
         private void Start()
@@ -60,10 +69,6 @@ namespace AugmeNDT
             GameObject.FindGameObjectsWithTag("Moving3DSphere").ToList().ForEach(x => Destroy(x));
         }
 
-        /// <summary>
-        /// Coroutine that handles spawning and maintaining the specified number of moving spheres
-        /// </summary>
-        /// <returns>IEnumerator for coroutine processing</returns>
         private IEnumerator SpawnMovingSpheres()
         {
             // Get gradient data and boundary information
@@ -86,30 +91,71 @@ namespace AugmeNDT
                 int currentSpheres = GameObject.FindGameObjectsWithTag("Moving3DSphere").Length;
 
                 // Spawn additional spheres if needed to maintain the target count
-                if (currentSpheres < numSpheres)
+                if (currentSpheres < numSpheres && streamLine3DInstance.LineObjs.Count > 0)
                 {
                     int spheresToSpawn = numSpheres - currentSpheres;
 
                     for (int i = 0; i < spheresToSpawn; i++)
                     {
-                        // Pick a random starting position from gradient points
-                        Vector3 startPosition = generatedGradientPoints[Random.Range(0, generatedGradientPoints.Count())].Position;
+                        // Pick a random streamline from the available lines
+                        GameObject randomLineObj = streamLine3DInstance.LineObjs[Random.Range(0, streamLine3DInstance.LineObjs.Count)];
+                        LineRenderer lineRenderer = randomLineObj.GetComponent<LineRenderer>();
 
-                        // Instantiate sphere at selected position
-                        GameObject sphere = Instantiate(spherePrefab, startPosition, Quaternion.identity);
-                        sphere.transform.parent = streamLine3DInstance.container;
-                        sphere.tag = "Moving3DSphere";
-                        sphere.transform.localScale = Vector3.one * localScaleRate;
-                        TrailRenderer trailRenderer = sphere.GetComponent<TrailRenderer>();
-                        if (trailRenderer != null)
+                        if (lineRenderer != null && lineRenderer.positionCount > 0)
                         {
-                            trailRenderer.startWidth = localScaleRate;
-                            trailRenderer.endWidth = localScaleRate;
-                        }
+                            // Get all points from the streamline
+                            Vector3[] streamlinePoints = new Vector3[lineRenderer.positionCount];
+                            lineRenderer.GetPositions(streamlinePoints);
 
-                        // Initialize flow behavior on the sphere
-                        FlowObject3D movingSphere = sphere.GetComponent<FlowObject3D>();
-                        movingSphere.StartFlow(generatedGradientPoints, spatialGrid, cellSize, bounds, streamlineStepSize, lifeTime, sphereSpeed);
+                            // Convert local positions to world positions
+                            for (int j = 0; j < streamlinePoints.Length; j++)
+                            {
+                                streamlinePoints[j] = randomLineObj.transform.TransformPoint(streamlinePoints[j]);
+                            }
+
+                            // Get start position from the beginning of the streamline
+                            Vector3 startPosition = streamlinePoints[0];
+
+                            // Instantiate sphere at selected position
+                            GameObject sphere = Instantiate(spherePrefab, startPosition, Quaternion.identity);
+                            sphere.transform.parent = streamLine3DInstance.container;
+                            sphere.tag = "Moving3DSphere";
+                            sphere.transform.localScale = Vector3.one * localScaleRate;
+
+                            // Küreye yeni materyali ata
+                            Renderer renderer = sphere.GetComponent<Renderer>();
+                            if (renderer != null)
+                            {
+                                renderer.material = pinkMaterial;
+                            }
+
+                            // Initialize flow behavior on the sphere, passing the streamline points
+                            FlowObject3D movingSphere = sphere.GetComponent<FlowObject3D>();
+                            movingSphere.StartFlowAlongStreamline(streamlinePoints, generatedGradientPoints, bounds,
+                                                                 streamlineStepSize, lifeTime, sphereSpeed);
+                        }
+                        else
+                        {
+                            // Fallback: pick a random starting position from gradient points if we couldn't get a streamline
+                            Vector3 startPosition = generatedGradientPoints[Random.Range(0, generatedGradientPoints.Count())].Position;
+
+                            // Instantiate sphere at selected position
+                            GameObject sphere = Instantiate(spherePrefab, startPosition, Quaternion.identity);
+                            sphere.transform.parent = streamLine3DInstance.container;
+                            sphere.tag = "Moving3DSphere";
+                            sphere.transform.localScale = Vector3.one * localScaleRate;
+
+                            TrailRenderer trailRenderer = sphere.GetComponent<TrailRenderer>();
+                            if (trailRenderer != null)
+                            {
+                                trailRenderer.startWidth = localScaleRate;
+                                trailRenderer.endWidth = localScaleRate;
+                            }
+
+                            // Initialize flow behavior on the sphere using the original gradient method
+                            FlowObject3D movingSphere = sphere.GetComponent<FlowObject3D>();
+                            movingSphere.StartFlow(generatedGradientPoints, spatialGrid, cellSize, bounds, streamlineStepSize, lifeTime, sphereSpeed);
+                        }
                     }
                 }
 

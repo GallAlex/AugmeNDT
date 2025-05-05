@@ -107,7 +107,8 @@ namespace AugmeNDT
                 "Critical Points",         // Title of the legend
                 labels,                    // Labels to display for each color segment
                 colors,                    // Corresponding colors for each label
-                5                          // Percentage spacing between blocks
+                calledFunction,            // Percentage spacing between blocks
+                5
             );
 
             // Attach the legend under the main container so it moves/scales with the data visualization
@@ -118,12 +119,6 @@ namespace AugmeNDT
             foreach (BoxCollider collider in boxColiders)
             {
                 collider.enabled = true;
-            }
-
-            ColorBarButtonConfig[] ColorBarButtonConfigs = legendObject.GetComponentsInChildren<ColorBarButtonConfig>();
-            foreach (ColorBarButtonConfig colorBarButtonConfig in ColorBarButtonConfigs)
-            {
-                colorBarButtonConfig.onButtonPressedCallback = calledFunction;
             }
 
             return legendObject;

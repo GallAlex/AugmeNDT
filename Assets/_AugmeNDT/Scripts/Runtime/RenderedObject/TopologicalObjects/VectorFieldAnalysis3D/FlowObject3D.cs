@@ -1,8 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace AugmeNDT
 {
@@ -70,6 +68,73 @@ namespace AugmeNDT
                 currentPosition = nextPosition;
                 elapsedTime += Time.deltaTime;
 
+                yield return null;
+            }
+
+            // Destroy the sphere object when flow completes or times out
+            Destroy(gameObject);
+        }
+
+        public void StartFlowAlongStreamline(Vector3[] streamlinePoints, List<GradientDataset> gradientPoints,
+                                     Bounds cubeBounds, float streamlineStepSize, float lifetime, float sphereSpeed)
+        {
+            StartCoroutine(MoveAlongStreamline(streamlinePoints, gradientPoints, cubeBounds,
+                                               streamlineStepSize, lifetime, sphereSpeed));
+        }
+
+        private IEnumerator MoveAlongStreamline(Vector3[] streamlinePoints, List<GradientDataset> gradientPoints,
+                                               Bounds cubeBounds, float streamlineStepSize, float lifetime, float sphereSpeed)
+        {
+            if (streamlinePoints == null || streamlinePoints.Length < 2)
+            {
+                // Fallback to gradient-based movement if streamline is invalid
+                yield return StartCoroutine(StartMoveSphere(gradientPoints, cubeBounds, streamlineStepSize, lifetime, sphereSpeed));
+                yield break;
+            }
+
+            // Start from the beginning of the streamline
+            int currentPointIndex = 0;
+            float elapsedTime = 0f;
+
+            while (currentPointIndex < streamlinePoints.Length - 1 && elapsedTime < lifetime)
+            {
+                // Calculate current and next points in the streamline
+                Vector3 currentPoint = streamlinePoints[currentPointIndex];
+                Vector3 nextPoint = streamlinePoints[currentPointIndex + 1];
+
+                // Calculate direction vector between current and next point
+                Vector3 direction = (nextPoint - currentPoint).normalized;
+
+                // Calculate distance to move this frame
+                float distanceToMove = sphereSpeed * Time.deltaTime;
+                float distanceToNextPoint = Vector3.Distance(transform.position, nextPoint);
+
+                // Check if we would reach or pass the next point
+                if (distanceToMove >= distanceToNextPoint)
+                {
+                    // Move directly to the next point and advance to the next segment
+                    transform.position = nextPoint;
+                    currentPointIndex++;
+
+                    // If we reached the end of the streamline, break the loop
+                    if (currentPointIndex >= streamlinePoints.Length - 1)
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    // Move along the direction by the calculated distance
+                    transform.position = Vector3.MoveTowards(transform.position, nextPoint, distanceToMove);
+                }
+
+                // Exit if object goes outside the boundary
+                if (!cubeBounds.Contains(transform.position))
+                {
+                    break;
+                }
+
+                elapsedTime += Time.deltaTime;
                 yield return null;
             }
 

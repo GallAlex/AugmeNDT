@@ -80,15 +80,15 @@ namespace AugmeNDT
         private void Update()
         {
             // Check proximity based on timer
-            if (useProximityBasedVisibility && boundsControl != null && container != null)
-            {
-                proximityCheckTimer -= Time.deltaTime;
-                if (proximityCheckTimer <= 0f)
-                {
-                    CheckProximity();
-                    proximityCheckTimer = proximityCheckInterval;
-                }
-            }
+            //if (useProximityBasedVisibility && boundsControl != null && container != null)
+            //{
+            //    proximityCheckTimer -= Time.deltaTime;
+            //    if (proximityCheckTimer <= 0f)
+            //    {
+            //        CheckProximity();
+            //        proximityCheckTimer = proximityCheckInterval;
+            //    }
+            //}
         }
 
         /// <summary>

@@ -24,6 +24,10 @@ namespace AugmeNDT
         private int onlyShowThisType = -1;
         private bool legendCreated = false;
         private GameObject legend;
+        
+        [Tooltip("Offset position for the duplicate container")]
+        // Determines where the duplicate streamlines appear relative to the original
+        private Vector3 positionOffset = new Vector3(0.5f, 0f, 0f);
 
         private void Awake()
         {
@@ -69,7 +73,14 @@ namespace AugmeNDT
 
                 if (legendCreated)
                 {
-                    legend.transform.position = rectangle3DManager.volumeTransform.position + new Vector3(0.2f, 0f, 0f);
+                    // Calculate the right edge based on position and scale
+                    float rightEdge = rectangle3DManager.volumeTransform.position.x +
+                                     (rectangle3DManager.volumeTransform.localScale.x / 2);
+
+                    legend.transform.position = new Vector3(rightEdge,
+                                       rectangle3DManager.volumeTransform.position.y,
+                                       rectangle3DManager.volumeTransform.position.z) + positionOffset;
+
                 }
                 else
                 {

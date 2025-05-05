@@ -22,6 +22,7 @@ namespace AugmeNDT
 
         // Reference to the pool for interactive streamline objects
         private static InteractiveStreamLineObjectPool interactiveStreamLinePool;
+        private static StreamlineFlowObjectManager2D instance_streamlineFlowObjectManager2D;
 
         #region Duplicate Settings
         [Header("Duplicate Settings")]
@@ -82,7 +83,7 @@ namespace AugmeNDT
         private List<GameObject> selectedGameObjects = new List<GameObject>();
 
         // Reference to the data visualization group
-        private Transform dataVisGroup;
+        public Transform dataVisGroup;
         #endregion
 
         private BoundsControl boundsControl;
@@ -100,6 +101,8 @@ namespace AugmeNDT
         {
             // Get reference to the object pool for efficient line creation
             interactiveStreamLinePool = InteractiveStreamLineObjectPool.Instance;
+            
+            instance_streamlineFlowObjectManager2D = StreamlineFlowObjectManager2D.instance;
 
             // Find the data visualization group in the scene
             dataVisGroup = GameObject.Find("Volume").transform;
@@ -162,7 +165,7 @@ namespace AugmeNDT
 
             // Clear existing data structures
             newStreamLines.Clear();
-            StopImmediatelyAllFlow();
+            instance_streamlineFlowObjectManager2D.PauseFlowObjects();
             gradeints.Clear();
 
             // Update the container position
@@ -231,7 +234,7 @@ namespace AugmeNDT
             }
 
             // After all streamlines are created, start the flow visualization
-            StartFlowObject();
+            instance_streamlineFlowObjectManager2D.SetAndStartFlowObjects(gradeints,selectedGameObjects,dataVisGroup);
         }
 
         /// <summary>
@@ -455,152 +458,6 @@ namespace AugmeNDT
         }
         #endregion
 
-        #region Flow Visualization
-        /// <summary>
-        /// Flow settings for particle visualization
-        /// </summary>
-        private Transform flowContainer = null;     // Container for flow particles
-        private bool stopFlowObjects = true;        // Flag to stop flow animation
-        private float sphereSpeed = 0.01f;          // Speed of flowing particles
-        private float lifetime = 15f;               // Lifetime of each particle
-        private int numSpheres = 100;               // Number of particles per streamline
-        private Vector3 localScale = Vector3.one * 0.003f;  // Scale of flow particles
-        private GameObject spherePrefab;            // Sphere prefab for particles
 
-        /// <summary>
-        /// Initializes and starts the flow object system
-        /// </summary>
-        private void StartFlowObject()
-        {
-            // Initial setup
-            if (flowContainer == null)
-            {
-                flowContainer = new GameObject("Interactive2DMovingSpheres").transform;
-                flowContainer.parent = dataVisGroup;
-                spherePrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/TopologicalVis/Interactive2DFLOW");
-            }
-
-            stopFlowObjects = false;
-            StartCoroutine(SpawnMovingSpheres());
-        }
-
-        /// <summary>
-        /// Manages spawning and lifecycle of moving spheres along selected streamlines
-        /// </summary>
-        private IEnumerator SpawnMovingSpheres()
-        {
-            // Dictionary to track spheres for each selected streamline
-            Dictionary<GameObject, List<GameObject>> lineToSpheres = new Dictionary<GameObject, List<GameObject>>();
-
-            while (true)
-            {
-                if (stopFlowObjects)
-                    break;
-
-                // Initialize dictionary to track spheres for each line
-                foreach (var obj in selectedGameObjects)
-                {
-                    if (!lineToSpheres.ContainsKey(obj))
-                    {
-                        lineToSpheres[obj] = new List<GameObject>();
-                    }
-                }
-
-                // Clean up any references to destroyed spheres
-                foreach (var kvp in lineToSpheres.ToList())
-                {
-                    kvp.Value.RemoveAll(sphere => sphere == null);
-                }
-
-                // Process each selected object
-                foreach (var lineObj in selectedGameObjects)
-                {
-                    LineRenderer lineRenderer = lineObj.GetComponent<LineRenderer>();
-
-                    if (lineRenderer != null && lineRenderer.positionCount > 0)
-                    {
-                        // Check if we need to spawn spheres for this line
-                        List<GameObject> currentSpheres = lineToSpheres[lineObj];
-
-                        // Calculate how many spheres to spawn
-                        int spheresToSpawn = numSpheres - currentSpheres.Count;
-
-                        if (spheresToSpawn > 0)
-                        {
-                            // Get start position from the beginning of the streamline
-                            Vector3 startPosition = lineRenderer.GetPosition(0);
-
-                            // Convert local position to world position
-                            startPosition = lineObj.transform.TransformPoint(startPosition);
-
-                            // Get all points from the streamline to pass to the flow object
-                            Vector3[] streamlinePoints = new Vector3[lineRenderer.positionCount];
-                            lineRenderer.GetPositions(streamlinePoints);
-
-                            // Convert local positions to world positions
-                            for (int j = 0; j < streamlinePoints.Length; j++)
-                            {
-                                streamlinePoints[j] = lineObj.transform.TransformPoint(streamlinePoints[j]);
-                            }
-
-                            // Spawn the needed number of spheres
-                            for (int i = 0; i < spheresToSpawn; i++)
-                            {
-                                // Instantiate sphere at selected position
-                                GameObject sphere = Instantiate(spherePrefab, startPosition, Quaternion.identity);
-                                sphere.transform.parent = flowContainer;
-                                sphere.transform.localScale = localScale; // Uniform small scale
-                                sphere.tag = "Interactive2DSphere"; // Tag for tracking spheres
-
-                                // Add reference to the tracking dictionary
-                                lineToSpheres[lineObj].Add(sphere);
-
-                                // Initialize flow behavior on the sphere, passing the streamline points
-                                StreamlineFlowObject2D movingSphere = sphere.GetComponent<StreamlineFlowObject2D>();
-                                movingSphere.StartFlowAlongStreamline(streamlinePoints, gradeints,
-                                    StreamLine2D.Instance.streamLineStepSize, sphereSpeed, lifetime);
-                            }
-                        }
-                    }
-                }
-
-                // Remove entries for lines that are no longer selected
-                foreach (var key in lineToSpheres.Keys.ToList())
-                {
-                    if (!selectedGameObjects.Contains(key))
-                    {
-                        // Destroy any remaining spheres for this line
-                        foreach (var sphere in lineToSpheres[key])
-                        {
-                            if (sphere != null)
-                            {
-                                Destroy(sphere);
-                            }
-                        }
-                        lineToSpheres.Remove(key);
-                    }
-                }
-
-                // Wait before checking sphere count again
-                yield return new WaitForSeconds(1f);
-            }
-        }
-
-        /// <summary>
-        /// Immediately stops all flow visualization and cleans up
-        /// </summary>
-        private void StopImmediatelyAllFlow()
-        {
-            stopFlowObjects = true;
-            selectedGameObjects.Clear();
-
-            // Find and destroy all flow particles
-            var objs = GameObject.FindGameObjectsWithTag("Interactive2DSphere");
-            foreach (var obj in objs)
-            {
-                DestroyImmediate(obj);
-            }
-        }
-        #endregion
     }
 }
