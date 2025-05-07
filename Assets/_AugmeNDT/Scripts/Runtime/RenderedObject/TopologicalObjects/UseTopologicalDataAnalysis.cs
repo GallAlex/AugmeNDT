@@ -94,16 +94,17 @@ namespace AugmeNDT
             if (Rectangle3DManager.rectangle3DManager != null)
             {
                 Rectangle3DManager.rectangle3DManager.UpdateRectangleAfterScaling();
+
                 if (isScaling)
                 {
                     if (Glyph3DVectorField.instance != null)
                         Glyph3DVectorField.instance.Visualize();
 
                     if (CriticalPoint3DVis.instance != null)
-                        CriticalPoint3DVis.instance.Visualize(true);
+                        CriticalPoint3DVis.instance.Visualize();
 
                     if (StreamLine3D.Instance != null)
-                        StreamLine3D.Instance.ShowStreamLines(true);
+                        StreamLine3D.Instance.ShowStreamLines();
                 }
 
                 if (FlowObject3DManager.Instance != null)

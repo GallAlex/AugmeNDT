@@ -21,19 +21,6 @@ namespace AugmeNDT
         private static float localScaleRateTo3DVectorVisualize;
         private Bounds cubeBounds;
 
-        /// <summary>
-        /// Checks whether the bounding box of the vector field has been updated.
-        /// </summary>
-        private bool IsUpdated()
-        {
-            Bounds currentCubeBounds = rectangle3DManager.GetRectangleBounds();
-            if (cubeBounds == currentCubeBounds)
-                return false;
-
-            cubeBounds = currentCubeBounds;
-            return true;
-        }
-
         private void Awake()
         {
             // Initialize singleton instance
@@ -56,18 +43,16 @@ namespace AugmeNDT
         /// <summary>
         /// Visualizes the 3D vector field using arrow glyphs.
         /// </summary>
-        /// <param name="force">Force the regeneration of visualization objects even if already present.</param>
-        public void Visualize(bool force = false)
+        public void Visualize()
         {
-            bool createNewObjects = force || !arrows.Any() || !spheres.Any() || IsUpdated();
-            if (createNewObjects)
-            {
-                SetContainer();
-                ClearArrows();
+            List<GradientDataset> gradients = rectangle3DManager.GetGradientPoints();
+            ClearArrows();
+            SetContainer();
 
-                // Create new arrow glyphs based on gradient points
-                arrows = VectorObjectVis.instance.CreateArrows(rectangle3DManager.GetGradientPoints(), container, localScaleRateTo3DVectorVisualize, rectangle3DManager.config.ColorOfVectorObject);
-            }
+            // Create new arrow glyphs based on gradient points
+            arrows = VectorObjectVis.instance.CreateArrows(gradients, container, 
+                localScaleRateTo3DVectorVisualize, rectangle3DManager.config.ColorOfVectorObject);
+
         }
 
         #region private methods
@@ -79,13 +64,12 @@ namespace AugmeNDT
         {
             if (container != null)
             {
-                Destroy(container.gameObject);
-                Destroy(container);
+                Destroy(GameObject.Find("3DVectorForce"));
                 container = null;
             }
             
             container = new GameObject("3DVectorForce").transform;
-            container.transform.SetParent(GameObject.Find("RectangleVisual").transform, worldPositionStays: true);
+            container.transform.SetParent(rectangle3DManager.volumeTransform.parent.transform, worldPositionStays: true);
         }
 
         /// <summary>

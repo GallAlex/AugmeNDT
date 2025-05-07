@@ -1,35 +1,30 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace AugmeNDT
 {
-    /// <summary>
-    /// Manages the visualization of critical points in the scene.
-    /// Loads critical points and creates interactive GameObjects with appropriate colors.
-    /// </summary>
-    public class CriticalPoint3DVis : MonoBehaviour
+    public class SelectableCriticalPointsVis : MonoBehaviour
     {
-        public static CriticalPoint3DVis instance;
-        public Dictionary<int, List<GameObject>> criticalPointDictionary = new Dictionary<int, List<GameObject>>();
-
-        // All visualized points will be parented to this container for better scene organization
-        public Transform container;
+        public static SelectableCriticalPointsVis instance;
 
         private CreateCriticalPoints createCriticalPointsInstance;
         private static Rectangle3DManager rectangle3DManager;
-
         private float localScaleRate;
+        private Bounds cubeBounds;
         private int onlyShowThisType = -1;
-        private bool legendCreated = false;
-        private GameObject legend;
-        
-        [Tooltip("Offset position for the duplicate container")]
-        // Determines where the duplicate streamlines appear relative to the original
-        private Vector3 positionOffset = new Vector3(0.5f, 0f, 0f);
+
+        private Dictionary<int, List<GameObject>> criticalPointDictionary = new Dictionary<int, List<GameObject>>();
+        // All visualized points will be parented to this container for better scene organization
+        private Transform container;
+        private float basedPositionOffset = -0.2f;
+        private Vector3 currentPositionOffset;
 
         private void Awake()
         {
-            // Singleton pattern for global access
             instance = this;
         }
 
@@ -55,61 +50,52 @@ namespace AugmeNDT
             // Set up the container (update its position instead of recreating)
             SetupContainer();
 
+            var criticalPoints = PrepareNewCriticalPositions();
+
             // Visualize critical points (using the pool)
-            criticalPointDictionary = CreateCriticalPointsUsingPool(rectangle3DManager.GetCriticalPoints(), container, localScaleRate);
+            criticalPointDictionary = CreateCriticalPointsUsingPool(criticalPoints, container, localScaleRate);
 
-            if (legendCreated)
-            {
-                // Calculate the right edge based on position and scale
-                float rightEdge = rectangle3DManager.volumeTransform.position.x +
-                                 (rectangle3DManager.volumeTransform.localScale.x / 2);
-
-                legend.transform.position = new Vector3(rightEdge,
-                                   rectangle3DManager.volumeTransform.position.y,
-                                   rectangle3DManager.volumeTransform.position.z) + positionOffset;
-
-            }
-            else
-            {
-                legend = createCriticalPointsInstance.CreateLegendColorBar(container, FilterCriticalPointsByType, localScaleRate * 2);
-                legendCreated = true;
-            }
         }
 
-        private void ClearVisualization()
+        private List<CriticalPointDataset> PrepareNewCriticalPositions()
         {
-            // Return all active critical points back to the pool
-            foreach (var pointList in criticalPointDictionary.Values)
+            var criticalPoints = rectangle3DManager.GetCriticalPoints();
+            List<CriticalPointDataset> criticalPointDatasets = new List<CriticalPointDataset>();
+
+            // Calculate the right edge based on position and scale
+            float leftEdge = rectangle3DManager.volumeTransform.position.x -
+                             (rectangle3DManager.volumeTransform.localScale.x / 2);
+            currentPositionOffset = new Vector3(leftEdge + basedPositionOffset, 0, 0);
+
+            foreach (var item in criticalPoints)
             {
-                foreach (var point in pointList)
-                {
-                    CriticalPointObjectPool.Instance.ReturnToPool(point);
-                }
+                var temp = item;
+                temp.Position = temp.Position + currentPositionOffset;
+                criticalPointDatasets.Add(temp);
             }
 
-            criticalPointDictionary.Clear();
+            return criticalPointDatasets;
         }
 
-        private void SetupContainer()
+        private List<GradientDataset> PrepareNewGradientPositions()
         {
-            if (container == null)
+            var gradients = rectangle3DManager.GetGradientPoints();
+            List<GradientDataset> gradientDatasets = new List<GradientDataset>();
+
+            // Calculate the right edge based on position and scale
+            float leftEdge = rectangle3DManager.volumeTransform.position.x -
+                             (rectangle3DManager.volumeTransform.localScale.x / 2);
+            currentPositionOffset = new Vector3(leftEdge + basedPositionOffset, 0, 0);
+
+            foreach (var item in gradients)
             {
-                container = new GameObject("CriticalPointObjects").transform;
-                container.SetParent(rectangle3DManager.volumeTransform, worldPositionStays: true);
-
-
-                Dictionary<int, Color> typeColors = new Dictionary<int, Color>()
-                    {
-                        { 0, rectangle3DManager.config.sinkColor },              // Minimum
-                        { 1, rectangle3DManager.config.saddle1_PointColor },     // 1-Saddle
-                        { 2, rectangle3DManager.config.saddle2_PointColor },     // 2-Saddle
-                        { 3, rectangle3DManager.config.sourcePointColor },       // Maximum
-                    };
-
-                createCriticalPointsInstance.CustomizeTypeColors(typeColors);
+                var temp = item;
+                temp.Position = temp.Position + currentPositionOffset;
+                gradientDatasets.Add(temp);
             }
-        }
 
+            return gradientDatasets;
+        }
         private Dictionary<int, List<GameObject>> CreateCriticalPointsUsingPool(List<CriticalPointDataset> criticalPoints, Transform container, float localScaleRate)
         {
             Dictionary<int, List<GameObject>> result = new Dictionary<int, List<GameObject>>();
@@ -123,7 +109,7 @@ namespace AugmeNDT
                 obj.transform.SetParent(container, true);
                 obj.transform.position = point.Position;  // world position olarak ayarla
                 obj.transform.localScale = Vector3.one * localScaleRate;
-                obj.name = $"InteractiveCriticalPoint_{point.ID}";
+                obj.name = $"DuplicatedInteractiveCriticalPoint_{point.ID}";
 
                 // Set the renderer
                 obj.GetComponent<Renderer>().material.color = createCriticalPointsInstance.GetColorByType(point.Type);
@@ -144,7 +130,6 @@ namespace AugmeNDT
 
             return result;
         }
-
         /// <summary>
         /// Filters the critical points displayed based on their type.
         /// </summary>
@@ -190,5 +175,29 @@ namespace AugmeNDT
                 }
             }
         }
+
+        private void ClearVisualization()
+        {
+            // Return all active critical points back to the pool
+            foreach (var pointList in criticalPointDictionary.Values)
+            {
+                foreach (var point in pointList)
+                {
+                    CriticalPointObjectPool.Instance.ReturnToPool(point);
+                }
+            }
+
+            criticalPointDictionary.Clear();
+        }
+
+        private void SetupContainer()
+        {
+            if (container == null)
+            {
+                container = new GameObject("DuplicatedCriticalPointObjects").transform;
+                container.SetParent(rectangle3DManager.volumeTransform, worldPositionStays: true);
+            }
+        }
+
     }
 }

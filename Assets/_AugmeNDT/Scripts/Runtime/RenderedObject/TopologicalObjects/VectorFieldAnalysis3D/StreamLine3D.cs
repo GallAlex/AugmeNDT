@@ -67,32 +67,15 @@ namespace AugmeNDT
         /// <summary>
         /// Shows streamlines by creating them if needed or making existing ones visible
         /// </summary>
-        public void ShowStreamLines(bool forced = false)
+        public void ShowStreamLines()
         {
-            if (forced || !LineObjs.Any() || IsUpdated())
-            {
-                if (!PrepareInstance())
-                    return;
+            if (!PrepareInstance())
+                return;
 
-                StartCoroutine(DrawStreamlinesCoroutine());
-            }
-            else
-            {
-                LineObjs.ForEach(line => line.SetActive(true));
-            }
+            StartCoroutine(DrawStreamlinesCoroutine());
         }
 
         #region private
-        private bool IsUpdated()
-        {
-            Bounds currentCubeBounds = rectangle3DManager.GetRectangleBounds();
-            if (cubeBounds == currentCubeBounds)
-                return false;
-
-            cubeBounds = currentCubeBounds;
-            return true;
-        }
-
         private bool PrepareInstance()
         {
             ReturnAllLinesToPool();
@@ -108,7 +91,7 @@ namespace AugmeNDT
             }
 
             container = new GameObject("3DStreamLines").transform;
-            container.transform.SetParent(rectangle3DManager.volumeTransform, true);
+            container.transform.SetParent(rectangle3DManager.volumeTransform.parent.transform, true);
 
             cubeBounds = rectangle3DManager.GetRectangleBounds();
             averageMagnitude = gradientPoints.Average(gradient => gradient.Magnitude);
