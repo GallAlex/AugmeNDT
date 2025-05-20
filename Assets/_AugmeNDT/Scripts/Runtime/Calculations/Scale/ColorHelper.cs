@@ -36,15 +36,15 @@ namespace AugmeNDT{
         public static Color[] violetSingleHueValues02 = new[] { ReturnColorFromHex("#D2B6E3"), ReturnColorFromHex("#8856A7"), ReturnColorFromHex("#572179") };
         public static Color[] violetSingleHueValues03 = new[] { ReturnColorFromHex("#FAF7F8"), ReturnColorFromHex("#E7C3CC"), ReturnColorFromHex("#A86273") };
 
-        // Stacked Histogram ChangeIndicator: From ligth blue to dark blue
+        // Chrono Bins ChangeIndicator: From ligth blue to dark blue
         public static Color[] blueHueValues = new[] { ReturnColorFromHex("#deebf7"), ReturnColorFromHex("#9ecae1"), ReturnColorFromHex("#3182bd") };
-        // Stacked Histogram ChangeIndicator: From ligth red to dark red
+        // Chrono Bins ChangeIndicator: From ligth red to dark red
         public static Color[] redHueValues = new[] { ReturnColorFromHex("#fee0d2"), ReturnColorFromHex("#fc9272"), ReturnColorFromHex("#de2d26")};
 
-        // Stacked Histogram ChangeIndicator: Diverging Scheme from from green to purple over gray
+        // Chrono Bins ChangeIndicator: Diverging Scheme from from green to purple over gray
         //public static Color[] divergingValues = new[] { ReturnColorFromHex("#88d8b0"), ReturnColorFromHex("#2a9d8f"), ReturnColorFromHex("#264653"), ReturnColorFromHex("#808080"), ReturnColorFromHex("#c77dff"), ReturnColorFromHex("#9e00ff"), ReturnColorFromHex("#4a148c") };
 
-        // Stacked Histogram ChangeIndicator: Diverging Scheme from from green to purple over (chnaged) darker white (https://colorbrewer2.org/#type=diverging&scheme=PiYG&n=7)
+        // Chrono Bins ChangeIndicator: Diverging Scheme from from green to purple over (chnaged) darker white (https://colorbrewer2.org/#type=diverging&scheme=PiYG&n=7)
         public static Color[] divergingValues = new[] { ReturnColorFromHex("#4d9221"), ReturnColorFromHex("#a1d76a"), ReturnColorFromHex("#e6f5d0"), ReturnColorFromHex("#e6e6e6"), ReturnColorFromHex("#fde0ef"), ReturnColorFromHex("#e9a3c9"), ReturnColorFromHex("#c51b7d") };
 
         // Time Scatter Plot (Time Difference): Scheme from darker white to purple

@@ -17,9 +17,9 @@ namespace AugmeNDT
         BarChart,
         Histogram,
         Scatterplot,
-        TimeScatter,
+        ChronoBins,
         MDDGlyphs,
-        StackedHistogram,
+        TemporalEvolutionTracker,
         NumberOfVisTypes,
     }
 
@@ -351,12 +351,12 @@ namespace AugmeNDT
                     return new VisHistogram();
                 case VisType.Scatterplot:
                     return new VisScatterplot();
-                case VisType.TimeScatter:              
-                    return new VisTimeScatter();
+                case VisType.TemporalEvolutionTracker:              
+                    return new VisTemporalEvolutionTracker();
                 case VisType.MDDGlyphs:
                     return new VisMDDGlyphs();
-                case VisType.StackedHistogram:
-                    return new VisStackedHistogram();
+                case VisType.ChronoBins:
+                    return new VisChronoBins();
             }
         }
 

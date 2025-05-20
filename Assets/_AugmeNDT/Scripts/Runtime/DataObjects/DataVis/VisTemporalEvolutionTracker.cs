@@ -15,15 +15,15 @@ namespace AugmeNDT{
     /// <summary>
     /// This class represents a Scatterplot which connects Points in different Datasets (Timesteps) (Y Axis) with a line. The Distance between points represents the similarity.
     /// </summary>
-    public class VisTimeScatter : Vis
+    public class VisTemporalEvolutionTracker : Vis
     {
         private ScaleLinear lineScale;      // Scaling for the thickness of the lines
         private double[] minMaxTimeDiff;    // Min/Max Time Difference
         private Dictionary<int[], double> indicatorsToDraw;
 
-        public VisTimeScatter()
+        public VisTemporalEvolutionTracker()
         {
-            title = "TimeScatter";
+            title = "Temporal Evolution Tracker";
             axes = 2;
 
             dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/BarWithOutline");

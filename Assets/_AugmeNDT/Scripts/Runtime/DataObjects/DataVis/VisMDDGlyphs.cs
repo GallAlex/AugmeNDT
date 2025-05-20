@@ -29,12 +29,12 @@ namespace AugmeNDT{
         private List<GameObject> selectionBoxes;
 
         private GameObject colorLegend;
-        private VisTimeScatter timeScatter;
+        private VisTemporalEvolutionTracker temporalEvolutionTracker;
 
 
         public VisMDDGlyphs()
         {
-            title = "MDD-Glyphs Chart";
+            title = "MDD Glyphs Chart";
             axes = 3;
 
             dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/Bar");
@@ -390,32 +390,32 @@ namespace AugmeNDT{
             // Set class to call when Object is moved
             transitionScript.SetMDDVis(this);
 
-            timeScatter = new VisTimeScatter();
+            temporalEvolutionTracker = new VisTemporalEvolutionTracker();
             if (!use4DData)
             {
-                timeScatter.axes = 2;
-                timeScatter.width = 1;
-                timeScatter.height = 1;
-                timeScatter.depth = 1;
+                temporalEvolutionTracker.axes = 2;
+                temporalEvolutionTracker.width = 1;
+                temporalEvolutionTracker.height = 1;
+                temporalEvolutionTracker.depth = 1;
                 //TODO: Copy the properties of the MDDGlyph Vis like offset, ticks,...
                 //AbstractDataset statisticalData = new AbstractDataset();
 
-                timeScatter.AppendData(dataSets[0]);
-                timeScatter.SetChannelEncoding(VisChannel.XPos, dataSets[0].GetHeader());
-                timeScatter.SetChannelEncoding(VisChannel.YPos, new Attribute(DerivedAttributes.DerivedAttributeCalc.Modality.ToString(), dataSets[0].GetDerivedAttribute(DerivedAttributes.DerivedAttributeCalc.Modality,false)));
-                timeScatter.CreateVis(visContainerObject);
-                timeScatter.visContainerObject.transform.Rotate(90,0,0);
-                timeScatter.visContainerObject.SetActive(false);
+                temporalEvolutionTracker.AppendData(dataSets[0]);
+                temporalEvolutionTracker.SetChannelEncoding(VisChannel.XPos, dataSets[0].GetHeader());
+                temporalEvolutionTracker.SetChannelEncoding(VisChannel.YPos, new Attribute(DerivedAttributes.DerivedAttributeCalc.Modality.ToString(), dataSets[0].GetDerivedAttribute(DerivedAttributes.DerivedAttributeCalc.Modality,false)));
+                temporalEvolutionTracker.CreateVis(visContainerObject);
+                temporalEvolutionTracker.visContainerObject.transform.Rotate(90,0,0);
+                temporalEvolutionTracker.visContainerObject.SetActive(false);
                 // Use Node-Link diagram to show the change between timesteps (y axis is chi-squared metric)
             }
             else
             {
                 // Use as Y Axis the Change between Timesteps (ordered)
                 // USe as X Axis the Attributes
-                timeScatter.axes = 2;
-                timeScatter.width = 1;
-                timeScatter.height = 1;
-                timeScatter.depth = 1;
+                temporalEvolutionTracker.axes = 2;
+                temporalEvolutionTracker.width = 1;
+                temporalEvolutionTracker.height = 1;
+                temporalEvolutionTracker.depth = 1;
                 //TODO: Copy the properties of the MDDGlyph Vis like offset, ticks,...
 
                 //Dictionary<string, double[]> timeData = new Dictionary<string, double[]>();
@@ -424,7 +424,7 @@ namespace AugmeNDT{
                 //    timeData.Add(dataSets[0].attributeNames[index], timeDifference[index]);
                 //}
                 //AbstractDataset timeDataset = new AbstractDataset("Time Relationship", dataSets[0].attributeNames, timeData);
-                //timeScatter.AppendData(timeDataset);
+                //temporalEvolutionTracker.AppendData(timeDataset);
 
                 List<double> timeDiff = new List<double>();
 
@@ -444,25 +444,25 @@ namespace AugmeNDT{
 
                 for (int dataSet = 0; dataSet < dataEnsemble.GetDataSetCount(); dataSet++)
                 {
-                    timeScatter.AppendData(dataSets[dataSet]);
+                    temporalEvolutionTracker.AppendData(dataSets[dataSet]);
                 }
                 Attribute timeDiffAttr = new Attribute("Time Difference", timeDiff.ToArray());
 
-                timeScatter.SetChannelEncoding(VisChannel.XPos, dataSets[0].GetHeader());
-                timeScatter.SetChannelEncoding(VisChannel.YPos, timeDiffAttr);
-                timeScatter.SetChannelEncoding(VisChannel.Color, new Attribute("Datasets", dataEnsemble.GetAbstractDataSetNames()));
+                temporalEvolutionTracker.SetChannelEncoding(VisChannel.XPos, dataSets[0].GetHeader());
+                temporalEvolutionTracker.SetChannelEncoding(VisChannel.YPos, timeDiffAttr);
+                temporalEvolutionTracker.SetChannelEncoding(VisChannel.Color, new Attribute("Datasets", dataEnsemble.GetAbstractDataSetNames()));
 
                 //Debug.Log(dataSets[0].GetHeader().PrintAttribute());
                 //Debug.Log(timeDiffAttr.PrintAttribute());
 
                 //timeDataset.PrintDatasetValues(true);
 
-                timeScatter.CreateVis(visContainerObject);
-                timeScatter.visContainerObject.transform.Rotate(90, 0, 0);
-                timeScatter.visContainerObject.SetActive(false);
+                temporalEvolutionTracker.CreateVis(visContainerObject);
+                temporalEvolutionTracker.visContainerObject.transform.Rotate(90, 0, 0);
+                temporalEvolutionTracker.visContainerObject.SetActive(false);
             }
 
-            timeScatter.visContainer.RemoveContainerHandle();
+            temporalEvolutionTracker.visContainer.RemoveContainerHandle();
         }
 
         public void ApplyMDDTransition(bool apply2DTransiton)
@@ -473,7 +473,7 @@ namespace AugmeNDT{
                 visContainer.visContainer.SetActive(false);
                 colorLegend.SetActive(false);
                 // Create new 2D Vis 
-                timeScatter.visContainerObject.SetActive(true);
+                temporalEvolutionTracker.visContainerObject.SetActive(true);
 
             }
             else
@@ -482,7 +482,7 @@ namespace AugmeNDT{
                 visContainer.visContainer.SetActive(true);
                 colorLegend.SetActive(true);
                 //Hide 2D Vis
-                timeScatter.visContainerObject.SetActive(false);
+                temporalEvolutionTracker.visContainerObject.SetActive(false);
 
             }
 
@@ -526,29 +526,29 @@ namespace AugmeNDT{
         public Vis CreateNewVis(int attribute, Vector3 pos)
         {
 
-            VisStackedHistogram stackedHistogram = new VisStackedHistogram();
-            stackedHistogram.title = "Stacked Histogram";
-            stackedHistogram.axes = 2;
-            stackedHistogram.width = 1;
-            stackedHistogram.height = 1;
-            stackedHistogram.depth = 1;
-            stackedHistogram.visInteractor = new VisMDDGlyphInteractor(this);
-            stackedHistogram.multiGroups = multiGroups;
+            VisChronoBins chronoBins = new VisChronoBins();
+            chronoBins.title = "Chrono Bins";
+            chronoBins.axes = 2;
+            chronoBins.width = 1;
+            chronoBins.height = 1;
+            chronoBins.depth = 1;
+            chronoBins.visInteractor = new VisMDDGlyphInteractor(this);
+            chronoBins.multiGroups = multiGroups;
 
             for (int dataSet = 0; dataSet < dataEnsemble.GetDataSetCount(); dataSet++)
             {
-                stackedHistogram.AppendData(dataEnsemble.GetDataSet(dataSet));
+                chronoBins.AppendData(dataEnsemble.GetDataSet(dataSet));
             }
 
             string axisName = "Datasets\n(" + dataEnsemble.GetAttribute(attribute).GetName() + ")";
 
-            stackedHistogram.SetChannelEncoding(VisChannel.XPos, new Attribute(axisName, dataEnsemble.GetAbstractDataSetNames()));  // The Timesteps (Datasets)
-            stackedHistogram.SetChannelEncoding(VisChannel.YPos, dataEnsemble.GetAttribute(attribute)); // The Attribute with its values
+            chronoBins.SetChannelEncoding(VisChannel.XPos, new Attribute(axisName, dataEnsemble.GetAbstractDataSetNames()));  // The Timesteps (Datasets)
+            chronoBins.SetChannelEncoding(VisChannel.YPos, dataEnsemble.GetAttribute(attribute)); // The Attribute with its values
 
-            stackedHistogram.CreateVis(visContainerObject);
-            stackedHistogram.SetVisContainerPosition(pos);
+            chronoBins.CreateVis(visContainerObject);
+            chronoBins.SetVisContainerPosition(pos);
 
-            return stackedHistogram;
+            return chronoBins;
         }
 
         /// <summary>

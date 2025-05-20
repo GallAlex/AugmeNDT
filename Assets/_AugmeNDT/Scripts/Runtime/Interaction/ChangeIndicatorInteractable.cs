@@ -5,7 +5,7 @@ namespace AugmeNDT
 {
     public class ChangeIndicatorInteractable : MonoBehaviour
     {
-        public VisStackedHistogram RefToClass;
+        public VisChronoBins RefToClass;
 
         public string indicatorID = "Bin_Dataset1_Dataset2";
 

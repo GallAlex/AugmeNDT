@@ -6,13 +6,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MixedReality.Toolkit.UX;
 using TMPro;
 using UnityEngine;
 
 namespace AugmeNDT
 {
-    public class VisStackedHistogram : Vis
+    public class VisChronoBins : Vis
     {
         private bool use4DData = false;                     // If more than one dataset is loaded, should the z-Axis be for the other Datasets?
 
@@ -32,9 +31,9 @@ namespace AugmeNDT
         private double[] negMinMaxChange;           // Min and Max change for all negative Indicators
         public GameObject text3DPrefab;
 
-        public VisStackedHistogram()
+        public VisChronoBins()
         {
-            title = "Stacked Histogram";
+            title = "Chrono Bins";
             axes = 2;
 
             dataMarkPrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/Marks/BarWithOutline");
@@ -64,7 +63,7 @@ namespace AugmeNDT
             xyzTicks = new[] { channelEncoding[VisChannel.XPos].GetNumberOfValues(), binCount, 13 };
             visContainer.SetAxisTickNumber(xyzTicks);
 
-            //Debug.Log("VisStackedHistogram X.Pos: \n" + channelEncoding[VisChannel.XPos].PrintAttribute());
+            //Debug.Log("VisChronoBins X.Pos: \n" + channelEncoding[VisChannel.XPos].PrintAttribute());
 
             // Number of Datasets does not extend for every Bin - only n Datasets (time steps) strings but for multiple bins i
             double[] timesteps;
@@ -85,15 +84,15 @@ namespace AugmeNDT
             }
             else
             {
-                Debug.Log("VisStackedHistogram: else-branch reached");
+                Debug.Log("VisChronoBins: else-branch reached");
                 timesteps = channelEncoding[VisChannel.XPos].GetNumericalVal();
             }
 
             /*
 
-            Debug.Log("VisStackedHistogram VisChannel.XPos: \n" + TablePrint.ToStringRow(channelEncoding[VisChannel.XPos].GetNumericalVal()));
+            Debug.Log("VisChronoBins VisChannel.XPos: \n" + TablePrint.ToStringRow(channelEncoding[VisChannel.XPos].GetNumericalVal()));
             Debug.Log("DRAW Timesteps: \n" + TablePrint.ToStringRow(timesteps));
-            Debug.Log("VisStackedHistogram minMaxYPos: \n" + TablePrint.ToStringRow(minMaxYPos));
+            Debug.Log("VisChronoBins minMaxYPos: \n" + TablePrint.ToStringRow(minMaxYPos));
             Debug.Log("DRAW yPos: \n" + TablePrint.ToStringRow(yPos.GetNumericalVal()));
             Debug.Log("DRAW frequencies: \n" + TablePrint.ToStringRow(frequencies.GetNumericalVal()));
             
@@ -175,10 +174,10 @@ namespace AugmeNDT
 
             /*
 
-            Debug.Log("VisStackedHistogram: Index of Attribute " + attribute.GetName() + " is " + index);
-            Debug.Log("VisStackedHistogram: MinMaxValues: " + minMaxValues[0] + " " + minMaxValues[1]);
-            Debug.Log("VisStackedHistogram: MaxDataPoints: " + maxDataPoints);
-            Debug.Log("VisStackedHistogram: binCount: " + binCount); 
+            Debug.Log("VisChronoBins: Index of Attribute " + attribute.GetName() + " is " + index);
+            Debug.Log("VisChronoBins: MinMaxValues: " + minMaxValues[0] + " " + minMaxValues[1]);
+            Debug.Log("VisChronoBins: MaxDataPoints: " + maxDataPoints);
+            Debug.Log("VisChronoBins: binCount: " + binCount); 
             
              */
 
@@ -204,8 +203,8 @@ namespace AugmeNDT
                 if (sumedFrequency > maxFrequency) maxFrequency = sumedFrequency;
             }
 
-            //Debug.Log("VisStackedHistogram: maxFrequency: " + maxFrequency);
-            //Debug.Log("VisStackedHistogram: yPos : " + TablePrint.ToStringRow(yPosList.ToArray()));
+            //Debug.Log("VisChronoBins: maxFrequency: " + maxFrequency);
+            //Debug.Log("VisChronoBins: yPos : " + TablePrint.ToStringRow(yPosList.ToArray()));
 
             // Finish drawable values
             frequencies = new Attribute("Frequencies", frequencyList.ToArray());
