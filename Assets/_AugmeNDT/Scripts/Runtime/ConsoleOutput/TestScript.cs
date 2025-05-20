@@ -1,3 +1,8 @@
+// /*
+//  * MIT License
+//  * Copyright (c) 2025 Alexander Gall
+//  */
+
 using UnityEngine;
 
 public class TestScript : MonoBehaviour

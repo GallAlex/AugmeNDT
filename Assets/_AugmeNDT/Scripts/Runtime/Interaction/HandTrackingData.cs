@@ -1,3 +1,8 @@
+// /*
+//  * MIT License
+//  * Copyright (c) 2025 Alexander Gall
+//  */
+
 using MixedReality.Toolkit;
 using MixedReality.Toolkit.Input;
 using MixedReality.Toolkit.Subsystems;

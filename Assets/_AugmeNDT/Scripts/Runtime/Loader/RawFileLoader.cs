@@ -1,3 +1,8 @@
+// /*
+//  * MIT License
+//  * Copyright (c) 2025 Alexander Gall
+//  */
+
 using System;
 using System.IO;
 using System.Threading.Tasks;

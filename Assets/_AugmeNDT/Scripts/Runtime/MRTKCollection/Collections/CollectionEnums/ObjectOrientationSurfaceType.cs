@@ -1,7 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-
-namespace Microsoft.MixedReality.Toolkit.Utilities
+﻿namespace Microsoft.MixedReality.Toolkit.Utilities
 {
     /// <summary>
     /// The type of surface to map the collect to.

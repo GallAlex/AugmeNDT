@@ -1,3 +1,8 @@
+// /*
+//  * MIT License
+//  * Copyright (c) 2025 Alexander Gall
+//  */
+
 namespace AugmeNDT{
     /// <summary>
     /// Interface for secondary data (abstract and spatial datasets)

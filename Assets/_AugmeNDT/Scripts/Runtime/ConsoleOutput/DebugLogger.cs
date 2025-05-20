@@ -1,4 +1,9 @@
-﻿using System;
+﻿// /*
+//  * MIT License
+//  * Copyright (c) 2025 Alexander Gall
+//  */
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
