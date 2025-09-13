@@ -11,6 +11,10 @@ namespace AugmeNDT
         [Header("MHD Dimensions")]
         public Vector3 mhdDimension = new Vector3(24, 16, 45);
 
+        [Header("SubRegion Borders")]
+        public Vector3 lowerCornerOfSubRegion = new Vector3(0, 0, 5);
+        public Vector3 upperCornerOfSubRegion = new Vector3(24, 8, 40);
+
         [Header("Data Paths")]
         public string mhdPath = @"C:/Users/ozdag/OneDrive/Desktop/smallDATA/fibers.mhd";
 

@@ -220,8 +220,8 @@ namespace AugmeNDT
             }
             else
             {
-                worldMin = topologicalDataObjectInstance.min3D;
-                worldMax = topologicalDataObjectInstance.max3D;
+                worldMin = topologicalDataObjectInstance.lowerCornerOfSubRegion;
+                worldMax = topologicalDataObjectInstance.upperCornerOfSubRegion;
 
                 if (worldMin == Vector3.zero && worldMax == Vector3.zero)
                 {

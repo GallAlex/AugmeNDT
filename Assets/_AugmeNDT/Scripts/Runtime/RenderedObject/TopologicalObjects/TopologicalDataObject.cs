@@ -25,15 +25,16 @@ namespace AugmeNDT
         private Vector3 lastVolumeScale;
         private Quaternion lastVolumeRotation;
 
-        public Vector3 min3D = new Vector3(0, 0, 5);
-        public Vector3 max3D = new Vector3(24, 8, 40);
+        // lower and upper corners of Subregion Box
+        public Vector3 lowerCornerOfSubRegion = new Vector3(0, 0, 5);
+        public Vector3 upperCornerOfSubRegion = new Vector3(24, 8, 40);
+        private Vector3 minLocalPositionOfSubRegion;
+        private Vector3 maxLocalPositionOfSubRegion;
 
         // Store initial local positions relative to volume for proper transformation
         private List<Vector3> gradientLocalPositions = new List<Vector3>();
         private List<Vector3> gradientLocalDirections = new List<Vector3>();
         private List<Vector3> criticalPointLocalPositions = new List<Vector3>();
-        private Vector3 minLocalPosition;
-        private Vector3 maxLocalPosition;
 
         private void Awake()
         {
@@ -46,6 +47,9 @@ namespace AugmeNDT
             config = InitializeTopologyConfigData.LoadTopologyConfiguration();
             path = config.mhdPath;
             originalDimensions = config.mhdDimension;
+
+            lowerCornerOfSubRegion = config.lowerCornerOfSubRegion;
+            upperCornerOfSubRegion = config.upperCornerOfSubRegion;
 
             ttkCalculation = new TTKCalculations(path);
 
@@ -97,9 +101,9 @@ namespace AugmeNDT
                 );
             }
 
-            // Update min3D and max3D vectors
-            min3D = CalculateWorldPosition(volumeTransform, minLocalPosition);
-            max3D = CalculateWorldPosition(volumeTransform, maxLocalPosition);
+            // Update lowerCornerOfSubRegion and upperCornerOfSubRegion vectors
+            lowerCornerOfSubRegion = CalculateWorldPosition(volumeTransform, minLocalPositionOfSubRegion);
+            upperCornerOfSubRegion = CalculateWorldPosition(volumeTransform, maxLocalPositionOfSubRegion);
         }
 
         /// <summary>
@@ -122,7 +126,7 @@ namespace AugmeNDT
         private void Initialize()
         {
             ConvertData(ttkCalculation.GetGradientAllVectorField(), ttkCalculation.GetCriticalPointAllVectorField());
-            ConvertMinMax3DVectors();
+            ConvertSubRegionBorders();
             StoreLocalTransforms(); // Store local positions for future transform updates
             TDAHandler.instance.ActivateTDAScenes(config);
         }
@@ -162,9 +166,9 @@ namespace AugmeNDT
                 criticalPointLocalPositions.Add(localPosition);
             }
 
-            // Store local positions for min3D and max3D
-            minLocalPosition = volumeTransform.InverseTransformPoint(min3D);
-            maxLocalPosition = volumeTransform.InverseTransformPoint(max3D);
+            // Store local positions for lowerCornerOfSubRegion and upperCornerOfSubRegion
+            minLocalPositionOfSubRegion = volumeTransform.InverseTransformPoint(lowerCornerOfSubRegion);
+            maxLocalPositionOfSubRegion = volumeTransform.InverseTransformPoint(upperCornerOfSubRegion);
         }
 
         private void ConvertData(List<GradientDataset> orjGradientList, List<CriticalPointDataset> orjCriticalPointDataset)
@@ -255,26 +259,26 @@ namespace AugmeNDT
         }
 
         /// <summary>
-        /// Converts Min3D and Max3D vectors from raw data coordinates to world coordinates
+        /// Converts lowerCornerOfSubRegion and upperCornerOfSubRegion vectors from raw data coordinates to world coordinates
         /// </summary>
-        private void ConvertMinMax3DVectors()
+        private void ConvertSubRegionBorders()
         {
             // Volume's world scale and position
             Vector3 volumeWorldScale = volumeTransform.lossyScale;
             Vector3 volumePosition = volumeTransform.position;
 
-            // Normalize Min3D (convert to 0-1 range)
+            // Normalize lowerCornerOfSubRegion (convert to 0-1 range)
             Vector3 normalizedMin = new Vector3(
-                min3D.x / originalDimensions.x,
-                min3D.y / originalDimensions.y,
-                min3D.z / originalDimensions.z
+                lowerCornerOfSubRegion.x / originalDimensions.x,
+                lowerCornerOfSubRegion.y / originalDimensions.y,
+                lowerCornerOfSubRegion.z / originalDimensions.z
             );
 
-            // Normalize Max3D (convert to 0-1 range)
+            // Normalize upperCornerOfSubRegion (convert to 0-1 range)
             Vector3 normalizedMax = new Vector3(
-                max3D.x / originalDimensions.x,
-                max3D.y / originalDimensions.y,
-                max3D.z / originalDimensions.z
+                upperCornerOfSubRegion.x / originalDimensions.x,
+                upperCornerOfSubRegion.y / originalDimensions.y,
+                upperCornerOfSubRegion.z / originalDimensions.z
             );
 
             // Convert normalized coordinates to world scale
@@ -299,8 +303,8 @@ namespace AugmeNDT
             Vector3 finalMax = volumePosition + (volumeTransform.rotation * adjustedMax);
 
             // Assign converted values
-            min3D = finalMin;
-            max3D = finalMax;
+            lowerCornerOfSubRegion = finalMin;
+            upperCornerOfSubRegion = finalMax;
         }
 
         /// <summary>
