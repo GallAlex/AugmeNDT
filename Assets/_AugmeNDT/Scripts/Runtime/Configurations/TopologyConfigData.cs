@@ -20,9 +20,19 @@ namespace AugmeNDT
         public Color saddle1_PointColor = Color.yellow;
         public Color saddle2_PointColor = Color.magenta;
 
+        [Header("Critical Point Label Settings")]
+        public string label_sink = "Sink";
+        public string label_source = "Source";
+        public string label_saddle1 = "1-Saddle";
+        public string label_saddle2 = "2-Saddle";
+
         [Header("Vector Field Color Settings")]
         public Color ColorOfVectorObject = Color.gray;
         public Color ColorOfStreamLines = Color.white;
+
+        [Header("3D Sub-region region-border")]
+        public bool showBorderof3DSub_Region = false;
+        public Color ColorOf_Borderof3DSub_Region = Color.green;
 
         [Header("Settings of All Vector Field_Vector Visualization")]
         public float localScaleRate = 0.3f;

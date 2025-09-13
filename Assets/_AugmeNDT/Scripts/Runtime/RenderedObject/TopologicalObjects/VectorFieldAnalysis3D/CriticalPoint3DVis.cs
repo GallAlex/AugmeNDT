@@ -105,8 +105,17 @@ namespace AugmeNDT
                         { 2, rectangle3DManager.config.saddle2_PointColor },     // 2-Saddle
                         { 3, rectangle3DManager.config.sourcePointColor },       // Maximum
                     };
-
+                
                 createCriticalPointsInstance.CustomizeTypeColors(typeColors);
+
+                string[] newCPlabels = { 
+                    rectangle3DManager.config.label_sink,
+                    rectangle3DManager.config.label_saddle1, 
+                    rectangle3DManager.config.label_saddle2, 
+                    rectangle3DManager.config.label_source,
+                };
+
+                createCriticalPointsInstance.CustomizeTypeLabels(newCPlabels);
             }
         }
 

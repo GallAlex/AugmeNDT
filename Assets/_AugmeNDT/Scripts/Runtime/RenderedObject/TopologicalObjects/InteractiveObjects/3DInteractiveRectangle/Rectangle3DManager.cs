@@ -13,7 +13,8 @@ namespace AugmeNDT
         public static Rectangle3DManager rectangle3DManager;
 
         public bool useAllData = true; // Whether to use the full volume data for the rectangle
-        public bool visibleRectangle = false; // Toggle visibility of the rectangle borders
+        private bool visibleBorderOfSubRegion = false; // Toggle visibility of the rectangle borders
+        private Color ColorOf_BorderOfSubRegion = Color.green; // Toggle visibility of the rectangle borders
 
         public TopologyConfigData config;
         public Transform volumeTransform;
@@ -48,6 +49,10 @@ namespace AugmeNDT
                 topologicalDataObjectInstance = TopologicalDataObject.instance;
                 volumeTransform = topologicalDataObjectInstance.volumeTransform;
                 config = topologicalDataObjectInstance.config;
+
+                // Toggle subregion border line visibility
+                visibleBorderOfSubRegion = config.showBorderof3DSub_Region;
+                ColorOf_BorderOfSubRegion = config.ColorOf_Borderof3DSub_Region;
 
                 scaleRateToCalculation = topologicalDataObjectInstance.GetOptimalScaleRateToCalculation();
                 defaultInterval = 0.1f;
@@ -229,7 +234,12 @@ namespace AugmeNDT
             Vector3 localMax = volumeTransform.InverseTransformPoint(worldMax);
 
             Basic3DRectangle basic3DRectangle = rectangle.AddComponent<Basic3DRectangle>();
-            basic3DRectangle.drawBorders = visibleRectangle;
+            if (!useAllData)
+            {
+                basic3DRectangle.drawBorders = visibleBorderOfSubRegion;
+                basic3DRectangle.colorOfBorders = ColorOf_BorderOfSubRegion;
+            }
+
             basic3DRectangle.InitializeBoundsLocal(localMin, localMax);
 
             return true;

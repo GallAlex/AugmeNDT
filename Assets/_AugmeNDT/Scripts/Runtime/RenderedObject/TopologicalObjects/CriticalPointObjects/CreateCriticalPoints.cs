@@ -24,9 +24,18 @@ namespace AugmeNDT
             instance = this; 
         }
 
+        /// <summary>
+        /// change default typeColors parameter
+        /// </summary>
+        /// <param name="customizedTypeColors"></param>
         public void CustomizeTypeColors(Dictionary<int, Color> customizedTypeColors)
         {
             typeColors = customizedTypeColors;
+        }
+
+        public void CustomizeTypeLabels(string[] customizedTypeLabels)
+        {
+            labels = customizedTypeLabels;
         }
 
         public Dictionary<int, List<GameObject>> CreateInteractiveCriticalPoint(List<CriticalPointDataset> criticalPoints,Transform container, GameObject pointPrefab, float localScaleRate = 1.0f, bool createLegendColorBar = true)

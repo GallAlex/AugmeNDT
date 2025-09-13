@@ -11,6 +11,7 @@
         private GameObject rectangleObject;
         private LineRenderer lineRenderer;
         public bool drawBorders = false;
+        public Color colorOfBorders = Color.green;
         private Matrix4x4 worldToLocalMatrix; // For thread-safe usage
 
         /// <summary>
@@ -56,8 +57,8 @@
 
                 lineRenderer = rectangleObject.AddComponent<LineRenderer>();
                 lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-                lineRenderer.startColor = Color.yellow;
-                lineRenderer.endColor = Color.yellow;
+                lineRenderer.startColor = colorOfBorders;
+                lineRenderer.endColor = colorOfBorders;
                 lineRenderer.startWidth = 0.001f; // Increase thickness for better visibility
                 lineRenderer.endWidth = 0.001f;
                 lineRenderer.positionCount = 24; // 12 edges, 2 points per edge

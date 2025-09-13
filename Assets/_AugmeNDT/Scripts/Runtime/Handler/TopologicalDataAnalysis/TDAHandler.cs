@@ -183,7 +183,6 @@ namespace AugmeNDT
                     MakeTransparent();
 
                 Rectangle3DManager.rectangle3DManager.useAllData = false;
-                Rectangle3DManager.rectangle3DManager.visibleRectangle = true;
                 Rectangle3DManager.rectangle3DManager.InitializeRectangle();
                 Glyph3DVectorField.instance.Visualize();
                 CriticalPoint3DVis.instance.Visualize();
@@ -210,7 +209,6 @@ namespace AugmeNDT
                     MakeTransparent();
 
                 Rectangle3DManager.rectangle3DManager.useAllData = false;
-                Rectangle3DManager.rectangle3DManager.visibleRectangle = true;
                 Rectangle3DManager.rectangle3DManager.InitializeRectangle();
                 StreamLine3D.Instance.ShowStreamLines();
                 CriticalPoint3DVis.instance.Visualize();
@@ -239,7 +237,6 @@ namespace AugmeNDT
                     MakeTransparent();
 
                 Rectangle3DManager.rectangle3DManager.useAllData = false;
-                Rectangle3DManager.rectangle3DManager.visibleRectangle = false;
                 Rectangle3DManager.rectangle3DManager.InitializeRectangle();
                 StreamLine3D.Instance.ShowStreamLines();
                 CriticalPoint3DVis.instance.Visualize();
