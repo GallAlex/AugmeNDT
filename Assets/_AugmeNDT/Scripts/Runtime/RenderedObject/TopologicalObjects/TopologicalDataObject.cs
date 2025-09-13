@@ -43,14 +43,15 @@ namespace AugmeNDT
             lastVolumeScale = volumeTransform.lossyScale;
             lastVolumeRotation = volumeTransform.rotation;
 
-            LoadTopologyConfiguration();
+            config = InitializeTopologyConfigData.LoadTopologyConfiguration();
+            path = config.mhdPath;
+            originalDimensions = config.mhdDimension;
 
-            ttkCalculation = new TTKCalculations();
-            ttkCalculation.mhdPath = path;
+            ttkCalculation = new TTKCalculations(path);
 
             Initialize();
         }
-
+        
         public void UpdateData()
         {
             // Check if volume transform has changed
@@ -116,33 +117,6 @@ namespace AugmeNDT
             Vector3 worldPosition = parent.position + rotatedPosition;
 
             return worldPosition;
-        }
-
-        private void LoadTopologyConfiguration()
-        {
-            string configPath = System.IO.Path.Combine(Application.streamingAssetsPath, "topologyConfig.json");
-            if (System.IO.File.Exists(configPath))
-            {
-                string jsonData = System.IO.File.ReadAllText(configPath);
-                config = JsonUtility.FromJson<TopologyConfigData>(jsonData);
-            }
-            else
-            {
-                // Create a new configuration with default values
-                config = new TopologyConfigData();
-                string jsonData = JsonUtility.ToJson(config, true); // true = pretty formatting
-                try
-                {
-                    System.IO.File.WriteAllText(configPath, jsonData);
-                }
-                catch (System.Exception e)
-                {
-                    Debug.LogException(e);
-                }
-            }
-
-            path = config.mhdPath;
-            originalDimensions = config.mhdDimension;
         }
 
         private void Initialize()

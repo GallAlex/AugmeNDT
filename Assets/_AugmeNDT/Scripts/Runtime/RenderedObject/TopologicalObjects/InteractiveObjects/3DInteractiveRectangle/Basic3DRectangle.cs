@@ -10,7 +10,7 @@
     {
         private GameObject rectangleObject;
         private LineRenderer lineRenderer;
-        public bool drawBorders = true;
+        public bool drawBorders = false;
         private Matrix4x4 worldToLocalMatrix; // For thread-safe usage
 
         /// <summary>

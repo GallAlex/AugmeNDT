@@ -11,11 +11,7 @@ public class InteractiveRectangle : MonoBehaviour
     private Vector3[] corners = new Vector3[4];
     private GameObject rectangleObject;
 
-
-    /// <summary>
-    /// Only used for 2DStreamline Calculation 
-    /// MUST UPDATED before start threads
-    /// </summary>
+    // Only used for 2DStreamline Calculation. MUST UPDATED before start threads!
     private Vector3[] worldCornersManuelUpdated = new Vector3[4];
 
     /// <summary>
@@ -43,80 +39,6 @@ public class InteractiveRectangle : MonoBehaviour
             corners[i] = cornerPositions[i] - center;
         }
         InitializeRectangle();
-    }
-
-    /// <summary>
-    /// Creates the rectangle mesh and material
-    /// </summary>
-    private void InitializeRectangle()
-    {
-        // Create a new GameObject for the rectangle
-        rectangleObject = new GameObject("Rectangle");
-        rectangleObject.transform.parent = transform;
-        rectangleObject.transform.localPosition = Vector3.zero;
-
-        // Add a MeshFilter and MeshRenderer
-        MeshFilter meshFilter = rectangleObject.AddComponent<MeshFilter>();
-        MeshRenderer meshRenderer = rectangleObject.AddComponent<MeshRenderer>();
-
-        // Create unlit material with flat gray color that doesn't respond to lighting
-        Material material = new Material(Shader.Find("Transparent/Diffuse"));
-
-        // Set a flat gray color
-        material.color = new Color(0.5f, 0.5f, 0.5f, 0.0f);
-        material.renderQueue = 3000; // Transparent render queue
-
-        // Apply material
-        meshRenderer.material = material;
-
-        // Create mesh from current corner positions
-        UpdateRectangleMesh(meshFilter);
-    }
-
-    /// <summary>
-    /// Updates the rectangle mesh based on current corner positions
-    /// </summary>
-    /// <param name="meshFilter">MeshFilter to update</param>
-    private void UpdateRectangleMesh(MeshFilter meshFilter)
-    {
-        Mesh mesh = new Mesh();
-
-        // Use the corners directly as vertices
-        Vector3[] vertices = new Vector3[4];
-        for (int i = 0; i < 4; i++)
-        {
-            vertices[i] = corners[i];
-        }
-
-        // Define triangles (two triangles making a quad)
-        // Create triangles for both front and back faces for visibility from both sides
-        int[] triangles = new int[] { 
-            // Front face
-            0, 1, 2,
-            0, 2, 3,
-            // Back face (reversed winding order)
-            2, 1, 0,
-            3, 2, 0
-        };
-
-        // Define UVs
-        Vector2[] uvs = new Vector2[] {
-            new Vector2(0, 0),
-            new Vector2(1, 0),
-            new Vector2(1, 1),
-            new Vector2(0, 1)
-        };
-
-        // Set mesh properties
-        mesh.vertices = vertices;
-        mesh.triangles = triangles;
-        mesh.uv = uvs;
-
-        // No need to recalculate normals for unlit shader, but useful for mesh bounds
-        mesh.RecalculateBounds();
-
-        // Set the mesh to the MeshFilter
-        meshFilter.mesh = mesh;
     }
 
     /// <summary>
@@ -265,5 +187,80 @@ public class InteractiveRectangle : MonoBehaviour
         // Create plane at first corner with normal
         return new Plane(normal, corners[0]);
     }
+
+    /// <summary>
+    /// Creates the rectangle mesh and material
+    /// </summary>
+    private void InitializeRectangle()
+    {
+        // Create a new GameObject for the rectangle
+        rectangleObject = new GameObject("Rectangle");
+        rectangleObject.transform.parent = transform;
+        rectangleObject.transform.localPosition = Vector3.zero;
+
+        // Add a MeshFilter and MeshRenderer
+        MeshFilter meshFilter = rectangleObject.AddComponent<MeshFilter>();
+        MeshRenderer meshRenderer = rectangleObject.AddComponent<MeshRenderer>();
+
+        // Create unlit material with flat gray color that doesn't respond to lighting
+        Material material = new Material(Shader.Find("Transparent/Diffuse"));
+
+        // Set a flat gray color
+        material.color = new Color(0.5f, 0.5f, 0.5f, 0.0f);
+        material.renderQueue = 3000; // Transparent render queue
+
+        // Apply material
+        meshRenderer.material = material;
+
+        // Create mesh from current corner positions
+        UpdateRectangleMesh(meshFilter);
+    }
+
+    /// <summary>
+    /// Updates the rectangle mesh based on current corner positions
+    /// </summary>
+    /// <param name="meshFilter">MeshFilter to update</param>
+    private void UpdateRectangleMesh(MeshFilter meshFilter)
+    {
+        Mesh mesh = new Mesh();
+
+        // Use the corners directly as vertices
+        Vector3[] vertices = new Vector3[4];
+        for (int i = 0; i < 4; i++)
+        {
+            vertices[i] = corners[i];
+        }
+
+        // Define triangles (two triangles making a quad)
+        // Create triangles for both front and back faces for visibility from both sides
+        int[] triangles = new int[] { 
+            // Front face
+            0, 1, 2,
+            0, 2, 3,
+            // Back face (reversed winding order)
+            2, 1, 0,
+            3, 2, 0
+        };
+
+        // Define UVs
+        Vector2[] uvs = new Vector2[] {
+            new Vector2(0, 0),
+            new Vector2(1, 0),
+            new Vector2(1, 1),
+            new Vector2(0, 1)
+        };
+
+        // Set mesh properties
+        mesh.vertices = vertices;
+        mesh.triangles = triangles;
+        mesh.uv = uvs;
+
+        // No need to recalculate normals for unlit shader, but useful for mesh bounds
+        mesh.RecalculateBounds();
+
+        // Set the mesh to the MeshFilter
+        meshFilter.mesh = mesh;
+    }
+
 
 }

@@ -11,8 +11,12 @@ namespace AugmeNDT
 {
     public class TTKCalculations
     {
+        public TTKCalculations( string mhdFilepath) {
+            this.mhdPath = mhdFilepath;
+        }
+
         // Paths for input/output and scripts
-        public string mhdPath;
+        private string mhdPath;
         private string ttkScripts = Application.streamingAssetsPath + @"/TTKScripts/";
         private string ttkResults = Application.streamingAssetsPath + @"/TTKResults/";
         private CultureInfo culture = new CultureInfo("en-US");

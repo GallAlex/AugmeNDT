@@ -166,6 +166,8 @@ namespace AugmeNDT
                             sphere.transform.parent = container;
                             sphere.transform.localScale = localScale; // Uniform small scale
                             sphere.tag = "2DMovingSphere"; // Tag for tracking spheres
+                            SetSphereColor(sphere);
+
 
                             // Initialize flow behavior on the sphere, passing the streamline points
                             FlowObject2D movingSphere = sphere.GetComponent<FlowObject2D>();
@@ -178,6 +180,14 @@ namespace AugmeNDT
                 // Wait before checking sphere count again
                 yield return new WaitForSeconds(1f);
             }
+        }
+
+        private void SetSphereColor(GameObject sphere)
+        {
+            Renderer rend = sphere.GetComponent<Renderer>();
+            Material newMat = new Material(rend.material);
+            newMat.color = Color.red;
+            rend.material = newMat;
         }
     }
 }

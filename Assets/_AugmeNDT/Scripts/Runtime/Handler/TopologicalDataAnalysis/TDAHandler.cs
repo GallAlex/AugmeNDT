@@ -99,31 +99,51 @@ namespace AugmeNDT
                 rectangleManagers3D.AddComponent<FlowObject3DManager>();
             }
 
+
+
+            // AllVectorField: StreamLine, Flow, Glyph3D and CriticalPoints
+            // SubRegion: StreamLine, Flow and CriticalPoints,Glyph3D
+            if (topologyConfigData.SceneNumber == 11 || topologyConfigData.SceneNumber == 12 ||
+                topologyConfigData.SceneNumber == 13 || topologyConfigData.SceneNumber == 14)
+            {
+                sceneObjects.AddComponent<CriticalPointObjectPool>();
+
+                GameObject rectangleManagers3D = new GameObject("RectangleManagers3D");
+                rectangleManagers3D.transform.parent = sceneObjects;
+                rectangleManagers3D.AddComponent<Rectangle3DManager>();
+
+                rectangleManagers3D.AddComponent<Glyph3DVectorField>();
+                rectangleManagers3D.AddComponent<CriticalPoint3DVis>();
+                rectangleManagers3D.AddComponent<StreamLine3D>();
+                rectangleManagers3D.AddComponent<FlowObject3DManager>();
+            }
+
+
             // It will draw a line when you touch the critical points.
-            if (topologyConfigData.SceneNumber == 11)
-            {
-                sceneObjects.AddComponent<CriticalPointObjectPool>();
+            //if (topologyConfigData.SceneNumber == 11)
+            //{
+            //    sceneObjects.AddComponent<CriticalPointObjectPool>();
 
-                GameObject rectangleManagers3D = new GameObject("RectangleManagers3D");
-                rectangleManagers3D.transform.parent = sceneObjects;
-                rectangleManagers3D.AddComponent<Rectangle3DManager>();
+            //    GameObject rectangleManagers3D = new GameObject("RectangleManagers3D");
+            //    rectangleManagers3D.transform.parent = sceneObjects;
+            //    rectangleManagers3D.AddComponent<Rectangle3DManager>();
 
-                rectangleManagers3D.AddComponent<CriticalPoint3DVis>();
-                rectangleManagers3D.AddComponent<SelectableCriticalPointsVis>();
-            }
+            //    rectangleManagers3D.AddComponent<CriticalPoint3DVis>();
+            //    rectangleManagers3D.AddComponent<SelectableCriticalPointsVis>();
+            //}
 
-            // SUB_REGION_It will draw a line when you touch the critical points.
-            if (topologyConfigData.SceneNumber == 12)
-            {
-                sceneObjects.AddComponent<CriticalPointObjectPool>();
+            //// SUB_REGION_It will draw a line when you touch the critical points.
+            //if (topologyConfigData.SceneNumber == 12)
+            //{
+            //    sceneObjects.AddComponent<CriticalPointObjectPool>();
 
-                GameObject rectangleManagers3D = new GameObject("RectangleManagers3D");
-                rectangleManagers3D.transform.parent = sceneObjects;
-                rectangleManagers3D.AddComponent<Rectangle3DManager>();
+            //    GameObject rectangleManagers3D = new GameObject("RectangleManagers3D");
+            //    rectangleManagers3D.transform.parent = sceneObjects;
+            //    rectangleManagers3D.AddComponent<Rectangle3DManager>();
 
-                rectangleManagers3D.AddComponent<CriticalPoint3DVis>();
-                rectangleManagers3D.AddComponent<SelectableCriticalPointsVis>();
-            }
+            //    rectangleManagers3D.AddComponent<CriticalPoint3DVis>();
+            //    rectangleManagers3D.AddComponent<SelectableCriticalPointsVis>();
+            //}
 
         }
 
@@ -179,9 +199,11 @@ namespace AugmeNDT
                 StreamLine3D.Instance.ShowStreamLines();
                 CriticalPoint3DVis.instance.Visualize();
                 FlowObject3DManager.Instance.StartFlowObject();
+
+                //dataVisGroup.AddComponent<PersistenceDiagramGenerator3D>();
             }
 
-            // AllVectorField: StreamLine, Flow and CriticalPoints
+            // SubRegion: StreamLine, Flow and CriticalPoints
             if (topologyConfigData.SceneNumber == 9 || topologyConfigData.SceneNumber == 10)
             {
                 if (topologyConfigData.SceneNumber == 10)
@@ -195,26 +217,56 @@ namespace AugmeNDT
                 FlowObject3DManager.Instance.StartFlowObject();
             }
 
-            // It will draw a line when you touch the critical points.
-            if (topologyConfigData.SceneNumber == 11 )
+            // AllVectorField: StreamLine, Flow and CriticalPoints
+            if (topologyConfigData.SceneNumber == 11 || topologyConfigData.SceneNumber == 12)
             {
-                Rectangle3DManager.rectangle3DManager.InitializeRectangle();
+                if (topologyConfigData.SceneNumber == 12)
+                    MakeTransparent();
 
+                Rectangle3DManager.rectangle3DManager.InitializeRectangle();
+                StreamLine3D.Instance.ShowStreamLines();
+                Glyph3DVectorField.instance.Visualize();
                 CriticalPoint3DVis.instance.Visualize();
-                SelectableCriticalPointsVis.instance.Visualize();
+                FlowObject3DManager.Instance.StartFlowObject();
+
+                dataVisGroup.AddComponent<PersistenceDiagramGenerator3D>();
             }
 
-            // SUB_REGION_It will draw a line when you touch the critical points.
-            if (topologyConfigData.SceneNumber == 12)
+            // SubRegion: StreamLine, Flow and CriticalPoints
+            if (topologyConfigData.SceneNumber == 13 || topologyConfigData.SceneNumber == 14)
             {
+                if (topologyConfigData.SceneNumber == 14)
+                    MakeTransparent();
+
                 Rectangle3DManager.rectangle3DManager.useAllData = false;
-                Rectangle3DManager.rectangle3DManager.visibleRectangle = true;
+                Rectangle3DManager.rectangle3DManager.visibleRectangle = false;
                 Rectangle3DManager.rectangle3DManager.InitializeRectangle();
-
+                StreamLine3D.Instance.ShowStreamLines();
                 CriticalPoint3DVis.instance.Visualize();
-                SelectableCriticalPointsVis.instance.Visualize();
-
+                Glyph3DVectorField.instance.Visualize();
+                FlowObject3DManager.Instance.StartFlowObject();
             }
+
+            //// It will draw a line when you touch the critical points.
+            //if (topologyConfigData.SceneNumber == 11 )
+            //{
+            //    Rectangle3DManager.rectangle3DManager.InitializeRectangle();
+
+            //    CriticalPoint3DVis.instance.Visualize();
+            //    SelectableCriticalPointsVis.instance.Visualize();
+            //}
+
+            //// SUB_REGION_It will draw a line when you touch the critical points.
+            //if (topologyConfigData.SceneNumber == 12)
+            //{
+            //    Rectangle3DManager.rectangle3DManager.useAllData = false;
+            //    Rectangle3DManager.rectangle3DManager.visibleRectangle = true;
+            //    Rectangle3DManager.rectangle3DManager.InitializeRectangle();
+
+            //    CriticalPoint3DVis.instance.Visualize();
+            //    SelectableCriticalPointsVis.instance.Visualize();
+
+            //}
         }
 
         private void MakeTransparent()

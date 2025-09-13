@@ -26,7 +26,7 @@ namespace AugmeNDT
         private static StreamLine3D streamLine3DInstance;
         private static Rectangle3DManager rectangle3DManager;
         private GameObject spherePrefab; // Sphere prefab
-        Material pinkMaterial;
+        private Material greenMaterial;
 
         private void Awake()
         {
@@ -35,12 +35,10 @@ namespace AugmeNDT
             spherePrefab = (GameObject)Resources.Load("Prefabs/DataVisPrefabs/TopologicalVis/MovingSphere");
 
 
-            // Yeni pembe materyal oluştur
-            Material pinkMaterial = new Material(Shader.Find("Standard"));
-            pinkMaterial.color = new Color(1f, 0.4f, 0.7f); // Pembe renk
-            pinkMaterial.EnableKeyword("_EMISSION");
-            pinkMaterial.SetColor("_EmissionColor", new Color(1f, 0.4f, 0.7f) * 0.5f); // Hafif parlaklık
-
+            greenMaterial = new Material(Shader.Find("Standard"));
+            greenMaterial.color = Color.green;
+            greenMaterial.EnableKeyword("_EMISSION");
+            greenMaterial.SetColor("_EmissionColor", new Color(0f, 1f, 0f) * 1.5f); 
         }
 
         private void Start()
@@ -126,7 +124,7 @@ namespace AugmeNDT
                             Renderer renderer = sphere.GetComponent<Renderer>();
                             if (renderer != null)
                             {
-                                renderer.material = pinkMaterial;
+                                renderer.material = greenMaterial;
                             }
 
                             // Initialize flow behavior on the sphere, passing the streamline points
