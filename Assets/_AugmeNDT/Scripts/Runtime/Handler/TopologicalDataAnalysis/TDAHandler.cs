@@ -227,7 +227,7 @@ namespace AugmeNDT
                 CriticalPoint3DVis.instance.Visualize();
                 FlowObject3DManager.Instance.StartFlowObject();
 
-                dataVisGroup.AddComponent<PersistenceDiagramGenerator3D>();
+                //dataVisGroup.AddComponent<PersistenceDiagramGenerator3D>();
             }
 
             // SubRegion: StreamLine, Flow and CriticalPoints
