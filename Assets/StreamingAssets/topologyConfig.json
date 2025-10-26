@@ -5,6 +5,16 @@
         "y": 16.0,
         "z": 45.0
     },
+    "lowerCornerOfSubRegion": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 5.0
+    },
+    "upperCornerOfSubRegion": {
+        "x": 24.0,
+        "y": 8.0,
+        "z": 40.0
+    },
     "mhdPath": "C:/Users/ozdag/OneDrive/Desktop/smallDATA/fibers.mhd",
     "sinkColor": {
         "r": 0.0,
@@ -30,6 +40,10 @@
         "b": 1.0,
         "a": 1.0
     },
+    "label_sink": "Sink",
+    "label_source": "Source",
+    "label_saddle1": "1-Saddle",
+    "label_saddle2": "2-Saddle",
     "ColorOfVectorObject": {
         "r": 0.5,
         "g": 0.5,
@@ -40,6 +54,16 @@
         "r": 1.0,
         "g": 1.0,
         "b": 1.0,
+        "a": 1.0
+    },
+    "numberOfStreamline": 550,
+    "StepSizeOfStreamline": 0.0032999999821186067,
+    "maxStepOfStreamline": 142,
+    "showBorderof3DSub_Region": false,
+    "ColorOf_Borderof3DSub_Region": {
+        "r": 0.0,
+        "g": 1.0,
+        "b": 0.0,
         "a": 1.0
     },
     "localScaleRate": 0.30000001192092898,

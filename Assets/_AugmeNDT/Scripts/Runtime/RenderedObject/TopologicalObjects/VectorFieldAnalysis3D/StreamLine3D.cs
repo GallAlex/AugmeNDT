@@ -20,9 +20,9 @@ namespace AugmeNDT
         public Transform container;
 
         [Header("Streamline Parameters")]
-        public int numStreamlines = 350; // Number of streamlines to draw
-        public float streamlineStepSize = 0.0033f; // Step size for integration
-        public int maxStreamlineSteps = 142; // Maximum number of steps per streamline
+        public int numStreamlines; // Number of streamlines to draw
+        public float streamlineStepSize; // Step size for integration
+        public int maxStreamlineSteps; // Maximum number of steps per streamline
         public float cellSize = 0.01f; // Spatial grid cell size
         public float streamlineDensity = 1f; // Controls the density of streamlines
 
@@ -62,6 +62,9 @@ namespace AugmeNDT
             rectangle3DManager = Rectangle3DManager.rectangle3DManager;
             TopologyConfigData config = rectangle3DManager.config;
             streamlineColor = config.ColorOfStreamLines;
+            numStreamlines = config.numberOfStreamline;
+            streamlineStepSize = config.StepSizeOfStreamline;
+            maxStreamlineSteps = config.maxStepOfStreamline;
         }
 
         /// <summary>

@@ -34,6 +34,11 @@ namespace AugmeNDT
         public Color ColorOfVectorObject = Color.gray;
         public Color ColorOfStreamLines = Color.white;
 
+        [Header("3D Streamline Parameters")]
+        public int numberOfStreamline = 550;
+        public float StepSizeOfStreamline = 0.0033f;
+        public int maxStepOfStreamline = 142;
+
         [Header("3D Sub-region region-border")]
         public bool showBorderof3DSub_Region = false;
         public Color ColorOf_Borderof3DSub_Region = Color.green;
