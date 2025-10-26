@@ -210,9 +210,11 @@ namespace AugmeNDT
         public async Task<String> StartPicker()
         {
             filePath = ""; //Clear filePath
-                           //TODO: Replace hardcoded MHD file path with a dynamic loading system
+                           
+            //TODO: Replace hardcoded MHD file path with a dynamic loading system
+            filePath = Application.streamingAssetsPath + @"/TestData/fibers.mhd";
+
 #if !UNITY_EDITOR && UNITY_STANDALONE
-            filePath = @"C:/Users/ozdag/OneDrive/Desktop/smallDATA/fibers.mhd"; 
             return filePath;
 #endif
 #if !UNITY_EDITOR && UNITY_WSA_10_0
@@ -224,7 +226,6 @@ namespace AugmeNDT
 #if UNITY_EDITOR
             //Debug.Log("UNITY_STANDALONE PICKER");
             //return await FilePicker_Win();
-            filePath = @"C:/Users/ozdag/OneDrive/Desktop/smallDATA/fibers.mhd";
             return filePath;
 #endif
 
