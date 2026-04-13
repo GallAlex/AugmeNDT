@@ -9,7 +9,6 @@
 [![Unity](https://img.shields.io/badge/Unity-6000.0.37f1-blue.svg)](https://unity.com/)
 [![MRTK3](https://img.shields.io/badge/MRTK-3.0-brightgreen.svg)](https://github.com/MixedRealityToolkit/MixedRealityToolkit-Unity)
 [![Math.NET](https://img.shields.io/badge/Math.NET-5.0.0-orange.svg)](https://numerics.mathdotnet.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 <img src="https://github.com/user-attachments/assets/6db0d7d2-e6a0-4a48-b686-b6d8ba011409" width="740">
 
