@@ -129,5 +129,5 @@ Developed and maintained by
 **Alexander Gall**  
 
 Email: [alexander.gall@uni-passau.de](mailto:alexander.gall@uni-passau.de)  
-LinkedIn: [LinkedIn Profile](https://www.linkedin.com/in/alexander-gall-1b7039242)  
+LinkedIn: [LinkedIn Profile](www.linkedin.com/in/gallalexander)  
 Website: [Homepage](https://sites.google.com/view/alexandergall/)
